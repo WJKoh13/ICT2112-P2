@@ -1,8 +1,523 @@
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Home — Pro Rentals";
+    Layout = null; @* Full-page homepage — renders its own navbar, footer, and styles *@
 }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pro Rentals — Order Processing System</title>
+    <!-- Bootstrap 5.3.3 (local) -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <!-- Bootstrap Icons 1.11.3 (local) -->
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" />
+    <!-- Brand theme (eco-green) + layout rules -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        /*
+         * Index.cshtml — page-scoped styles (homepage only)
+         * These overrides exist here because they are unique to the homepage layout
+         * and cannot be expressed solely with Bootstrap utility classes.
+         * Do NOT copy these into site.css.
+         */
 
-<div class="text-center">
-    <h1 class="display-4">Welcome to ProRental</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+        /* Remove the layout's sticky-footer body margin — homepage has its own footer */
+        body { margin-bottom: 0; }
+
+        /* Hero banner — eco-green gradient */
+        .hero-banner {
+            background: linear-gradient(135deg, #0f2d1e 0%, #2d7a4f 60%, #1a5c3a 100%);
+            min-height: 420px;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Module card header accent colours */
+        .module-header-1 { background-color: #2d7a4f; }    /* Order Processing  — brand eco-green */
+        .module-header-2 { background-color: #0d6efd; }    /* Inventory Mgmt    — blue */
+        .module-header-3 { background-color: #0a9396; }    /* Carbon Footprint  — teal */
+
+        /* Module card feature-link colours */
+        .module-link-1 { color: #2d7a4f; text-decoration: none; }
+        .module-link-1:hover { color: #1e5435; text-decoration: underline; }
+        .module-link-2 { color: #0d6efd; text-decoration: none; }
+        .module-link-2:hover { color: #0b5ed7; text-decoration: underline; }
+        .module-link-3 { color: #0a9396; text-decoration: none; }
+        .module-link-3:hover { color: #088083; text-decoration: underline; }
+
+        /* Module "Go to Module" CTA buttons — component-scoped CSS variable overrides */
+        .btn-module-1 { --bs-btn-bg: #2d7a4f; --bs-btn-border-color: #2d7a4f; --bs-btn-hover-bg: #1e5435; --bs-btn-hover-border-color: #1e5435; --bs-btn-active-bg: #1e5435; color: #fff; }
+        .btn-module-2 { --bs-btn-bg: #0d6efd; --bs-btn-border-color: #0d6efd; --bs-btn-hover-bg: #0b5ed7; --bs-btn-hover-border-color: #0b5ed7; --bs-btn-active-bg: #0b5ed7; color: #fff; }
+        .btn-module-3 { --bs-btn-bg: #0a9396; --bs-btn-border-color: #0a9396; --bs-btn-hover-bg: #088083; --bs-btn-hover-border-color: #088083; --bs-btn-active-bg: #088083; color: #fff; }
+
+        /* Role card coloured top accent bar */
+        .role-accent { height: 4px; border-radius: calc(0.375rem - 1px) calc(0.375rem - 1px) 0 0; }
+
+        /* Staff portal strip */
+        .staff-banner { background-color: #1a252f; }
+    </style>
+</head>
+<body>
+
+    @* ================================================================
+       NAVBAR
+       Three module dropdowns + Login / Register on the right.
+       Add new <li class="nav-item"> entries inside the relevant
+       <ul class="dropdown-menu"> to extend a module's nav links.
+       ================================================================ *@
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
+        <div class="container">
+
+            @* Brand / Logo *@
+            <a class="navbar-brand fw-bold" href="#">
+                <i class="bi bi-box-seam-fill me-2" style="color: #2d7a4f;"></i>Pro Rentals
+            </a>
+
+            @* Mobile hamburger *@
+            <button class="navbar-toggler" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#mainNav"
+                    aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+                    @* Module 1 — Order Processing *@
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-cart3 me-1"></i>Order Processing
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><h6 class="dropdown-header text-uppercase" style="color: #2d7a4f; font-size: 0.7rem;">Module 1</h6></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-plus-circle me-2" style="color: #2d7a4f;"></i>Place Order</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-search me-2" style="color: #2d7a4f;"></i>Track Order</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-truck me-2" style="color: #2d7a4f;"></i>Manage Dispatch</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-arrow-return-left me-2" style="color: #2d7a4f;"></i>Handle Returns</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-cash-coin me-2" style="color: #2d7a4f;"></i>Deposit Refunds</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-bell me-2" style="color: #2d7a4f;"></i>Order Notifications</a></li>
+                        </ul>
+                    </li>
+
+                    @* Module 2 — Inventory Management *@
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-boxes me-1"></i>Inventory Management
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><h6 class="dropdown-header text-uppercase" style="color: #0d6efd; font-size: 0.7rem;">Module 2</h6></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-grid me-2" style="color: #0d6efd;"></i>Product Catalogue</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-box-seam me-2" style="color: #0d6efd;"></i>Stock Management</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-arrow-repeat me-2" style="color: #0d6efd;"></i>Return Processing Pipeline</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-building-check me-2" style="color: #0d6efd;"></i>Trusted Supplier Registry</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-bar-chart-line me-2" style="color: #0d6efd;"></i>Analytics &amp; Reports</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-tag me-2" style="color: #0d6efd;"></i>Product Clearance</a></li>
+                        </ul>
+                    </li>
+
+                    @* Module 3 — Carbon Footprint *@
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-leaf me-1"></i>Carbon Footprint
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><h6 class="dropdown-header text-uppercase" style="color: #0a9396; font-size: 0.7rem;">Module 3</h6></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-calculator me-2" style="color: #0a9396;"></i>Product Carbon Calculator</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-truck-flatbed me-2" style="color: #0a9396;"></i>Shipment Carbon Tracker</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-signpost-2 me-2" style="color: #0a9396;"></i>Route Distance Determination</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-building me-2" style="color: #0a9396;"></i>Warehouse Storage Emissions</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-recycle me-2" style="color: #0a9396;"></i>Return Process Carbon Lifecycle</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-collection me-2" style="color: #0a9396;"></i>Batch Delivery Consolidation</a></li>
+                        </ul>
+                    </li>
+
+                </ul>
+
+                @* Auth buttons *@
+                <div class="d-flex gap-2">
+                    <a href="#" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-box-arrow-in-right me-1"></i>Login
+                    </a>
+                    <a href="#" class="btn btn-primary btn-sm">
+                        <i class="bi bi-person-plus me-1"></i>Register
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+
+    @* ================================================================
+       HERO BANNER
+       Full-width eco-green gradient. Hardcoded placeholder text only.
+       ================================================================ *@
+    <section class="hero-banner">
+        <div class="container py-5">
+            <div class="row align-items-center gy-4">
+
+                <div class="col-lg-8 text-white">
+                    <span class="badge px-3 py-2 mb-3 d-inline-block"
+                          style="background-color: rgba(255,255,255,0.15);">
+                        <i class="bi bi-star-fill me-1 text-warning"></i>Unified Rental Management Platform
+                    </span>
+                    <h1 class="display-4 fw-bold lh-sm mb-3">
+                        Pro Rentals Order<br />Processing System
+                    </h1>
+                    <p class="lead mb-4" style="color: rgba(255,255,255,0.75);">
+                        A centralised platform connecting order processing, inventory management,
+                        and carbon footprint tracking — built for efficiency and sustainability.
+                    </p>
+                    <div class="d-flex flex-wrap gap-3">
+                        <a href="#" class="btn btn-light btn-lg fw-semibold px-4">
+                            <i class="bi bi-grid me-2"></i>Browse Equipment
+                        </a>
+                        <a href="#" class="btn btn-outline-light btn-lg px-4">
+                            <i class="bi bi-search me-2"></i>Track My Order
+                        </a>
+                    </div>
+                </div>
+
+                @* Decorative icon cluster — hidden on small screens *@
+                <div class="col-lg-4 d-none d-lg-flex justify-content-center align-items-center flex-column"
+                     style="color: rgba(255,255,255,0.25);">
+                    <i class="bi bi-cart-check mb-3" style="font-size: 6rem;"></i>
+                    <div class="d-flex gap-4">
+                        <i class="bi bi-boxes" style="font-size: 3.5rem;"></i>
+                        <i class="bi bi-tree-fill" style="font-size: 3.5rem;"></i>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+
+    @* ================================================================
+       MODULE HUB SECTION
+       Three equal Bootstrap cards, one per module.
+       Each card header uses the module's distinct accent colour.
+       ================================================================ *@
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">System Modules</h2>
+                <p class="text-muted">Navigate directly to any feature across all three modules</p>
+            </div>
+            <div class="row g-4">
+
+                @* MODULE 1 — Order Processing *@
+                <div class="col-lg-4">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-header module-header-1 text-white py-3 border-0">
+                            <div class="d-flex align-items-center mb-1">
+                                <i class="bi bi-cart-check-fill fs-4 me-2"></i>
+                                <h5 class="mb-0">Order Processing</h5>
+                            </div>
+                            <small class="opacity-75">Module 1 — Manage the full order lifecycle</small>
+                        </div>
+                        <div class="card-body py-3">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-3"><a href="#" class="module-link-1 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Place Order</a></li>
+                                <li class="mb-3"><a href="#" class="module-link-1 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Track Order</a></li>
+                                <li class="mb-3"><a href="#" class="module-link-1 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Manage Dispatch</a></li>
+                                <li class="mb-3"><a href="#" class="module-link-1 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Handle Returns</a></li>
+                                <li class="mb-3"><a href="#" class="module-link-1 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Deposit Refunds</a></li>
+                                <li class="mb-0"><a href="#" class="module-link-1 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Order Notifications</a></li>
+                            </ul>
+                        </div>
+                        <div class="card-footer bg-white border-0 pb-3 px-3">
+                            <a href="#" class="btn btn-module-1 w-100">
+                                Go to Module 1 <i class="bi bi-arrow-right ms-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                @* MODULE 2 — Inventory Management *@
+                <div class="col-lg-4">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-header module-header-2 text-white py-3 border-0">
+                            <div class="d-flex align-items-center mb-1">
+                                <i class="bi bi-boxes fs-4 me-2"></i>
+                                <h5 class="mb-0">Inventory Management</h5>
+                            </div>
+                            <small class="opacity-75">Module 2 — Stock, suppliers &amp; clearance</small>
+                        </div>
+                        <div class="card-body py-3">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-3"><a href="#" class="module-link-2 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Product Catalogue</a></li>
+                                <li class="mb-3"><a href="#" class="module-link-2 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Stock Management</a></li>
+                                <li class="mb-2"><a href="#" class="module-link-2 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Return Processing Pipeline</a></li>
+                                <li class="mb-3 ps-4">
+                                    <small class="text-muted" style="font-size: 0.72rem;">
+                                        Damage Inspection &rarr; Repair &rarr; Servicing &rarr; Cleaning &rarr; Back to Inventory
+                                    </small>
+                                </li>
+                                <li class="mb-3"><a href="#" class="module-link-2 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Trusted Supplier Registry</a></li>
+                                <li class="mb-3"><a href="#" class="module-link-2 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Analytics &amp; Reports</a></li>
+                                <li class="mb-0"><a href="#" class="module-link-2 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Product Clearance</a></li>
+                            </ul>
+                        </div>
+                        <div class="card-footer bg-white border-0 pb-3 px-3">
+                            <a href="#" class="btn btn-module-2 w-100">
+                                Go to Module 2 <i class="bi bi-arrow-right ms-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                @* MODULE 3 — Carbon Footprint *@
+                <div class="col-lg-4">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-header module-header-3 text-white py-3 border-0">
+                            <div class="d-flex align-items-center mb-1">
+                                <i class="bi bi-tree-fill fs-4 me-2"></i>
+                                <h5 class="mb-0">Carbon Footprint</h5>
+                            </div>
+                            <small class="opacity-75">Module 3 — Monitor &amp; reduce environmental impact</small>
+                        </div>
+                        <div class="card-body py-3">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-3"><a href="#" class="module-link-3 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Product Carbon Calculator</a></li>
+                                <li class="mb-3"><a href="#" class="module-link-3 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Shipment Carbon Tracker</a></li>
+                                <li class="mb-3"><a href="#" class="module-link-3 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Route Distance Determination</a></li>
+                                <li class="mb-3"><a href="#" class="module-link-3 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Warehouse Storage Emissions</a></li>
+                                <li class="mb-3"><a href="#" class="module-link-3 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Return Process Carbon Lifecycle</a></li>
+                                <li class="mb-0"><a href="#" class="module-link-3 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Batch Delivery Consolidation</a></li>
+                            </ul>
+                        </div>
+                        <div class="card-footer bg-white border-0 pb-3 px-3">
+                            <a href="#" class="btn btn-module-3 w-100">
+                                Go to Module 3 <i class="bi bi-arrow-right ms-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+
+    @* ================================================================
+       USER ROLE QUICK ACCESS
+       Three cards — Customer, Staff, Executive.
+       Coloured top accent bar differentiates roles from module colours.
+       Customer = eco-green | Staff = orange | Executive = dark charcoal
+       ================================================================ *@
+    <section class="py-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">Quick Access by Role</h2>
+                <p class="text-muted">Jump directly to your most-used features</p>
+            </div>
+            <div class="row g-4 justify-content-center">
+
+                @* Customer *@
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="role-accent" style="background-color: #2d7a4f;"></div>
+                        <div class="card-body p-4">
+                            <div class="text-center mb-4">
+                                <i class="bi bi-person-circle fs-1" style="color: #2d7a4f;"></i>
+                                <h5 class="fw-bold mt-2 mb-0">Customer</h5>
+                                <small class="text-muted">Self-service portal</small>
+                            </div>
+                            <div class="list-group list-group-flush">
+                                <a href="#" class="list-group-item list-group-item-action border-0 px-0 py-2">
+                                    <i class="bi bi-grid me-2" style="color: #2d7a4f;"></i>Browse Catalogue
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action border-0 px-0 py-2">
+                                    <i class="bi bi-cart-plus me-2" style="color: #2d7a4f;"></i>Place Order
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action border-0 px-0 py-2">
+                                    <i class="bi bi-truck me-2" style="color: #2d7a4f;"></i>Track Order
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action border-0 px-0 py-2">
+                                    <i class="bi bi-arrow-return-left me-2" style="color: #2d7a4f;"></i>My Returns
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action border-0 px-0 py-2">
+                                    <i class="bi bi-bell me-2" style="color: #2d7a4f;"></i>Notifications
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @* Staff *@
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="role-accent" style="background-color: #fd7e14;"></div>
+                        <div class="card-body p-4">
+                            <div class="text-center mb-4">
+                                <i class="bi bi-person-badge fs-1" style="color: #fd7e14;"></i>
+                                <h5 class="fw-bold mt-2 mb-0">Staff</h5>
+                                <small class="text-muted">Operations &amp; inventory</small>
+                            </div>
+                            <div class="list-group list-group-flush">
+                                <a href="#" class="list-group-item list-group-item-action border-0 px-0 py-2">
+                                    <i class="bi bi-person-check me-2" style="color: #fd7e14;"></i>Process Walk-in Order
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action border-0 px-0 py-2">
+                                    <i class="bi bi-boxes me-2" style="color: #fd7e14;"></i>Manage Inventory
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action border-0 px-0 py-2">
+                                    <i class="bi bi-arrow-repeat me-2" style="color: #fd7e14;"></i>Return Processing Pipeline
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action border-0 px-0 py-2">
+                                    <i class="bi bi-send me-2" style="color: #fd7e14;"></i>Dispatch Management
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action border-0 px-0 py-2">
+                                    <i class="bi bi-bar-chart me-2" style="color: #fd7e14;"></i>Carbon Dashboard
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @* Executive *@
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="role-accent" style="background-color: #343a40;"></div>
+                        <div class="card-body p-4">
+                            <div class="text-center mb-4">
+                                <i class="bi bi-briefcase fs-1" style="color: #343a40;"></i>
+                                <h5 class="fw-bold mt-2 mb-0">Executive</h5>
+                                <small class="text-muted">Reports &amp; analytics</small>
+                            </div>
+                            <div class="list-group list-group-flush">
+                                <a href="#" class="list-group-item list-group-item-action border-0 px-0 py-2">
+                                    <i class="bi bi-graph-up me-2" style="color: #343a40;"></i>Sales Reports
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action border-0 px-0 py-2">
+                                    <i class="bi bi-clipboard-data me-2" style="color: #343a40;"></i>Inventory Analytics
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action border-0 px-0 py-2">
+                                    <i class="bi bi-leaf me-2" style="color: #343a40;"></i>Carbon Footprint Summary
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action border-0 px-0 py-2">
+                                    <i class="bi bi-bar-chart-line me-2" style="color: #343a40;"></i>Market Trends
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+
+    @* ================================================================
+       STAFF PORTAL BANNER
+       Dark strip — clearly separated from customer-facing sections.
+       The warning colour and lock icon signal restricted access.
+       ================================================================ *@
+    <section class="staff-banner py-4">
+        <div class="container">
+            <div class="row align-items-center justify-content-between gy-3">
+                <div class="col-md-8">
+                    <div class="d-flex align-items-center flex-wrap gap-3">
+                        <i class="bi bi-shield-lock-fill fs-2 text-warning"></i>
+                        <div>
+                            <h5 class="mb-0 fw-bold text-white">Staff &amp; Admin Portal</h5>
+                            <small class="text-secondary">
+                                Restricted access — authorised personnel only. All sessions are logged and audited.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-auto">
+                    <a href="#" class="btn btn-warning btn-lg fw-semibold">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Staff Login
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    @* ================================================================
+       FOOTER
+       Three columns: Quick Links | Modules | Contact
+       ================================================================ *@
+    <footer class="bg-dark text-light pt-5 pb-3">
+        <div class="container">
+            <div class="row g-4">
+
+                @* Brand blurb + copyright *@
+                <div class="col-lg-3 col-md-6">
+                    <h5 class="fw-bold mb-3">
+                        <i class="bi bi-box-seam-fill me-2" style="color: #2d7a4f;"></i>Pro Rentals
+                    </h5>
+                    <p class="text-secondary small">
+                        A unified order processing and inventory management platform for modern rental
+                        operations — fast, efficient, and sustainable.
+                    </p>
+                    <p class="text-secondary small mb-0">
+                        &copy; @DateTime.Now.Year Pro Rentals. All rights reserved.
+                    </p>
+                </div>
+
+                @* Quick Links *@
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="text-uppercase text-secondary fw-semibold small mb-3" style="letter-spacing: 0.05em;">Quick Links</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-1"><a href="#" class="text-secondary text-decoration-none small">Home</a></li>
+                        <li class="mb-1"><a href="#" class="text-secondary text-decoration-none small">Browse Equipment</a></li>
+                        <li class="mb-1"><a href="#" class="text-secondary text-decoration-none small">Track My Order</a></li>
+                        <li class="mb-1"><a href="#" class="text-secondary text-decoration-none small">Contact Us</a></li>
+                        <li class="mb-1"><a href="#" class="text-secondary text-decoration-none small">Privacy Policy</a></li>
+                    </ul>
+                </div>
+
+                @* Modules *@
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="text-uppercase text-secondary fw-semibold small mb-3" style="letter-spacing: 0.05em;">Modules</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-1"><a href="#" class="text-secondary text-decoration-none small"><i class="bi bi-cart3 me-1"></i>Order Processing</a></li>
+                        <li class="mb-1"><a href="#" class="text-secondary text-decoration-none small"><i class="bi bi-boxes me-1"></i>Inventory Management</a></li>
+                        <li class="mb-1"><a href="#" class="text-secondary text-decoration-none small"><i class="bi bi-leaf me-1"></i>Carbon Footprint</a></li>
+                        <li class="mb-1"><a href="#" class="text-secondary text-decoration-none small"><i class="bi bi-bar-chart me-1"></i>Analytics &amp; Reports</a></li>
+                        <li class="mb-1"><a href="#" class="text-secondary text-decoration-none small"><i class="bi bi-shield-lock me-1"></i>Staff Portal</a></li>
+                    </ul>
+                </div>
+
+                @* Contact *@
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="text-uppercase text-secondary fw-semibold small mb-3" style="letter-spacing: 0.05em;">Contact</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2 text-secondary small">
+                            <i class="bi bi-geo-alt me-2"></i>123 Rental Avenue, Singapore 123456
+                        </li>
+                        <li class="mb-2 text-secondary small">
+                            <i class="bi bi-telephone me-2"></i>+65 6123 4567
+                        </li>
+                        <li class="mb-2 text-secondary small">
+                            <i class="bi bi-envelope me-2"></i>support@@prorentals.sg
+                        </li>
+                        <li class="mb-2 text-secondary small">
+                            <i class="bi bi-clock me-2"></i>Mon – Fri, 9 AM – 6 PM SGT
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <hr class="border-secondary mt-3 mb-3" />
+            <p class="text-center text-secondary small mb-0">
+                Built with Bootstrap 5.3.3 &middot; Pro Rentals Order Processing System v1.0 &middot; 2026
+            </p>
+        </div>
+    </footer>
+
+    <!-- Scripts: jQuery → Bootstrap JS (required for dropdowns & navbar collapse) -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

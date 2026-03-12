@@ -23,15 +23,7 @@ public partial class User
 
     public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 
-    public virtual ICollection<Reliabilityrating> Reliabilityratings { get; set; } = new List<Reliabilityrating>();
-
-    public virtual ICollection<Replenishmentrequest> ReplenishmentrequestCompletedbyNavigations { get; set; } = new List<Replenishmentrequest>();
-
-    public virtual ICollection<Replenishmentrequest> ReplenishmentrequestRequestedbyNavigations { get; set; } = new List<Replenishmentrequest>();
-
     public virtual ICollection<Session> Sessions { get; set; } = new List<Session>();
 
     public virtual ICollection<Staff> Staff { get; set; } = new List<Staff>();
-
-    public virtual ICollection<Vettingrecord> Vettingrecords { get; set; } = new List<Vettingrecord>();
 }

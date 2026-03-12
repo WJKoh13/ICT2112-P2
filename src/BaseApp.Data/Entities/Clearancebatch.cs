@@ -14,4 +14,6 @@ public partial class Clearancebatch
     public DateTime? Clearancedate { get; set; }
 
     public virtual ICollection<Clearanceitem> Clearanceitems { get; set; } = new List<Clearanceitem>();
+
+    public virtual ICollection<Clearancelog> Clearancelogs { get; set; } = new List<Clearancelog>();
 }

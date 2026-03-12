@@ -7,9 +7,6 @@ public partial class Transport
 {
     public int TransportId { get; set; }
 
-    /// <summary>Maps to the PostgreSQL <c>transport_mode</c> enum column. Values: TRUCK, SHIP, PLANE, TRAIN.</summary>
-    public string? TransportMode { get; set; }
-
     public double? MaxLoadKg { get; set; }
 
     public double? VehicleSizeM2 { get; set; }

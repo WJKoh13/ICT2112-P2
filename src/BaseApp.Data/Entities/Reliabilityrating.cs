@@ -17,8 +17,6 @@ public partial class Reliabilityrating
 
     public DateTime? Calculatedat { get; set; }
 
-    public virtual User? Calculatedbyuser { get; set; }
-
     public virtual Supplier? Supplier { get; set; }
 
     public virtual ICollection<Vettingrecord> Vettingrecords { get; set; } = new List<Vettingrecord>();

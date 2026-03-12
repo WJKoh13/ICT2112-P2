@@ -13,5 +13,5 @@ public partial class Stockitem
 
     public string? Uom { get; set; }
 
-    public virtual Product Product { get; set; } = null!;
+    public virtual ICollection<Polineitem> Polineitems { get; set; } = new List<Polineitem>();
 }

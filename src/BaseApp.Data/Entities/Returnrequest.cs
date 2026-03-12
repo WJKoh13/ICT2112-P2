@@ -20,4 +20,6 @@ public partial class Returnrequest
     public virtual Order Order { get; set; } = null!;
 
     public virtual ICollection<Returnitem> Returnitems { get; set; } = new List<Returnitem>();
+
+    public virtual ICollection<Returnlog> Returnlogs { get; set; } = new List<Returnlog>();
 }

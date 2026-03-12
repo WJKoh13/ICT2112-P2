@@ -23,5 +23,7 @@ public partial class Loanlist
 
     public virtual ICollection<Loanitem> Loanitems { get; set; } = new List<Loanitem>();
 
+    public virtual ICollection<Loanlog> Loanlogs { get; set; } = new List<Loanlog>();
+
     public virtual Order Order { get; set; } = null!;
 }

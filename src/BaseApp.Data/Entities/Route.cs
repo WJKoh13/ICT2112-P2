@@ -15,9 +15,6 @@ public partial class Route
 
     public bool? IsValid { get; set; }
 
-    /// <summary>Maps to the PostgreSQL <c>transport_mode_combination</c> enum column. Values: TRUCK_ONLY, SHIP_TRUCK, AIR_TRUCK, RAIL_TRUCK, MULTIMODAL.</summary>
-    public string? ModeCombination { get; set; }
-
     public int? OriginHubId { get; set; }
 
     public int? DestinationHubId { get; set; }

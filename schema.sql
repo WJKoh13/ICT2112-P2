@@ -38,34 +38,28 @@ CREATE TYPE hub_type AS ENUM (
 );
 
 -- TEAM 2
-CREATE TYPE po_status_enum AS ENUM (
-    'COMPLETED', 'CONFIRMED', 'SUBMITTED', 'APPROVED', 'REJECTED', 'CANCELLED'
-);
-
-CREATE TYPE supplier_category_enum AS ENUM ('A', 'B', 'C', 'D');
-
+-- Supplier & Vetting
+CREATE TYPE supplier_category_enum AS ENUM ('LONGCREDITPERIOD', 'QUICKTURNAROUNDTIME', 'NEWUNTESTED');
 CREATE TYPE vetting_result_enum AS ENUM ('APPROVED', 'REJECTED', 'PENDING');
-
-CREATE TYPE vetting_decision_enum AS ENUM ('APPROVED', 'REJECTED');
-
+CREATE TYPE vetting_decision_enum AS ENUM ('APPROVED', 'REJECTED', 'PENDING');
 CREATE TYPE rating_band_enum AS ENUM ('HIGH', 'MEDIUM', 'LOW', 'UNRATED');
 
+-- Purchase Replenisihment Request
+CREATE TYPE po_status_enum AS ENUM ('COMPLETED', 'CONFIRMED', 'SUBMITTED', 'APPROVED', 'REJECTED', 'CANCELLED');
 CREATE TYPE replenishment_status_enum AS ENUM ('DRAFT', 'SUBMITTED', 'CANCELLED', 'COMPLETED');
-
 CREATE TYPE reason_code_enum AS ENUM ('LOWSTOCK', 'DEMANDSPIKE', 'REPLACEMENT', 'NEWITEM', 'OTHERS');
 
-CREATE TYPE rental_order_status_enum AS ENUM ('PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED');
+-- Logging
+CREATE TYPE log_type_enum AS ENUM ('RENTAL_ORDER', 'LOAN', 'RETURN', 'PURCHASE_ORDER', 'CLEARANCE');
+CREATE TYPE delivery_type_enum AS ENUM ('STANDARD', 'EXPRESS', 'SELF_PICKUP');
+CREATE TYPE rental_status_enum AS ENUM ('PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED');
+CREATE TYPE loan_status_enum AS ENUM ('ONGOING', 'RETURNED', 'OVERDUE', 'CANCELLED');
+CREATE TYPE return_status_enum AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'COMPLETED');
+CREATE TYPE purchase_order_status_enum AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'DELIVERED', 'CANCELLED');
+CREATE TYPE clearance_status_enum AS ENUM ('ONGOING', 'COMPLETED', 'CANCELLED');
 
-CREATE TYPE loan_log_status_enum AS ENUM ('ONGOING', 'RETURNED', 'OVERDUE', 'CANCELLED');
-
-CREATE TYPE return_log_status_enum AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'COMPLETED');
-
-CREATE TYPE purchase_order_log_status_enum AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'DELIVERED', 'CANCELLED');
-
-CREATE TYPE clearance_log_status_enum AS ENUM ('ONGOING', 'COMPLETED', 'CANCELLED');
-
+-- Analytics
 CREATE TYPE visual_type_enum AS ENUM ('TABLE', 'BAR', 'COLUMN', 'LINE', 'PIE', 'AREA');
-
 CREATE TYPE file_format_enum AS ENUM ('CSV', 'XLSX', 'PDF', 'PNG');
 
 -- TEAM 4
@@ -360,6 +354,13 @@ CREATE TABLE IF NOT EXISTS PurchaseOrder (
     totalAmount          DECIMAL(10,2)
 );
 
+CREATE TABLE IF NOT EXISTS StockItem (
+    productID INT PRIMARY KEY,
+    sku       VARCHAR(100),
+    name      VARCHAR(255),
+    uom       VARCHAR(50)
+);
+
 CREATE TABLE IF NOT EXISTS POLineItem (
     poLineID  INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     poID      INT,
@@ -367,16 +368,8 @@ CREATE TABLE IF NOT EXISTS POLineItem (
     qty       INT,
     unitPrice DECIMAL(10,2),
     lineTotal DECIMAL(10,2),
-    CONSTRAINT fk_polineitem_po FOREIGN KEY (poID) REFERENCES PurchaseOrder(poID) ON DELETE CASCADE
-    -- fk_polineitem_product deferred to end of file (Product is Team 3)
-);
-
-CREATE TABLE IF NOT EXISTS StockItem (
-    productID INT PRIMARY KEY,
-    sku       VARCHAR(100),
-    name      VARCHAR(255),
-    uom       VARCHAR(50)
-    -- fk_stockitem_product deferred to end of file (Product is Team 3)
+    CONSTRAINT fk_polineitem_po FOREIGN KEY (poID) REFERENCES PurchaseOrder(poID) ON DELETE CASCADE,
+    CONSTRAINT fk_product_stock FOREIGN KEY (productID) REFERENCES StockItem(productID) ON DELETE CASCADE
 );
 
 -- SUPPLIER & VETTING --
@@ -391,6 +384,16 @@ CREATE TABLE IF NOT EXISTS Supplier (
     VettingResult     vetting_result_enum
 );
 
+CREATE TABLE IF NOT EXISTS SupplierCategoryChangeLog (
+    LogID            INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    SupplierID       INT,
+    PreviousCategory supplier_category_enum,
+    NewCategory      supplier_category_enum,
+    ChangeReason     VARCHAR(255),
+    ChangedAt        TIMESTAMP,
+    CONSTRAINT fk_suppliercatelog_supplier FOREIGN KEY (SupplierID) REFERENCES Supplier(SupplierID) ON DELETE CASCADE
+);
+
 -- ReliabilityRating must precede VettingRecord because VettingRecord.RatingID references it
 CREATE TABLE IF NOT EXISTS ReliabilityRating (
     RatingID           INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -401,7 +404,6 @@ CREATE TABLE IF NOT EXISTS ReliabilityRating (
     CalculatedByUserID INT,
     CalculatedAt       TIMESTAMP,
     CONSTRAINT fk_reliabilityrating_supplier FOREIGN KEY (SupplierID) REFERENCES Supplier(SupplierID) ON DELETE SET NULL
-    -- fk_reliabilityrating_user deferred to end of file ("User" is Team 4)
 );
 
 CREATE TABLE IF NOT EXISTS VettingRecord (
@@ -414,99 +416,40 @@ CREATE TABLE IF NOT EXISTS VettingRecord (
     Notes          TEXT,
     CONSTRAINT fk_vettingrecord_rating   FOREIGN KEY (RatingID)   REFERENCES ReliabilityRating(RatingID) ON DELETE SET NULL,
     CONSTRAINT fk_vettingrecord_supplier FOREIGN KEY (SupplierID) REFERENCES Supplier(SupplierID)        ON DELETE SET NULL
-    -- fk_vettingrecord_user deferred to end of file ("User" is Team 4)
-);
-
-CREATE TABLE IF NOT EXISTS SupplierCategoryChangeLog (
-    LogID            INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    SupplierID       INT,
-    PreviousCategory supplier_category_enum,
-    NewCategory      supplier_category_enum,
-    ChangeReason     VARCHAR(255),
-    ChangedAt        TIMESTAMP,
-    CONSTRAINT fk_suppliercatelog_supplier FOREIGN KEY (SupplierID) REFERENCES Supplier(SupplierID) ON DELETE CASCADE
 );
 
 -- REPLENISHMENT --
+-- NOTE: LineItem has been deferred to CROSS FK TABLE section
 CREATE TABLE IF NOT EXISTS ReplenishmentRequest (
     RequestId   INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    RequestedBy INT,                          -- FK to "User" (deferred)
+    RequestedBy VARCHAR(255),
     Status      replenishment_status_enum,
     CreatedAt   TIMESTAMP,
     Remarks     TEXT,
     CompletedAt TIMESTAMP,
-    CompletedBy INT                           -- FK to "User" (deferred)
-    -- fk_replenishment_requestedby and fk_replenishment_completedby deferred to end of file
+    CompletedBy VARCHAR(255)
 );
 
-CREATE TABLE IF NOT EXISTS LineItem (
-    LineItemId      INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    RequestId       INT,
-    ProductId       INT,
-    QuantityRequest INT,
-    ReasonCode      reason_code_enum,
-    Remarks         TEXT,
-    CONSTRAINT fk_lineitem_request FOREIGN KEY (RequestId) REFERENCES ReplenishmentRequest(RequestId) ON DELETE CASCADE
-    -- fk_lineitem_product deferred to end of file (Product is Team 3)
-);
-
--- ANALYTICS LOG TABLES (denormalised snapshots for reporting)
--- NOTE: These parallel the normalised Team 3/6 tables and are intentional audit logs.
-CREATE TABLE IF NOT EXISTS RentalOrderLog (
-    RentalOrderId INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    OrderId       INT,
-    CustomerId    INT,
-    OrderDate     TIMESTAMP,
-    TotalAmount   DECIMAL(10,2),
-    Status        rental_order_status_enum,
-    DetailsJSON   TEXT
-);
-
-CREATE TABLE IF NOT EXISTS LoanLog (
-    LoanLogId   INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    OrderId     INT,
-    Status      loan_log_status_enum,
-    LoanDate    TIMESTAMP,
-    ReturnDate  TIMESTAMP,
-    DueDate     TIMESTAMP,
-    DetailsJSON TEXT
-);
-
-CREATE TABLE IF NOT EXISTS ReturnLog (
-    ReturnLogId       INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    CustomerId        INT,
-    ReturnRequestId   INT,
-    ReturnItemId      INT,
-    RefundAmount      DECIMAL(10,2),
-    RequestDate       TIMESTAMP,
-    CompletionDate    TIMESTAMP,
-    Status            return_log_status_enum,
-    ImageURL          VARCHAR(500),
-    DetailsJSON       TEXT
+-- TRANSACTION LOG TABLES
+-- NOTE: All other log subtypes are deferred to CROSS FK TABLE section
+CREATE TABLE IF NOT EXISTS TransactionLog (
+    TransactionLogID INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    LogType log_type_enum NOT NULL,
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS PurchaseOrderLog (
-    PurchaseOrderLogId   INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    PurchaseOrderRef     INT,                              -- references PurchaseOrder.poID
-    SupplierId           INT,
-    Status               purchase_order_log_status_enum,
-    ExpectedDeliveryDate TIMESTAMP,
-    TotalAmount          DECIMAL(10,2),
-    DetailsJSON          TEXT,
-    CONSTRAINT fk_purchaseorderlog_po FOREIGN KEY (PurchaseOrderRef) REFERENCES PurchaseOrder(poID) ON DELETE SET NULL
-);
+    PurchaseOrderLogId      INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    PoID                    INT NOT NULL,
+    PoDate                  TIMESTAMP,
+    SupplierId              INT,
+    Status                  rental_status_enum,
+    ExpectedDeliveryDate    TIMESTAMP,
+    TotalAmount             DECIMAL(10,2),
+    DetailsJSON             TEXT,
 
--- Renamed from ClearenceLog (was misspelled)
-CREATE TABLE IF NOT EXISTS ClearanceLog (
-    ClearanceLogId   INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    BatchName        VARCHAR(255),
-    ClearanceItemId  INT,
-    ClearanceDate    TIMESTAMP,
-    FinalPrice       DECIMAL(10,2),
-    RecommendedPrice DECIMAL(10,2),
-    SaleDate         TIMESTAMP,
-    Status           clearance_log_status_enum,
-    DetailsJSON      TEXT
+    CONSTRAINT fk_po_transaction FOREIGN KEY (PurchaseOrderLogId) REFERENCES TransactionLog(TransactionLogID) ON DELETE CASCADE,
+    CONSTRAINT fk_po_log_po      FOREIGN KEY (PoID)               REFERENCES PurchaseOrder(poID)              ON DELETE CASCADE
 );
 
 -- ANALYTICS TABLES --
@@ -516,12 +459,10 @@ CREATE TABLE IF NOT EXISTS Analytics (
     EndDate             TIMESTAMP,
     LoanAmt             INT,
     ReturnAmt           INT,
-    PrimarySupplierID   INT,
-    PrimaryItemID       INT,
+    PrimarySupplier     VARCHAR(255),
+    PrimaryItem         VARCHAR(255),
     SupplierReliability DECIMAL(10,2),
-    TurnoverRate        DECIMAL(10,2),
-    CONSTRAINT fk_analytics_supplier FOREIGN KEY (PrimarySupplierID) REFERENCES Supplier(SupplierID) ON DELETE SET NULL
-    -- fk_analytics_product deferred to end of file (Product is Team 3)
+    TurnoverRate        DECIMAL(10,2)
 );
 
 CREATE TABLE IF NOT EXISTS ReportExport (
@@ -534,14 +475,14 @@ CREATE TABLE IF NOT EXISTS ReportExport (
     CONSTRAINT fk_reportexport_analytics FOREIGN KEY (RefAnalyticsID) REFERENCES Analytics(AnalyticsID) ON DELETE SET NULL
 );
 
--- AnalysisList links an analytics snapshot to a transaction log entry.
--- RentalOrderLog is the transaction source for analytics. 
-CREATE TABLE IF NOT EXISTS AnalysisList (
+-- AnalyticsList links an analytics snapshot to a transaction log entry.
+-- TransactionLog is the transaction source for analytics. 
+CREATE TABLE IF NOT EXISTS AnalyticsList (
     AnalyticsID      INT NOT NULL,
     TransactionLogID INT NOT NULL,
     PRIMARY KEY (AnalyticsID, TransactionLogID),
-    CONSTRAINT fk_analysislist_analytics FOREIGN KEY (AnalyticsID)      REFERENCES Analytics(AnalyticsID)         ON DELETE CASCADE,
-    CONSTRAINT fk_analysislist_log       FOREIGN KEY (TransactionLogID) REFERENCES RentalOrderLog(RentalOrderId)  ON DELETE CASCADE
+    CONSTRAINT fk_AnalyticsList_analytics FOREIGN KEY (AnalyticsID)      REFERENCES Analytics(AnalyticsID)            ON DELETE CASCADE,
+    CONSTRAINT fk_AnalyticsList_log       FOREIGN KEY (TransactionLogID) REFERENCES TransactionLog(TransactionLogID)  ON DELETE CASCADE
 );
 
 
@@ -758,7 +699,7 @@ CREATE TYPE order_status_enum AS ENUM (
     'CANCELLED'
 );
 
-CREATE TYPE delivery_type_enum AS ENUM ('NextDay','ThreeDays','OneWeek');
+CREATE TYPE delivery_duration_enum AS ENUM ('NextDay','ThreeDays','OneWeek');
 
 CREATE TYPE transaction_type_enum AS ENUM ('PAYMENT','REFUND');
 
@@ -948,6 +889,66 @@ CREATE TABLE IF NOT EXISTS Deposit (
 --TEAM 1 CROSS TEAM FK TABLES
 
 --TEAM 2 CROSS TEAM FK TABLES
+CREATE TABLE IF NOT EXISTS LineItem (
+    LineItemId      INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    RequestId       INT,
+    ProductId       INT,
+    QuantityRequest INT,
+    ReasonCode      reason_code_enum,
+    Remarks         TEXT,
+    CONSTRAINT fk_lineitem_request FOREIGN KEY (RequestId) REFERENCES ReplenishmentRequest(RequestId) ON DELETE CASCADE,
+    CONSTRAINT fk_lineitem_product FOREIGN KEY (ProductId) REFERENCES Product(ProductID) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS RentalOrderLog (
+    RentalOrderLogId INT PRIMARY KEY,
+    OrderId       INT,
+    CustomerId    INT,
+    OrderDate     TIMESTAMP,
+    TotalAmount   DECIMAL(10,2),
+    DeliveryType  delivery_type_enum,
+    Status        rental_status_enum,
+    DetailsJSON   TEXT,
+    CONSTRAINT fk_rental_transaction FOREIGN KEY (RentalOrderLogId) REFERENCES TransactionLog(TransactionLogID) ON DELETE CASCADE,
+    CONSTRAINT fk_rental_order       FOREIGN KEY (OrderId)          REFERENCES "Order"(OrderId)                   ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS LoanLog (
+    LoanLogId           INT PRIMARY KEY,
+    LoanListId          INT NOT NULL,
+    RentalOrderLogId    INT NOT NULL,
+    Status              loan_status_enum,
+    LoanDate            TIMESTAMP,
+    ReturnDate          TIMESTAMP,
+    DueDate             TIMESTAMP,
+    DetailsJSON         TEXT,
+    CONSTRAINT fk_loan_transaction FOREIGN KEY (LoanLogId)        REFERENCES TransactionLog(TransactionLogID) ON DELETE CASCADE,
+    CONSTRAINT fk_loan_rental      FOREIGN KEY (RentalOrderLogId) REFERENCES RentalOrderLog(RentalOrderLogId) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS ReturnLog (
+    ReturnLogId         INT PRIMARY KEY,
+    ReturnRequestId     INT NOT NULL,
+    RentalOrderLogId    INT NOT NULL,
+    CustomerId          VARCHAR(50),
+    Status              return_status_enum,
+    RequestDate         TIMESTAMP,
+    CompletionDate      TIMESTAMP,
+    ImageURL            VARCHAR(500),
+    DetailsJSON         TEXT,
+    CONSTRAINT fk_return_transaction FOREIGN KEY (ReturnLogId)      REFERENCES TransactionLog(TransactionLogID) ON DELETE CASCADE,
+    CONSTRAINT fk_return_rental      FOREIGN KEY (RentalOrderLogId) REFERENCES RentalOrderLog(RentalOrderLogId) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS ClearanceLog (
+    ClearanceLogId INT PRIMARY KEY,
+    ClearanceBatchId INT NOT NULL,
+    BatchName VARCHAR(255),
+    ClearanceDate TIMESTAMP,
+    Status clearance_status_enum,
+    DetailsJSON TEXT,
+    CONSTRAINT fk_clearance_transaction FOREIGN KEY (ClearanceLogId)   REFERENCES TransactionLog(TransactionLogID) ON DELETE CASCADE
+);
 
 --TEAM 3 CROSS TEAM FK TABLES
 CREATE TYPE loan_status AS ENUM ('OPEN', 'ON_LOAN', 'RETURNED');
@@ -1208,39 +1209,16 @@ ALTER TABLE PackagingConfiguration
 -- Applied after all tables across all teams are defined.
 -- ============================================================
 
--- Team 2 → Team 3: Product references
-ALTER TABLE POLineItem
-    ADD CONSTRAINT fk_polineitem_product
-        FOREIGN KEY (productID) REFERENCES Product(ProductId) ON DELETE RESTRICT;
-
-ALTER TABLE StockItem
-    ADD CONSTRAINT fk_stockitem_product
-        FOREIGN KEY (productID) REFERENCES Product(ProductId) ON DELETE RESTRICT;
-
-ALTER TABLE LineItem
-    ADD CONSTRAINT fk_lineitem_product
-        FOREIGN KEY (ProductId) REFERENCES Product(ProductId) ON DELETE RESTRICT;
-
-ALTER TABLE Analytics
-    ADD CONSTRAINT fk_analytics_product
-        FOREIGN KEY (PrimaryItemID) REFERENCES Product(ProductId) ON DELETE SET NULL;
-
--- Team 2 → Team 4: "User" references
-ALTER TABLE ReliabilityRating
-    ADD CONSTRAINT fk_reliabilityrating_user
-        FOREIGN KEY (CalculatedByUserID) REFERENCES "User"(userId) ON DELETE SET NULL;
-
-ALTER TABLE VettingRecord
-    ADD CONSTRAINT fk_vettingrecord_user
-        FOREIGN KEY (VettedByUserID) REFERENCES "User"(userId) ON DELETE SET NULL;
-
-ALTER TABLE ReplenishmentRequest
-    ADD CONSTRAINT fk_replenishment_requestedby
-        FOREIGN KEY (RequestedBy) REFERENCES "User"(userId) ON DELETE SET NULL;
-
-ALTER TABLE ReplenishmentRequest
-    ADD CONSTRAINT fk_replenishment_completedby
-        FOREIGN KEY (CompletedBy) REFERENCES "User"(userId) ON DELETE SET NULL;
+-- Team 2 → Team 3: LoanList references
+ALTER TABLE LoanLog
+    ADD CONSTRAINT fk_loan_list
+		FOREIGN KEY (LoanListId) REFERENCES LoanList(LoanListId) ON DELETE CASCADE;
+ALTER TABLE ReturnLog
+	ADD CONSTRAINT fk_return_request
+		FOREIGN KEY (ReturnRequestId) REFERENCES ReturnRequest(ReturnRequestId) ON DELETE CASCADE;
+ALTER TABLE ClearanceLog
+	ADD CONSTRAINT fk_clearance_batch
+		FOREIGN KEY (ClearanceBatchId) REFERENCES ClearanceBatch(ClearanceBatchId) ON DELETE CASCADE;
 
 -- Team 1 → Team 4/6: Customer and "Order" references
 ALTER TABLE customer_choice

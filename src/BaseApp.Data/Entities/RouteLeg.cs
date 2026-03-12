@@ -23,9 +23,6 @@ public partial class RouteLeg
 
     public int? TransportId { get; set; }
 
-    /// <summary>Maps to the PostgreSQL <c>transport_mode</c> enum column. Values: TRUCK, SHIP, PLANE, TRAIN.</summary>
-    public string? TransportMode { get; set; }
-
     public virtual ICollection<LegCarbon> LegCarbons { get; set; } = new List<LegCarbon>();
 
     public virtual Route Route { get; set; } = null!;

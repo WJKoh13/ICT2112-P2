@@ -5,7 +5,7 @@ namespace BaseApp.Data.Entities;
 
 public partial class Rentalorderlog
 {
-    public int Rentalorderid { get; set; }
+    public int Rentalorderlogid { get; set; }
 
     public int? Orderid { get; set; }
 
@@ -17,5 +17,11 @@ public partial class Rentalorderlog
 
     public string? Detailsjson { get; set; }
 
-    public virtual ICollection<Analytic> Analytics { get; set; } = new List<Analytic>();
+    public virtual ICollection<Loanlog> Loanlogs { get; set; } = new List<Loanlog>();
+
+    public virtual Order? Order { get; set; }
+
+    public virtual Transactionlog RentalorderlogNavigation { get; set; } = null!;
+
+    public virtual ICollection<Returnlog> Returnlogs { get; set; } = new List<Returnlog>();
 }

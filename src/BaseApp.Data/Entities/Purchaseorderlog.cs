@@ -7,7 +7,9 @@ public partial class Purchaseorderlog
 {
     public int Purchaseorderlogid { get; set; }
 
-    public int? Purchaseorderref { get; set; }
+    public int Poid { get; set; }
+
+    public DateTime? Podate { get; set; }
 
     public int? Supplierid { get; set; }
 
@@ -17,5 +19,7 @@ public partial class Purchaseorderlog
 
     public string? Detailsjson { get; set; }
 
-    public virtual Purchaseorder? PurchaseorderrefNavigation { get; set; }
+    public virtual Purchaseorder Po { get; set; } = null!;
+
+    public virtual Transactionlog PurchaseorderlogNavigation { get; set; } = null!;
 }

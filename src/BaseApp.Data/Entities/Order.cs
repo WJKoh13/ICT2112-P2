@@ -39,6 +39,8 @@ public partial class Order
 
     public virtual ICollection<Refund> Refunds { get; set; } = new List<Refund>();
 
+    public virtual ICollection<Rentalorderlog> Rentalorderlogs { get; set; } = new List<Rentalorderlog>();
+
     public virtual ICollection<Returnrequest> Returnrequests { get; set; } = new List<Returnrequest>();
 
     public virtual ICollection<Shipment> Shipments { get; set; } = new List<Shipment>();

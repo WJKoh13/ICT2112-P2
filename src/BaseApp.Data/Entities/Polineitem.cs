@@ -19,5 +19,5 @@ public partial class Polineitem
 
     public virtual Purchaseorder? Po { get; set; }
 
-    public virtual Product? Product { get; set; }
+    public virtual Stockitem? Product { get; set; }
 }

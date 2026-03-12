@@ -15,8 +15,6 @@ public partial class Product
 
     public DateTime Updatedat { get; set; }
 
-    public virtual ICollection<Analytic> Analytics { get; set; } = new List<Analytic>();
-
     public virtual ICollection<Cartitem> Cartitems { get; set; } = new List<Cartitem>();
 
     public virtual Category Category { get; set; } = null!;
@@ -27,11 +25,7 @@ public partial class Product
 
     public virtual ICollection<Orderitem> Orderitems { get; set; } = new List<Orderitem>();
 
-    public virtual ICollection<Polineitem> Polineitems { get; set; } = new List<Polineitem>();
-
     public virtual Productdetail? Productdetail { get; set; }
 
     public virtual ICollection<Productfootprint> Productfootprints { get; set; } = new List<Productfootprint>();
-
-    public virtual Stockitem? Stockitem { get; set; }
 }

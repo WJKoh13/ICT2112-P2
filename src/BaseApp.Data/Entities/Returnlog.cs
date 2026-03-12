@@ -7,13 +7,11 @@ public partial class Returnlog
 {
     public int Returnlogid { get; set; }
 
-    public int? Customerid { get; set; }
+    public int Returnrequestid { get; set; }
 
-    public int? Returnrequestid { get; set; }
+    public int Rentalorderlogid { get; set; }
 
-    public int? Returnitemid { get; set; }
-
-    public decimal? Refundamount { get; set; }
+    public string? Customerid { get; set; }
 
     public DateTime? Requestdate { get; set; }
 
@@ -22,4 +20,10 @@ public partial class Returnlog
     public string? Imageurl { get; set; }
 
     public string? Detailsjson { get; set; }
+
+    public virtual Rentalorderlog Rentalorderlog { get; set; } = null!;
+
+    public virtual Transactionlog ReturnlogNavigation { get; set; } = null!;
+
+    public virtual Returnrequest Returnrequest { get; set; } = null!;
 }

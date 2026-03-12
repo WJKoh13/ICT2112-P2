@@ -17,8 +17,6 @@ public partial class Supplier
 
     public bool? Isverified { get; set; }
 
-    public virtual ICollection<Analytic> Analytics { get; set; } = new List<Analytic>();
-
     public virtual ICollection<Reliabilityrating> Reliabilityratings { get; set; } = new List<Reliabilityrating>();
 
     public virtual ICollection<Suppliercategorychangelog> Suppliercategorychangelogs { get; set; } = new List<Suppliercategorychangelog>();

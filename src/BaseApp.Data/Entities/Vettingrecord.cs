@@ -20,6 +20,4 @@ public partial class Vettingrecord
     public virtual Reliabilityrating? Rating { get; set; }
 
     public virtual Supplier? Supplier { get; set; }
-
-    public virtual User? Vettedbyuser { get; set; }
 }

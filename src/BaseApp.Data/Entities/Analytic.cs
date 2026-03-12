@@ -15,19 +15,15 @@ public partial class Analytic
 
     public int? Returnamt { get; set; }
 
-    public int? Primarysupplierid { get; set; }
+    public string? Primarysupplier { get; set; }
 
-    public int? Primaryitemid { get; set; }
+    public string? Primaryitem { get; set; }
 
     public decimal? Supplierreliability { get; set; }
 
     public decimal? Turnoverrate { get; set; }
 
-    public virtual Product? Primaryitem { get; set; }
-
-    public virtual Supplier? Primarysupplier { get; set; }
-
     public virtual ICollection<Reportexport> Reportexports { get; set; } = new List<Reportexport>();
 
-    public virtual ICollection<Rentalorderlog> Transactionlogs { get; set; } = new List<Rentalorderlog>();
+    public virtual ICollection<Transactionlog> Transactionlogs { get; set; } = new List<Transactionlog>();
 }

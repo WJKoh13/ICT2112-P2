@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
-using BaseApp.Data.Entities;
 
-namespace BaseApp.Data;
+namespace BaseApp.Data.Entities;
 
 public partial class AppDbContext : DbContext
 {
+    public AppDbContext()
+    {
+    }
+
     public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options)
     {
@@ -152,6 +155,8 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Transaction> Transactions { get; set; }
 
+    public virtual DbSet<Transactionlog> Transactionlogs { get; set; }
+
     public virtual DbSet<Transport> Transports { get; set; }
 
     public virtual DbSet<TransportationHub> TransportationHubs { get; set; }
@@ -164,6 +169,10 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Warehouse> Warehouses { get; set; }
 
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=pro_rental;Username=postgres;Password=132135");
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder
@@ -173,14 +182,16 @@ public partial class AppDbContext : DbContext
             .HasPostgresEnum("cart_status_enum", new[] { "ACTIVE", "CHECKED_OUT", "EXPIRED" })
             .HasPostgresEnum("checkout_status_enum", new[] { "IN_PROGRESS", "CONFIRMED", "CANCELLED" })
             .HasPostgresEnum("clearance_batch_status", new[] { "SCHEDULED", "ACTIVE", "CLOSED" })
-            .HasPostgresEnum("clearance_log_status_enum", new[] { "ONGOING", "COMPLETED", "CANCELLED" })
             .HasPostgresEnum("clearance_status", new[] { "CLEARANCE", "SOLD" })
-            .HasPostgresEnum("delivery_type_enum", new[] { "NextDay", "ThreeDays", "OneWeek" })
+            .HasPostgresEnum("clearance_status_enum", new[] { "ONGOING", "COMPLETED", "CANCELLED" })
+            .HasPostgresEnum("delivery_duration_enum", new[] { "NextDay", "ThreeDays", "OneWeek" })
+            .HasPostgresEnum("delivery_type_enum", new[] { "STANDARD", "EXPRESS", "SELF_PICKUP" })
             .HasPostgresEnum("file_format_enum", new[] { "CSV", "XLSX", "PDF", "PNG" })
             .HasPostgresEnum("hub_type", new[] { "WAREHOUSE", "SHIPPING_PORT", "AIRPORT" })
             .HasPostgresEnum("inventory_status", new[] { "AVAILABLE", "RETIRED", "CLEARANCE", "SOLD", "MAINTENANCE", "RESERVED", "ON_LOAN", "BROKEN" })
-            .HasPostgresEnum("loan_log_status_enum", new[] { "ONGOING", "RETURNED", "OVERDUE", "CANCELLED" })
             .HasPostgresEnum("loan_status", new[] { "OPEN", "ON_LOAN", "RETURNED" })
+            .HasPostgresEnum("loan_status_enum", new[] { "ONGOING", "RETURNED", "OVERDUE", "CANCELLED" })
+            .HasPostgresEnum("log_type_enum", new[] { "RENTAL_ORDER", "LOAN", "RETURN", "PURCHASE_ORDER", "CLEARANCE" })
             .HasPostgresEnum("notification_frequency_enum", new[] { "INSTANT", "DAILY", "WEEKLY" })
             .HasPostgresEnum("notification_granularity_enum", new[] { "ALL", "IMPORTANT_ONLY", "NONE" })
             .HasPostgresEnum("notification_type_enum", new[] { "ORDER_UPDATE", "PROMOTION", "SYSTEM", "PRODUCT" })
@@ -191,22 +202,22 @@ public partial class AppDbContext : DbContext
             .HasPostgresEnum("po_status_enum", new[] { "COMPLETED", "CONFIRMED", "SUBMITTED", "APPROVED", "REJECTED", "CANCELLED" })
             .HasPostgresEnum("preference_type", new[] { "SPEED", "COST", "GREEN" })
             .HasPostgresEnum("product_status", new[] { "AVAILABLE", "UNAVAILABLE", "RETIRED" })
-            .HasPostgresEnum("purchase_order_log_status_enum", new[] { "PENDING", "APPROVED", "REJECTED", "DELIVERED", "CANCELLED" })
+            .HasPostgresEnum("purchase_order_status_enum", new[] { "PENDING", "APPROVED", "REJECTED", "DELIVERED", "CANCELLED" })
             .HasPostgresEnum("rating_band_enum", new[] { "HIGH", "MEDIUM", "LOW", "UNRATED" })
             .HasPostgresEnum("reason_code_enum", new[] { "LOWSTOCK", "DEMANDSPIKE", "REPLACEMENT", "NEWITEM", "OTHERS" })
-            .HasPostgresEnum("rental_order_status_enum", new[] { "PENDING", "CONFIRMED", "CANCELLED", "COMPLETED" })
+            .HasPostgresEnum("rental_status_enum", new[] { "PENDING", "CONFIRMED", "CANCELLED", "COMPLETED" })
             .HasPostgresEnum("replenishment_status_enum", new[] { "DRAFT", "SUBMITTED", "CANCELLED", "COMPLETED" })
             .HasPostgresEnum("return_item_status", new[] { "DAMAGE_INSPECTION", "REPAIRING", "SERVICING", "CLEANING", "RETURN_TO_INVENTORY" })
-            .HasPostgresEnum("return_log_status_enum", new[] { "PENDING", "APPROVED", "REJECTED", "COMPLETED" })
             .HasPostgresEnum("return_request_status", new[] { "PROCESSING", "COMPLETED" })
+            .HasPostgresEnum("return_status_enum", new[] { "PENDING", "APPROVED", "REJECTED", "COMPLETED" })
             .HasPostgresEnum("shipment_status_enum", new[] { "PENDING", "IN_TRANSIT", "DELIVERED", "CANCELLED" })
-            .HasPostgresEnum("supplier_category_enum", new[] { "A", "B", "C", "D" })
+            .HasPostgresEnum("supplier_category_enum", new[] { "LONGCREDITPERIOD", "QUICKTURNAROUNDTIME", "NEWUNTESTED" })
             .HasPostgresEnum("transaction_purpose_enum", new[] { "ORDER", "PENALTY", "REFUND_DEPOSIT" })
             .HasPostgresEnum("transaction_status_enum", new[] { "PENDING", "COMPLETED", "FAILED", "CANCELLED" })
             .HasPostgresEnum("transaction_type_enum", new[] { "PAYMENT", "REFUND" })
             .HasPostgresEnum("transport_mode", new[] { "TRUCK", "SHIP", "PLANE", "TRAIN" })
             .HasPostgresEnum("transport_mode_combination", new[] { "TRUCK_ONLY", "SHIP_TRUCK", "AIR_TRUCK", "RAIL_TRUCK", "MULTIMODAL" })
-            .HasPostgresEnum("vetting_decision_enum", new[] { "APPROVED", "REJECTED" })
+            .HasPostgresEnum("vetting_decision_enum", new[] { "APPROVED", "REJECTED", "PENDING" })
             .HasPostgresEnum("vetting_result_enum", new[] { "APPROVED", "REJECTED", "PENDING" })
             .HasPostgresEnum("visual_type_enum", new[] { "TABLE", "BAR", "COLUMN", "LINE", "PIE", "AREA" });
 
@@ -245,8 +256,12 @@ public partial class AppDbContext : DbContext
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("enddate");
             entity.Property(e => e.Loanamt).HasColumnName("loanamt");
-            entity.Property(e => e.Primaryitemid).HasColumnName("primaryitemid");
-            entity.Property(e => e.Primarysupplierid).HasColumnName("primarysupplierid");
+            entity.Property(e => e.Primaryitem)
+                .HasMaxLength(255)
+                .HasColumnName("primaryitem");
+            entity.Property(e => e.Primarysupplier)
+                .HasMaxLength(255)
+                .HasColumnName("primarysupplier");
             entity.Property(e => e.Returnamt).HasColumnName("returnamt");
             entity.Property(e => e.Startdate)
                 .HasColumnType("timestamp without time zone")
@@ -258,29 +273,19 @@ public partial class AppDbContext : DbContext
                 .HasPrecision(10, 2)
                 .HasColumnName("turnoverrate");
 
-            entity.HasOne(d => d.Primaryitem).WithMany(p => p.Analytics)
-                .HasForeignKey(d => d.Primaryitemid)
-                .OnDelete(DeleteBehavior.SetNull)
-                .HasConstraintName("fk_analytics_product");
-
-            entity.HasOne(d => d.Primarysupplier).WithMany(p => p.Analytics)
-                .HasForeignKey(d => d.Primarysupplierid)
-                .OnDelete(DeleteBehavior.SetNull)
-                .HasConstraintName("fk_analytics_supplier");
-
             entity.HasMany(d => d.Transactionlogs).WithMany(p => p.Analytics)
                 .UsingEntity<Dictionary<string, object>>(
-                    "Analysislist",
-                    r => r.HasOne<Rentalorderlog>().WithMany()
+                    "Analyticslist",
+                    r => r.HasOne<Transactionlog>().WithMany()
                         .HasForeignKey("Transactionlogid")
-                        .HasConstraintName("fk_analysislist_log"),
+                        .HasConstraintName("fk_analyticslist_log"),
                     l => l.HasOne<Analytic>().WithMany()
                         .HasForeignKey("Analyticsid")
-                        .HasConstraintName("fk_analysislist_analytics"),
+                        .HasConstraintName("fk_analyticslist_analytics"),
                     j =>
                     {
-                        j.HasKey("Analyticsid", "Transactionlogid").HasName("analysislist_pkey");
-                        j.ToTable("analysislist");
+                        j.HasKey("Analyticsid", "Transactionlogid").HasName("analyticslist_pkey");
+                        j.ToTable("analyticslist");
                         j.IndexerProperty<int>("Analyticsid").HasColumnName("analyticsid");
                         j.IndexerProperty<int>("Transactionlogid").HasColumnName("transactionlogid");
                     });
@@ -542,25 +547,24 @@ public partial class AppDbContext : DbContext
             entity.ToTable("clearancelog");
 
             entity.Property(e => e.Clearancelogid)
-                .UseIdentityAlwaysColumn()
+                .ValueGeneratedNever()
                 .HasColumnName("clearancelogid");
             entity.Property(e => e.Batchname)
                 .HasMaxLength(255)
                 .HasColumnName("batchname");
+            entity.Property(e => e.Clearancebatchid).HasColumnName("clearancebatchid");
             entity.Property(e => e.Clearancedate)
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("clearancedate");
-            entity.Property(e => e.Clearanceitemid).HasColumnName("clearanceitemid");
             entity.Property(e => e.Detailsjson).HasColumnName("detailsjson");
-            entity.Property(e => e.Finalprice)
-                .HasPrecision(10, 2)
-                .HasColumnName("finalprice");
-            entity.Property(e => e.Recommendedprice)
-                .HasPrecision(10, 2)
-                .HasColumnName("recommendedprice");
-            entity.Property(e => e.Saledate)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("saledate");
+
+            entity.HasOne(d => d.Clearancebatch).WithMany(p => p.Clearancelogs)
+                .HasForeignKey(d => d.Clearancebatchid)
+                .HasConstraintName("fk_clearance_batch");
+
+            entity.HasOne(d => d.ClearancelogNavigation).WithOne(p => p.Clearancelog)
+                .HasForeignKey<Clearancelog>(d => d.Clearancelogid)
+                .HasConstraintName("fk_clearance_transaction");
         });
 
         modelBuilder.Entity<Customer>(entity =>
@@ -829,7 +833,7 @@ public partial class AppDbContext : DbContext
 
             entity.HasOne(d => d.Product).WithMany(p => p.Lineitems)
                 .HasForeignKey(d => d.Productid)
-                .OnDelete(DeleteBehavior.Restrict)
+                .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("fk_lineitem_product");
 
             entity.HasOne(d => d.Request).WithMany(p => p.Lineitems)
@@ -902,7 +906,7 @@ public partial class AppDbContext : DbContext
             entity.ToTable("loanlog");
 
             entity.Property(e => e.Loanlogid)
-                .UseIdentityAlwaysColumn()
+                .ValueGeneratedNever()
                 .HasColumnName("loanlogid");
             entity.Property(e => e.Detailsjson).HasColumnName("detailsjson");
             entity.Property(e => e.Duedate)
@@ -911,10 +915,23 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.Loandate)
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("loandate");
-            entity.Property(e => e.Orderid).HasColumnName("orderid");
+            entity.Property(e => e.Loanlistid).HasColumnName("loanlistid");
+            entity.Property(e => e.Rentalorderlogid).HasColumnName("rentalorderlogid");
             entity.Property(e => e.Returndate)
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("returndate");
+
+            entity.HasOne(d => d.Loanlist).WithMany(p => p.Loanlogs)
+                .HasForeignKey(d => d.Loanlistid)
+                .HasConstraintName("fk_loan_list");
+
+            entity.HasOne(d => d.LoanlogNavigation).WithOne(p => p.Loanlog)
+                .HasForeignKey<Loanlog>(d => d.Loanlogid)
+                .HasConstraintName("fk_loan_transaction");
+
+            entity.HasOne(d => d.Rentalorderlog).WithMany(p => p.Loanlogs)
+                .HasForeignKey(d => d.Rentalorderlogid)
+                .HasConstraintName("fk_loan_rental");
         });
 
         modelBuilder.Entity<Notification>(entity =>
@@ -1199,8 +1216,8 @@ public partial class AppDbContext : DbContext
 
             entity.HasOne(d => d.Product).WithMany(p => p.Polineitems)
                 .HasForeignKey(d => d.Productid)
-                .OnDelete(DeleteBehavior.Restrict)
-                .HasConstraintName("fk_polineitem_product");
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_product_stock");
         });
 
         modelBuilder.Entity<PricingRule>(entity =>
@@ -1354,22 +1371,29 @@ public partial class AppDbContext : DbContext
             entity.ToTable("purchaseorderlog");
 
             entity.Property(e => e.Purchaseorderlogid)
+                .ValueGeneratedOnAdd()
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("purchaseorderlogid");
             entity.Property(e => e.Detailsjson).HasColumnName("detailsjson");
             entity.Property(e => e.Expecteddeliverydate)
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("expecteddeliverydate");
-            entity.Property(e => e.Purchaseorderref).HasColumnName("purchaseorderref");
+            entity.Property(e => e.Podate)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("podate");
+            entity.Property(e => e.Poid).HasColumnName("poid");
             entity.Property(e => e.Supplierid).HasColumnName("supplierid");
             entity.Property(e => e.Totalamount)
                 .HasPrecision(10, 2)
                 .HasColumnName("totalamount");
 
-            entity.HasOne(d => d.PurchaseorderrefNavigation).WithMany(p => p.Purchaseorderlogs)
-                .HasForeignKey(d => d.Purchaseorderref)
-                .OnDelete(DeleteBehavior.SetNull)
-                .HasConstraintName("fk_purchaseorderlog_po");
+            entity.HasOne(d => d.Po).WithMany(p => p.Purchaseorderlogs)
+                .HasForeignKey(d => d.Poid)
+                .HasConstraintName("fk_po_log_po");
+
+            entity.HasOne(d => d.PurchaseorderlogNavigation).WithOne(p => p.Purchaseorderlog)
+                .HasForeignKey<Purchaseorderlog>(d => d.Purchaseorderlogid)
+                .HasConstraintName("fk_po_transaction");
         });
 
         modelBuilder.Entity<Refund>(entity =>
@@ -1427,11 +1451,6 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("score");
             entity.Property(e => e.Supplierid).HasColumnName("supplierid");
 
-            entity.HasOne(d => d.Calculatedbyuser).WithMany(p => p.Reliabilityratings)
-                .HasForeignKey(d => d.Calculatedbyuserid)
-                .OnDelete(DeleteBehavior.SetNull)
-                .HasConstraintName("fk_reliabilityrating_user");
-
             entity.HasOne(d => d.Supplier).WithMany(p => p.Reliabilityratings)
                 .HasForeignKey(d => d.Supplierid)
                 .OnDelete(DeleteBehavior.SetNull)
@@ -1440,13 +1459,13 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<Rentalorderlog>(entity =>
         {
-            entity.HasKey(e => e.Rentalorderid).HasName("rentalorderlog_pkey");
+            entity.HasKey(e => e.Rentalorderlogid).HasName("rentalorderlog_pkey");
 
             entity.ToTable("rentalorderlog");
 
-            entity.Property(e => e.Rentalorderid)
-                .UseIdentityAlwaysColumn()
-                .HasColumnName("rentalorderid");
+            entity.Property(e => e.Rentalorderlogid)
+                .ValueGeneratedNever()
+                .HasColumnName("rentalorderlogid");
             entity.Property(e => e.Customerid).HasColumnName("customerid");
             entity.Property(e => e.Detailsjson).HasColumnName("detailsjson");
             entity.Property(e => e.Orderdate)
@@ -1456,6 +1475,15 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.Totalamount)
                 .HasPrecision(10, 2)
                 .HasColumnName("totalamount");
+
+            entity.HasOne(d => d.Order).WithMany(p => p.Rentalorderlogs)
+                .HasForeignKey(d => d.Orderid)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_rental_order");
+
+            entity.HasOne(d => d.RentalorderlogNavigation).WithOne(p => p.Rentalorderlog)
+                .HasForeignKey<Rentalorderlog>(d => d.Rentalorderlogid)
+                .HasConstraintName("fk_rental_transaction");
         });
 
         modelBuilder.Entity<Replenishmentrequest>(entity =>
@@ -1470,22 +1498,16 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.Completedat)
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("completedat");
-            entity.Property(e => e.Completedby).HasColumnName("completedby");
+            entity.Property(e => e.Completedby)
+                .HasMaxLength(255)
+                .HasColumnName("completedby");
             entity.Property(e => e.Createdat)
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("createdat");
             entity.Property(e => e.Remarks).HasColumnName("remarks");
-            entity.Property(e => e.Requestedby).HasColumnName("requestedby");
-
-            entity.HasOne(d => d.CompletedbyNavigation).WithMany(p => p.ReplenishmentrequestCompletedbyNavigations)
-                .HasForeignKey(d => d.Completedby)
-                .OnDelete(DeleteBehavior.SetNull)
-                .HasConstraintName("fk_replenishment_completedby");
-
-            entity.HasOne(d => d.RequestedbyNavigation).WithMany(p => p.ReplenishmentrequestRequestedbyNavigations)
-                .HasForeignKey(d => d.Requestedby)
-                .OnDelete(DeleteBehavior.SetNull)
-                .HasConstraintName("fk_replenishment_requestedby");
+            entity.Property(e => e.Requestedby)
+                .HasMaxLength(255)
+                .HasColumnName("requestedby");
         });
 
         modelBuilder.Entity<Reportexport>(entity =>
@@ -1570,24 +1592,35 @@ public partial class AppDbContext : DbContext
             entity.ToTable("returnlog");
 
             entity.Property(e => e.Returnlogid)
-                .UseIdentityAlwaysColumn()
+                .ValueGeneratedNever()
                 .HasColumnName("returnlogid");
             entity.Property(e => e.Completiondate)
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("completiondate");
-            entity.Property(e => e.Customerid).HasColumnName("customerid");
+            entity.Property(e => e.Customerid)
+                .HasMaxLength(50)
+                .HasColumnName("customerid");
             entity.Property(e => e.Detailsjson).HasColumnName("detailsjson");
             entity.Property(e => e.Imageurl)
                 .HasMaxLength(500)
                 .HasColumnName("imageurl");
-            entity.Property(e => e.Refundamount)
-                .HasPrecision(10, 2)
-                .HasColumnName("refundamount");
+            entity.Property(e => e.Rentalorderlogid).HasColumnName("rentalorderlogid");
             entity.Property(e => e.Requestdate)
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("requestdate");
-            entity.Property(e => e.Returnitemid).HasColumnName("returnitemid");
             entity.Property(e => e.Returnrequestid).HasColumnName("returnrequestid");
+
+            entity.HasOne(d => d.Rentalorderlog).WithMany(p => p.Returnlogs)
+                .HasForeignKey(d => d.Rentalorderlogid)
+                .HasConstraintName("fk_return_rental");
+
+            entity.HasOne(d => d.ReturnlogNavigation).WithOne(p => p.Returnlog)
+                .HasForeignKey<Returnlog>(d => d.Returnlogid)
+                .HasConstraintName("fk_return_transaction");
+
+            entity.HasOne(d => d.Returnrequest).WithMany(p => p.Returnlogs)
+                .HasForeignKey(d => d.Returnrequestid)
+                .HasConstraintName("fk_return_request");
         });
 
         modelBuilder.Entity<Returnrequest>(entity =>
@@ -1641,7 +1674,6 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("origin_address");
             entity.Property(e => e.OriginHubId).HasColumnName("origin_hub_id");
             entity.Property(e => e.TotalDistanceKm).HasColumnName("total_distance_km");
-            entity.Property(e => e.ModeCombination).HasColumnName("mode_combination");
 
             entity.HasOne(d => d.DestinationHub).WithMany(p => p.RouteDestinationHubs)
                 .HasForeignKey(d => d.DestinationHubId)
@@ -1677,7 +1709,6 @@ public partial class AppDbContext : DbContext
                 .HasMaxLength(255)
                 .HasColumnName("start_point");
             entity.Property(e => e.TransportId).HasColumnName("transport_id");
-            entity.Property(e => e.TransportMode).HasColumnName("transport_mode");
 
             entity.HasOne(d => d.Route).WithMany(p => p.RouteLegs)
                 .HasForeignKey(d => d.RouteId)
@@ -1754,7 +1785,6 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("destination");
             entity.Property(e => e.Orderid).HasColumnName("orderid");
             entity.Property(e => e.Weight).HasColumnName("weight");
-            entity.Property(e => e.Status).HasColumnName("status");
 
             entity.HasOne(d => d.Batch).WithMany(p => p.Shipments)
                 .HasForeignKey(d => d.Batchid)
@@ -1898,11 +1928,6 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.Uom)
                 .HasMaxLength(50)
                 .HasColumnName("uom");
-
-            entity.HasOne(d => d.Product).WithOne(p => p.Stockitem)
-                .HasForeignKey<Stockitem>(d => d.Productid)
-                .OnDelete(DeleteBehavior.Restrict)
-                .HasConstraintName("fk_stockitem_product");
         });
 
         modelBuilder.Entity<Supplier>(entity =>
@@ -1995,6 +2020,21 @@ public partial class AppDbContext : DbContext
                 .HasConstraintName("fk_transaction_order");
         });
 
+        modelBuilder.Entity<Transactionlog>(entity =>
+        {
+            entity.HasKey(e => e.Transactionlogid).HasName("transactionlog_pkey");
+
+            entity.ToTable("transactionlog");
+
+            entity.Property(e => e.Transactionlogid)
+                .UseIdentityAlwaysColumn()
+                .HasColumnName("transactionlogid");
+            entity.Property(e => e.Createdat)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("createdat");
+        });
+
         modelBuilder.Entity<Transport>(entity =>
         {
             entity.HasKey(e => e.TransportId).HasName("transport_pkey");
@@ -2009,7 +2049,6 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("is_available");
             entity.Property(e => e.MaxLoadKg).HasColumnName("max_load_kg");
             entity.Property(e => e.VehicleSizeM2).HasColumnName("vehicle_size_m2");
-            entity.Property(e => e.TransportMode).HasColumnName("transport_mode");
         });
 
         modelBuilder.Entity<TransportationHub>(entity =>
@@ -2111,11 +2150,6 @@ public partial class AppDbContext : DbContext
                 .HasForeignKey(d => d.Supplierid)
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("fk_vettingrecord_supplier");
-
-            entity.HasOne(d => d.Vettedbyuser).WithMany(p => p.Vettingrecords)
-                .HasForeignKey(d => d.Vettedbyuserid)
-                .OnDelete(DeleteBehavior.SetNull)
-                .HasConstraintName("fk_vettingrecord_user");
         });
 
         modelBuilder.Entity<Warehouse>(entity =>

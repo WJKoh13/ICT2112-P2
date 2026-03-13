@@ -493,6 +493,8 @@ CREATE TYPE inventory_status AS ENUM
 ('AVAILABLE', 'RETIRED', 'CLEARANCE', 'SOLD', 
  'MAINTENANCE', 'RESERVED', 'ON_LOAN', 'BROKEN');
 
+CREATE TYPE alert_status AS ENUM ('OPEN', 'ACKNOWLEDGED', 'RESOLVED');
+
 CREATE TYPE clearance_status AS ENUM ('CLEARANCE', 'SOLD');
 
 CREATE TYPE clearance_batch_status AS ENUM ('SCHEDULED', 'ACTIVE', 'CLOSED');
@@ -510,6 +512,7 @@ CREATE TABLE Product (
     CategoryId INT NOT NULL,
     Sku VARCHAR(255) NOT NULL,
     Status product_status NOT NULL DEFAULT 'AVAILABLE',
+    Threshold DECIMAL(5,4) NOT NULL DEFAULT 0.0,
     CreatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UpdatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -546,6 +549,22 @@ CREATE TABLE InventoryItem (
     ExpiryDate TIMESTAMP,
 
     CONSTRAINT fk_inventory_product
+        FOREIGN KEY (ProductId)
+        REFERENCES Product(ProductId)
+        ON DELETE CASCADE
+);
+
+CREATE TABLE Alert (
+    AlertId INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    ProductId INT NOT NULL,
+    Status alert_status NOT NULL DEFAULT 'OPEN',
+    MinThreshold INT NOT NULL,
+    CurrentStock INT NOT NULL,
+    Message VARCHAR(255) NOT NULL,
+    CreatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_alert_product
         FOREIGN KEY (ProductId)
         REFERENCES Product(ProductId)
         ON DELETE CASCADE

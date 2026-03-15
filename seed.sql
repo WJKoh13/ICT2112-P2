@@ -513,3 +513,80 @@ INSERT INTO Deposit (depositId, orderId, transactionId, originalAmount, heldAmou
 -- Order 15: CANCELLED full kit → full refund
 ('DEP-ORD-015', 15, 15, 84.50, 84.50, 84.50,  0.00, NOW() - INTERVAL '8 days');
 -- (R5 45 + Canon 70-200 27.50 + DJI RS3 12 = 84.50)
+
+-- Team 5 seed--
+-- BuildingFootprint--
+INSERT INTO BuildingFootprint (timeHourly, zone, block, floor, room, totalRoomCo2)
+VALUES
+-- Room 101 continuation
+('2026-03-10 12:00:00', 'North Wing', 'Block A', '1', 'Room 101', 495.6),
+('2026-03-10 13:00:00', 'North Wing', 'Block A', '1', 'Room 101', 510.3),
+('2026-03-10 14:00:00', 'North Wing', 'Block A', '1', 'Room 101', 525.9),
+('2026-03-10 15:00:00', 'North Wing', 'Block A', '1', 'Room 101', 500.4),
+('2026-03-10 16:00:00', 'North Wing', 'Block A', '1', 'Room 101', 470.7),
+
+-- Room 201 continuation
+('2026-03-10 11:00:00', 'North Wing', 'Block A', '2', 'Room 201', 430.8),
+('2026-03-10 12:00:00', 'North Wing', 'Block A', '2', 'Room 201', 445.1),
+('2026-03-10 13:00:00', 'North Wing', 'Block A', '2', 'Room 201', 460.3),
+('2026-03-10 14:00:00', 'North Wing', 'Block A', '2', 'Room 201', 440.2),
+('2026-03-10 15:00:00', 'North Wing', 'Block A', '2', 'Room 201', 420.5),
+
+-- Room 102 continuation
+('2026-03-10 11:00:00', 'South Wing', 'Block B', '1', 'Room 102', 410.7),
+('2026-03-10 12:00:00', 'South Wing', 'Block B', '1', 'Room 102', 425.6),
+('2026-03-10 13:00:00', 'South Wing', 'Block B', '1', 'Room 102', 440.9),
+('2026-03-10 14:00:00', 'South Wing', 'Block B', '1', 'Room 102', 415.2),
+('2026-03-10 15:00:00', 'South Wing', 'Block B', '1', 'Room 102', 395.4),
+
+-- Room 305 continuation
+('2026-03-10 11:00:00', 'South Wing', 'Block B', '3', 'Room 305', 360.5),
+('2026-03-10 12:00:00', 'South Wing', 'Block B', '3', 'Room 305', 375.3),
+('2026-03-10 13:00:00', 'South Wing', 'Block B', '3', 'Room 305', 390.6),
+('2026-03-10 14:00:00', 'South Wing', 'Block B', '3', 'Room 305', 370.4),
+('2026-03-10 15:00:00', 'South Wing', 'Block B', '3', 'Room 305', 350.8),
+
+-- Next day data (for analytics charts)
+('2026-03-11 08:00:00', 'North Wing', 'Block A', '1', 'Room 101', 410.2),
+('2026-03-11 09:00:00', 'North Wing', 'Block A', '1', 'Room 101', 430.7),
+('2026-03-11 10:00:00', 'North Wing', 'Block A', '1', 'Room 101', 455.9),
+('2026-03-11 11:00:00', 'North Wing', 'Block A', '1', 'Room 101', 470.1),
+
+('2026-03-11 08:00:00', 'North Wing', 'Block A', '2', 'Room 201', 370.4),
+('2026-03-11 09:00:00', 'North Wing', 'Block A', '2', 'Room 201', 390.5),
+('2026-03-11 10:00:00', 'North Wing', 'Block A', '2', 'Room 201', 405.8),
+('2026-03-11 11:00:00', 'North Wing', 'Block A', '2', 'Room 201', 420.6),
+
+('2026-03-11 08:00:00', 'South Wing', 'Block B', '1', 'Room 102', 345.7),
+('2026-03-11 09:00:00', 'South Wing', 'Block B', '1', 'Room 102', 365.2),
+('2026-03-11 10:00:00', 'South Wing', 'Block B', '1', 'Room 102', 385.9),
+('2026-03-11 11:00:00', 'South Wing', 'Block B', '1', 'Room 102', 405.3),
+
+('2026-03-11 08:00:00', 'South Wing', 'Block B', '3', 'Room 305', 295.6),
+('2026-03-11 09:00:00', 'South Wing', 'Block B', '3', 'Room 305', 315.2),
+('2026-03-11 10:00:00', 'South Wing', 'Block B', '3', 'Room 305', 335.7),
+('2026-03-11 11:00:00', 'South Wing', 'Block B', '3', 'Room 305', 350.1);
+
+--Packaging Material--
+INSERT INTO PackagingMaterial (name, type, recyclable, reusable)
+VALUES
+('Protective Camera Foam Insert', 'Foam', FALSE, TRUE),
+('Shockproof Equipment Hard Case', 'Plastic', TRUE, TRUE),
+('Padded Equipment Transport Bag', 'Fabric', TRUE, TRUE),
+('Reusable Plastic Transport Crate', 'Plastic', TRUE, TRUE),
+('Corrugated Protective Shipping Box', 'Paper', TRUE, FALSE),
+('Anti-Static Bubble Wrap', 'Plastic', FALSE, FALSE),
+('Lens Protection Sleeve', 'Fabric', TRUE, TRUE),
+('Tripod Protection Tube', 'Plastic', TRUE, TRUE),
+('Camera Body Protective Wrap', 'Foam', FALSE, TRUE),
+('Reusable Velcro Cable Organizer', 'Fabric', TRUE, TRUE),
+('Silica Gel Moisture Pack', 'Chemical', FALSE, FALSE),
+('Reusable Foam Divider Set', 'Foam', FALSE, TRUE),
+('Protective Corner Guards', 'Plastic', TRUE, FALSE),
+('Heavy Duty Equipment Case', 'Plastic', TRUE, TRUE),
+('Reusable Equipment Strap Wrap', 'Fabric', TRUE, TRUE),
+('Protective Microphone Case', 'Plastic', TRUE, TRUE),
+('Lens Cushion Padding', 'Foam', FALSE, TRUE),
+('Equipment Transport Carton', 'Paper', TRUE, FALSE),
+('Reusable Camera Transport Box', 'Plastic', TRUE, TRUE),
+('Shock Absorbing Packing Foam', 'Foam', FALSE, FALSE);

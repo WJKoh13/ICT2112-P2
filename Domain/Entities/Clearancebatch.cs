@@ -10,7 +10,7 @@ public partial class Clearancebatch
 
     public string Batchname { get; private set; } = null!;
 
-    public CleanraceBatchStatus { get; private set; }
+    public ClearanceBatchStatus ClearanceBatchStatus { get; private set; }
 
     public DateTime Createddate { get; private set; }
 

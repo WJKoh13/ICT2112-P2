@@ -1,6 +1,6 @@
 namespace ProRental.Domain.Enums;
 
-public enum CleanraceBatchStatus
+public enum ClearanceBatchStatus
 {
 	SCHEDULED,
 	ACTIVE,

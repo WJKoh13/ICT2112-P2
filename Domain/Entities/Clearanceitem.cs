@@ -5,17 +5,23 @@ namespace ProRental.Domain.Entities;
 
 public partial class Clearanceitem
 {
-    public int Clearanceitemid { get; private set; }
+    private int _clearanceitemid;
+    private int Clearanceitemid { get => _clearanceitemid; set => _clearanceitemid = value; }
 
-    public int Clearancebatchid { get; private set; }
+    private int _clearancebatchid;
+    private int Clearancebatchid { get => _clearancebatchid; set => _clearancebatchid = value; }
 
-    public int Inventoryitemid { get; private set; }
+    private int _inventoryitemid;
+    private int Inventoryitemid { get => _inventoryitemid; set => _inventoryitemid = value; }
 
-    public decimal? Finalprice { get; private set; }
+    private decimal? _finalprice;
+    private decimal? Finalprice { get => _finalprice; set => _finalprice = value; }
 
-    public decimal? Recommendedprice { get; private set; }
+    private decimal? _recommendedprice;
+    private decimal? Recommendedprice { get => _recommendedprice; set => _recommendedprice = value; }
 
-    public DateTime? Saledate { get; private set; }
+    private DateTime? _saledate;
+    private DateTime? Saledate { get => _saledate; set => _saledate = value; }
 
     public virtual Clearancebatch Clearancebatch { get; private set; } = null!;
 

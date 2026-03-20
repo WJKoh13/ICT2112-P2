@@ -5,15 +5,20 @@ namespace ProRental.Domain.Entities;
 
 public partial class Payment
 {
-    public string Paymentid { get; private set; } = null!;
+    private string _paymentid = null!;
+    private string Paymentid { get => _paymentid; set => _paymentid = value; }
 
-    public int Orderid { get; private set; }
+    private int _orderid;
+    private int Orderid { get => _orderid; set => _orderid = value; }
 
-    public int Transactionid { get; private set; }
+    private int _transactionid;
+    private int Transactionid { get => _transactionid; set => _transactionid = value; }
 
-    public decimal Amount { get; private set; }
+    private decimal _amount;
+    private decimal Amount { get => _amount; set => _amount = value; }
 
-    public DateTime Createdat { get; private set; }
+    private DateTime _createdat;
+    private DateTime Createdat { get => _createdat; set => _createdat = value; }
 
     public virtual Order Order { get; private set; } = null!;
 

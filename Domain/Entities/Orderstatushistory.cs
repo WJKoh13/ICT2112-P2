@@ -5,15 +5,20 @@ namespace ProRental.Domain.Entities;
 
 public partial class Orderstatushistory
 {
-    public int Historyid { get; private set; }
+    private int _historyid;
+    private int Historyid { get => _historyid; set => _historyid = value; }
 
-    public int Orderid { get; private set; }
+    private int _orderid;
+    private int Orderid { get => _orderid; set => _orderid = value; }
 
-    public DateTime Timestamp { get; private set; }
+    private DateTime _timestamp;
+    private DateTime Timestamp { get => _timestamp; set => _timestamp = value; }
 
-    public string Updatedby { get; private set; } = null!;
+    private string _updatedby = null!;
+    private string Updatedby { get => _updatedby; set => _updatedby = value; }
 
-    public string? Remark { get; private set; }
+    private string? _remark;
+    private string? Remark { get => _remark; set => _remark = value; }
 
     public virtual Order Order { get; private set; } = null!;
 }

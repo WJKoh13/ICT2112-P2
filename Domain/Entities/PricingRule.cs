@@ -5,11 +5,15 @@ namespace ProRental.Domain.Entities;
 
 public partial class PricingRule
 {
-    public int RuleId { get; private set; }
+    private int _ruleId;
+    private int RuleId { get => _ruleId; set => _ruleId = value; }
 
-    public decimal? BaseRatePerKm { get; private set; }
+    private decimal? _baseRatePerKm;
+    private decimal? BaseRatePerKm { get => _baseRatePerKm; set => _baseRatePerKm = value; }
 
-    public bool? IsActive { get; private set; }
+    private bool? _isActive;
+    private bool? IsActive { get => _isActive; set => _isActive = value; }
 
-    public decimal? CarbonSurcharge { get; private set; }
+    private decimal? _carbonSurcharge;
+    private decimal? CarbonSurcharge { get => _carbonSurcharge; set => _carbonSurcharge = value; }
 }

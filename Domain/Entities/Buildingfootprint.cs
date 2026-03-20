@@ -5,17 +5,24 @@ namespace ProRental.Domain.Entities;
 
 public partial class Buildingfootprint
 {
-    public int Buildingcarbonfootprintid { get; private set; }
+    private int _buildingcarbonfootprintid;
+    private int Buildingcarbonfootprintid { get => _buildingcarbonfootprintid; set => _buildingcarbonfootprintid = value; }
 
-    public DateTime Timehourly { get; private set; }
+    private DateTime _timehourly;
+    private DateTime Timehourly { get => _timehourly; set => _timehourly = value; }
 
-    public string? Zone { get; private set; }
+    private string? _zone;
+    private string? Zone { get => _zone; set => _zone = value; }
 
-    public string? Block { get; private set; }
+    private string? _block;
+    private string? Block { get => _block; set => _block = value; }
 
-    public string? Floor { get; private set; }
+    private string? _floor;
+    private string? Floor { get => _floor; set => _floor = value; }
 
-    public string? Room { get; private set; }
+    private string? _room;
+    private string? Room { get => _room; set => _room = value; }
 
-    public double Totalroomco2 { get; private set; }
+    private double _totalroomco2;
+    private double Totalroomco2 { get => _totalroomco2; set => _totalroomco2 = value; }
 }

@@ -5,15 +5,20 @@ namespace ProRental.Domain.Entities;
 
 public partial class Clearancelog
 {
-    public int Clearancelogid { get; private set; }
+    private int _clearancelogid;
+    private int Clearancelogid { get => _clearancelogid; set => _clearancelogid = value; }
 
-    public int Clearancebatchid { get; private set; }
+    private int _clearancebatchid;
+    private int Clearancebatchid { get => _clearancebatchid; set => _clearancebatchid = value; }
 
-    public string? Batchname { get; private set; }
+    private string? _batchname;
+    private string? Batchname { get => _batchname; set => _batchname = value; }
 
-    public DateTime? Clearancedate { get; private set; }
+    private DateTime? _clearancedate;
+    private DateTime? Clearancedate { get => _clearancedate; set => _clearancedate = value; }
 
-    public string? Detailsjson { get; private set; }
+    private string? _detailsjson;
+    private string? Detailsjson { get => _detailsjson; set => _detailsjson = value; }
 
     public virtual Clearancebatch Clearancebatch { get; private set; } = null!;
 

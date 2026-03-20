@@ -5,23 +5,29 @@ namespace ProRental.Domain.Entities;
 
 public partial class Checkout
 {
-    public int Checkoutid { get; private set; }
+    private int _checkoutid;
+    private int Checkoutid { get => _checkoutid; set => _checkoutid = value; }
 
-    public int Customerid { get; private set; }
+    private int _customerid;
+    private int Customerid { get => _customerid; set => _customerid = value; }
 
-    public int Cartid { get; private set; }
+    private int _cartid;
+    private int Cartid { get => _cartid; set => _cartid = value; }
 
-    public int? Deliveryid { get; private set; }
+    private int? _optionId;
+    private int? OptionId { get => _optionId; set => _optionId = value; }
 
-    public bool? Notifyoptin { get; private set; }
+    private bool? _notifyoptin;
+    private bool? Notifyoptin { get => _notifyoptin; set => _notifyoptin = value; }
 
-    public DateTime Createdat { get; private set; }
+    private DateTime _createdat;
+    private DateTime Createdat { get => _createdat; set => _createdat = value; }
 
     public virtual Cart Cart { get; private set; } = null!;
 
     public virtual Customer Customer { get; private set; } = null!;
 
-    public virtual Deliverymethod? Delivery { get; private set; }
+    public virtual ShippingOption? Option { get; private set; }
 
     public virtual ICollection<Order> Orders { get; private set; } = new List<Order>();
 }

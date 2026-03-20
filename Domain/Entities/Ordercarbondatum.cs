@@ -5,23 +5,32 @@ namespace ProRental.Domain.Entities;
 
 public partial class Ordercarbondatum
 {
-    public int Ordercarbondataid { get; private set; }
+    private int _ordercarbondataid;
+    private int Ordercarbondataid { get => _ordercarbondataid; set => _ordercarbondataid = value; }
 
-    public int Orderid { get; private set; }
+    private int _orderid;
+    private int Orderid { get => _orderid; set => _orderid = value; }
 
-    public double Productcarbon { get; private set; }
+    private double _productcarbon;
+    private double Productcarbon { get => _productcarbon; set => _productcarbon = value; }
 
-    public double Packagingcarbon { get; private set; }
+    private double _packagingcarbon;
+    private double Packagingcarbon { get => _packagingcarbon; set => _packagingcarbon = value; }
 
-    public double Staffcarbon { get; private set; }
+    private double _staffcarbon;
+    private double Staffcarbon { get => _staffcarbon; set => _staffcarbon = value; }
 
-    public double Buildingcarbon { get; private set; }
+    private double _buildingcarbon;
+    private double Buildingcarbon { get => _buildingcarbon; set => _buildingcarbon = value; }
 
-    public double Totalcarbon { get; private set; }
+    private double _totalcarbon;
+    private double Totalcarbon { get => _totalcarbon; set => _totalcarbon = value; }
 
-    public string? Impactlevel { get; private set; }
+    private string? _impactlevel;
+    private string? Impactlevel { get => _impactlevel; set => _impactlevel = value; }
 
-    public DateTime Calculatedat { get; private set; }
+    private DateTime _calculatedat;
+    private DateTime Calculatedat { get => _calculatedat; set => _calculatedat = value; }
 
     public virtual ICollection<Customerreward> Customerrewards { get; private set; } = new List<Customerreward>();
 

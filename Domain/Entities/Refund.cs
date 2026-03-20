@@ -5,23 +5,32 @@ namespace ProRental.Domain.Entities;
 
 public partial class Refund
 {
-    public int Refundid { get; private set; }
+    private int _refundid;
+    private int Refundid { get => _refundid; set => _refundid = value; }
 
-    public int Orderid { get; private set; }
+    private int _orderid;
+    private int Orderid { get => _orderid; set => _orderid = value; }
 
-    public int Customerid { get; private set; }
+    private int _customerid;
+    private int Customerid { get => _customerid; set => _customerid = value; }
 
-    public int? Transactionid { get; private set; }
+    private int? _transactionid;
+    private int? Transactionid { get => _transactionid; set => _transactionid = value; }
 
-    public int Returnrequestid { get; private set; }
+    private int _returnrequestid;
+    private int Returnrequestid { get => _returnrequestid; set => _returnrequestid = value; }
 
-    public decimal Depositrefundamount { get; private set; }
+    private decimal _depositrefundamount;
+    private decimal Depositrefundamount { get => _depositrefundamount; set => _depositrefundamount = value; }
 
-    public DateTime Returndate { get; private set; }
+    private DateTime _returndate;
+    private DateTime Returndate { get => _returndate; set => _returndate = value; }
 
-    public decimal? Penaltyamount { get; private set; }
+    private decimal? _penaltyamount;
+    private decimal? Penaltyamount { get => _penaltyamount; set => _penaltyamount = value; }
 
-    public string Returnmethod { get; private set; } = null!;
+    private string _returnmethod = null!;
+    private string Returnmethod { get => _returnmethod; set => _returnmethod = value; }
 
     public virtual Customer Customer { get; private set; } = null!;
 

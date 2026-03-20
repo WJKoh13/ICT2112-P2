@@ -5,23 +5,32 @@ namespace ProRental.Domain.Entities;
 
 public partial class RouteLeg
 {
-    public int LegId { get; private set; }
+    private int _legId;
+    private int LegId { get => _legId; set => _legId = value; }
 
-    public int RouteId { get; private set; }
+    private int _routeId;
+    private int RouteId { get => _routeId; set => _routeId = value; }
 
-    public int? Sequence { get; private set; }
+    private int? _sequence;
+    private int? Sequence { get => _sequence; set => _sequence = value; }
 
-    public string? StartPoint { get; private set; }
+    private string? _startPoint;
+    private string? StartPoint { get => _startPoint; set => _startPoint = value; }
 
-    public string? EndPoint { get; private set; }
+    private string? _endPoint;
+    private string? EndPoint { get => _endPoint; set => _endPoint = value; }
 
-    public double? DistanceKm { get; private set; }
+    private double? _distanceKm;
+    private double? DistanceKm { get => _distanceKm; set => _distanceKm = value; }
 
-    public bool? IsFirstMile { get; private set; }
+    private bool? _isFirstMile;
+    private bool? IsFirstMile { get => _isFirstMile; set => _isFirstMile = value; }
 
-    public bool? IsLastMile { get; private set; }
+    private bool? _isLastMile;
+    private bool? IsLastMile { get => _isLastMile; set => _isLastMile = value; }
 
-    public int? TransportId { get; private set; }
+    private int? _transportId;
+    private int? TransportId { get => _transportId; set => _transportId = value; }
 
     public virtual ICollection<LegCarbon> LegCarbons { get; private set; } = new List<LegCarbon>();
 

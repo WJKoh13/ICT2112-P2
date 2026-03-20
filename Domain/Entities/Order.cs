@@ -5,17 +5,23 @@ namespace ProRental.Domain.Entities;
 
 public partial class Order
 {
-    public int Orderid { get; private set; }
+    private int _orderid;
+    private int Orderid { get => _orderid; set => _orderid = value; }
 
-    public int Customerid { get; private set; }
+    private int _customerid;
+    private int Customerid { get => _customerid; set => _customerid = value; }
 
-    public int Checkoutid { get; private set; }
+    private int _checkoutid;
+    private int Checkoutid { get => _checkoutid; set => _checkoutid = value; }
 
-    public int? Transactionid { get; private set; }
+    private int? _transactionid;
+    private int? Transactionid { get => _transactionid; set => _transactionid = value; }
 
-    public DateTime Orderdate { get; private set; }
+    private DateTime _orderdate;
+    private DateTime Orderdate { get => _orderdate; set => _orderdate = value; }
 
-    public decimal Totalamount { get; private set; }
+    private decimal _totalamount;
+    private decimal Totalamount { get => _totalamount; set => _totalamount = value; }
 
     public virtual BatchOrder? BatchOrder { get; private set; }
 
@@ -24,8 +30,6 @@ public partial class Order
     public virtual Customer Customer { get; private set; } = null!;
 
     public virtual ICollection<CustomerChoice> CustomerChoices { get; private set; } = new List<CustomerChoice>();
-
-    public virtual ICollection<Deliverymethod> Deliverymethods { get; private set; } = new List<Deliverymethod>();
 
     public virtual ICollection<Deposit> Deposits { get; private set; } = new List<Deposit>();
 

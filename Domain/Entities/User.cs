@@ -5,17 +5,23 @@ namespace ProRental.Domain.Entities;
 
 public partial class User
 {
-    public int Userid { get; private set; }
+    private int _userid;
+    private int Userid { get => _userid; set => _userid = value; }
 
-    public string Name { get; private set; } = null!;
+    private string _name = null!;
+    private string Name { get => _name; set => _name = value; }
 
-    public string Email { get; private set; } = null!;
+    private string _email = null!;
+    private string Email { get => _email; set => _email = value; }
 
-    public string Passwordhash { get; private set; } = null!;
+    private string _passwordhash = null!;
+    private string Passwordhash { get => _passwordhash; set => _passwordhash = value; }
 
-    public int? Phonecountry { get; private set; }
+    private int? _phonecountry;
+    private int? Phonecountry { get => _phonecountry; set => _phonecountry = value; }
 
-    public string? Phonenumber { get; private set; }
+    private string? _phonenumber;
+    private string? Phonenumber { get => _phonenumber; set => _phonenumber = value; }
 
     public virtual Customer? Customer { get; private set; }
 

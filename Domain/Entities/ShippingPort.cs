@@ -5,15 +5,20 @@ namespace ProRental.Domain.Entities;
 
 public partial class ShippingPort
 {
-    public int HubId { get; private set; }
+    private int _hubId;
+    private int HubId { get => _hubId; set => _hubId = value; }
 
-    public string PortCode { get; private set; } = null!;
+    private string _portCode = null!;
+    private string PortCode { get => _portCode; set => _portCode = value; }
 
-    public string PortName { get; private set; } = null!;
+    private string _portName = null!;
+    private string PortName { get => _portName; set => _portName = value; }
 
-    public string? PortType { get; private set; }
+    private string? _portType;
+    private string? PortType { get => _portType; set => _portType = value; }
 
-    public int? VesselSize { get; private set; }
+    private int? _vesselSize;
+    private int? VesselSize { get => _vesselSize; set => _vesselSize = value; }
 
     public virtual TransportationHub Hub { get; private set; } = null!;
 }

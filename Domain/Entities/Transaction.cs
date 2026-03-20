@@ -5,13 +5,17 @@ namespace ProRental.Domain.Entities;
 
 public partial class Transaction
 {
-    public int Transactionid { get; private set; }
+    private int _transactionid;
+    private int Transactionid { get => _transactionid; set => _transactionid = value; }
 
-    public decimal Amount { get; private set; }
+    private decimal _amount;
+    private decimal Amount { get => _amount; set => _amount = value; }
 
-    public string? Providertransactionid { get; private set; }
+    private string? _providertransactionid;
+    private string? Providertransactionid { get => _providertransactionid; set => _providertransactionid = value; }
 
-    public DateTime Createdat { get; private set; }
+    private DateTime _createdat;
+    private DateTime Createdat { get => _createdat; set => _createdat = value; }
 
     public virtual ICollection<Deposit> Deposits { get; private set; } = new List<Deposit>();
 

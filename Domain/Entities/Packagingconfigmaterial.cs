@@ -5,13 +5,17 @@ namespace ProRental.Domain.Entities;
 
 public partial class Packagingconfigmaterial
 {
-    public int Configurationid { get; private set; }
+    private int _configurationid;
+    private int Configurationid { get => _configurationid; set => _configurationid = value; }
 
-    public int Materialid { get; private set; }
+    private int _materialid;
+    private int Materialid { get => _materialid; set => _materialid = value; }
 
-    public string? Category { get; private set; }
+    private string? _category;
+    private string? Category { get => _category; set => _category = value; }
 
-    public int Quantity { get; private set; }
+    private int _quantity;
+    private int Quantity { get => _quantity; set => _quantity = value; }
 
     public virtual Packagingconfiguration Configuration { get; private set; } = null!;
 

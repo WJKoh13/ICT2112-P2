@@ -5,11 +5,14 @@ namespace ProRental.Domain.Entities;
 
 public partial class CustomerChoice
 {
-    public int CustomerId { get; private set; }
+    private int _customerId;
+    private int CustomerId { get => _customerId; set => _customerId = value; }
 
-    public int OrderId { get; private set; }
+    private int _orderId;
+    private int OrderId { get => _orderId; set => _orderId = value; }
 
-    public DateTime? CreatedAt { get; private set; }
+    private DateTime? _createdAt;
+    private DateTime? CreatedAt { get => _createdAt; set => _createdAt = value; }
 
     public virtual Customer Customer { get; private set; } = null!;
 

@@ -5,19 +5,26 @@ namespace ProRental.Domain.Entities;
 
 public partial class Damagereport
 {
-    public int Damagereportid { get; private set; }
+    private int _damagereportid;
+    private int Damagereportid { get => _damagereportid; set => _damagereportid = value; }
 
-    public int Returnitemid { get; private set; }
+    private int _returnitemid;
+    private int Returnitemid { get => _returnitemid; set => _returnitemid = value; }
 
-    public string? Description { get; private set; }
+    private string? _description;
+    private string? Description { get => _description; set => _description = value; }
 
-    public string? Severity { get; private set; }
+    private string? _severity;
+    private string? Severity { get => _severity; set => _severity = value; }
 
-    public decimal? Repaircost { get; private set; }
+    private decimal? _repaircost;
+    private decimal? Repaircost { get => _repaircost; set => _repaircost = value; }
 
-    public string? Images { get; private set; }
+    private string? _images;
+    private string? Images { get => _images; set => _images = value; }
 
-    public DateTime Reportdate { get; private set; }
+    private DateTime _reportdate;
+    private DateTime Reportdate { get => _reportdate; set => _reportdate = value; }
 
     public virtual Returnitem Returnitem { get; private set; } = null!;
 }

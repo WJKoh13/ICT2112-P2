@@ -5,17 +5,23 @@ namespace ProRental.Domain.Entities;
 
 public partial class Vettingrecord
 {
-    public int Vettingid { get; private set; }
+    private int _vettingid;
+    private int Vettingid { get => _vettingid; set => _vettingid = value; }
 
-    public int? Ratingid { get; private set; }
+    private int? _ratingid;
+    private int? Ratingid { get => _ratingid; set => _ratingid = value; }
 
-    public int? Supplierid { get; private set; }
+    private int? _supplierid;
+    private int? Supplierid { get => _supplierid; set => _supplierid = value; }
 
-    public int? Vettedbyuserid { get; private set; }
+    private int? _vettedbyuserid;
+    private int? Vettedbyuserid { get => _vettedbyuserid; set => _vettedbyuserid = value; }
 
-    public DateTime? Vettedat { get; private set; }
+    private DateTime? _vettedat;
+    private DateTime? Vettedat { get => _vettedat; set => _vettedat = value; }
 
-    public string? Notes { get; private set; }
+    private string? _notes;
+    private string? Notes { get => _notes; set => _notes = value; }
 
     public virtual Reliabilityrating? Rating { get; private set; }
 

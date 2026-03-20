@@ -5,15 +5,20 @@ namespace ProRental.Domain.Entities;
 
 public partial class Cartitem
 {
-    public int Cartitemid { get; private set; }
+    private int _cartitemid;
+    private int Cartitemid { get => _cartitemid; set => _cartitemid = value; }
 
-    public int Cartid { get; private set; }
+    private int _cartid;
+    private int Cartid { get => _cartid; set => _cartid = value; }
 
-    public int Productid { get; private set; }
+    private int _productid;
+    private int Productid { get => _productid; set => _productid = value; }
 
-    public int Quantity { get; private set; }
+    private int _quantity;
+    private int Quantity { get => _quantity; set => _quantity = value; }
 
-    public bool? Isselected { get; private set; }
+    private bool? _isselected;
+    private bool? Isselected { get => _isselected; set => _isselected = value; }
 
     public virtual Cart Cart { get; private set; } = null!;
 

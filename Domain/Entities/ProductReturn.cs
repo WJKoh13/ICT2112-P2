@@ -5,13 +5,18 @@ namespace ProRental.Domain.Entities;
 
 public partial class ProductReturn
 {
-    public int ReturnId { get; private set; }
+    private int _returnId;
+    private int ReturnId { get => _returnId; set => _returnId = value; }
 
-    public string? ReturnStatus { get; private set; }
+    private string? _returnStatus;
+    private string? ReturnStatus { get => _returnStatus; set => _returnStatus = value; }
 
-    public double? TotalCarbon { get; private set; }
+    private double? _totalCarbon;
+    private double? TotalCarbon { get => _totalCarbon; set => _totalCarbon = value; }
 
-    public DateOnly? DateIn { get; private set; }
+    private DateOnly? _dateIn;
+    private DateOnly? DateIn { get => _dateIn; set => _dateIn = value; }
 
-    public DateOnly? DateOn { get; private set; }
+    private DateOnly? _dateOn;
+    private DateOnly? DateOn { get => _dateOn; set => _dateOn = value; }
 }

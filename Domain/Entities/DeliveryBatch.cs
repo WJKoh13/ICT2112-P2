@@ -5,17 +5,23 @@ namespace ProRental.Domain.Entities;
 
 public partial class DeliveryBatch
 {
-    public int DeliveryBatchId { get; private set; }
+    private int _deliveryBatchId;
+    private int DeliveryBatchId { get => _deliveryBatchId; set => _deliveryBatchId = value; }
 
-    public double? BatchWeightKg { get; private set; }
+    private double? _batchWeightKg;
+    private double? BatchWeightKg { get => _batchWeightKg; set => _batchWeightKg = value; }
 
-    public string? DestinationAddress { get; private set; }
+    private string? _destinationAddress;
+    private string? DestinationAddress { get => _destinationAddress; set => _destinationAddress = value; }
 
-    public int? TotalOrders { get; private set; }
+    private int? _totalOrders;
+    private int? TotalOrders { get => _totalOrders; set => _totalOrders = value; }
 
-    public double? CarbonSavings { get; private set; }
+    private double? _carbonSavings;
+    private double? CarbonSavings { get => _carbonSavings; set => _carbonSavings = value; }
 
-    public int? HubId { get; private set; }
+    private int? _hubId;
+    private int? HubId { get => _hubId; set => _hubId = value; }
 
     public virtual ICollection<BatchOrder> BatchOrders { get; private set; } = new List<BatchOrder>();
 

@@ -5,15 +5,20 @@ namespace ProRental.Domain.Entities;
 
 public partial class Shipment
 {
-    public int Trackingid { get; private set; }
+    private int _trackingid;
+    private int Trackingid { get => _trackingid; set => _trackingid = value; }
 
-    public int Orderid { get; private set; }
+    private int _orderid;
+    private int Orderid { get => _orderid; set => _orderid = value; }
 
-    public int Batchid { get; private set; }
+    private int _batchid;
+    private int Batchid { get => _batchid; set => _batchid = value; }
 
-    public double Weight { get; private set; }
+    private double _weight;
+    private double Weight { get => _weight; set => _weight = value; }
 
-    public string Destination { get; private set; } = null!;
+    private string _destination = null!;
+    private string Destination { get => _destination; set => _destination = value; }
 
     public virtual DeliveryBatch Batch { get; private set; } = null!;
 

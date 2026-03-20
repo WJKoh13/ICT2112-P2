@@ -5,19 +5,26 @@ namespace ProRental.Domain.Entities;
 
 public partial class LegCarbon
 {
-    public int LegId { get; private set; }
+    private int _legId;
+    private int LegId { get => _legId; set => _legId = value; }
 
-    public double? DistanceKm { get; private set; }
+    private double? _distanceKm;
+    private double? DistanceKm { get => _distanceKm; set => _distanceKm = value; }
 
-    public double? WeightKg { get; private set; }
+    private double? _weightKg;
+    private double? WeightKg { get => _weightKg; set => _weightKg = value; }
 
-    public double? CarbonKg { get; private set; }
+    private double? _carbonKg;
+    private double? CarbonKg { get => _carbonKg; set => _carbonKg = value; }
 
-    public double? CarbonRate { get; private set; }
+    private double? _carbonRate;
+    private double? CarbonRate { get => _carbonRate; set => _carbonRate = value; }
 
-    public int? CarbonResultId { get; private set; }
+    private int? _carbonResultId;
+    private int? CarbonResultId { get => _carbonResultId; set => _carbonResultId = value; }
 
-    public int? RouteLegId { get; private set; }
+    private int? _routeLegId;
+    private int? RouteLegId { get => _routeLegId; set => _routeLegId = value; }
 
     public virtual CarbonResult? CarbonResult { get; private set; }
 

@@ -5,13 +5,17 @@ namespace ProRental.Domain.Entities;
 
 public partial class Loanitem
 {
-    public int Loanitemid { get; private set; }
+    private int _loanitemid;
+    private int Loanitemid { get => _loanitemid; set => _loanitemid = value; }
 
-    public int Loanlistid { get; private set; }
+    private int _loanlistid;
+    private int Loanlistid { get => _loanlistid; set => _loanlistid = value; }
 
-    public int Inventoryitemid { get; private set; }
+    private int _inventoryitemid;
+    private int Inventoryitemid { get => _inventoryitemid; set => _inventoryitemid = value; }
 
-    public string? Remarks { get; private set; }
+    private string? _remarks;
+    private string? Remarks { get => _remarks; set => _remarks = value; }
 
     public virtual Inventoryitem Inventoryitem { get; private set; } = null!;
 

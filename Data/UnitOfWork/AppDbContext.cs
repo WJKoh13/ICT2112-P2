@@ -8,6 +8,10 @@ namespace ProRental.Data.UnitOfWork;
 
 public partial class AppDbContext : DbContext
 {
+    public AppDbContext()
+    {
+    }
+
     public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options)
     {
@@ -52,8 +56,6 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<DeliveryBatch> DeliveryBatches { get; set; }
 
     public virtual DbSet<DeliveryRoute> DeliveryRoutes { get; set; }
-
-    public virtual DbSet<Deliverymethod> Deliverymethods { get; set; }
 
     public virtual DbSet<Deposit> Deposits { get; set; }
 
@@ -171,11 +173,16 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Warehouse> Warehouses { get; set; }
 
+//     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+// #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+//         => optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=pro_rental;Username=devuser;Password=devpassword");
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder
             .HasPostgresEnum("access_event_type", new[] { "IN", "OUT" })
             .HasPostgresEnum("alert_status", new[] { "OPEN", "ACKNOWLEDGED", "RESOLVED" })
+            .HasPostgresEnum("analytics_type_enum", new[] { "DAILY", "SUPTREND", "PRODTREND" })
             .HasPostgresEnum("batch_status", new[] { "PENDING", "SHIPPEDOUT" })
             .HasPostgresEnum("carbon_stage_type", new[] { "DAMAGE_INSPECTION", "REPAIRING", "SERVICING", "CLEANING", "RETURN" })
             .HasPostgresEnum("cart_status_enum", new[] { "ACTIVE", "CHECKED_OUT", "EXPIRED" })
@@ -216,91 +223,121 @@ public partial class AppDbContext : DbContext
             .HasPostgresEnum("transaction_status_enum", new[] { "PENDING", "COMPLETED", "FAILED", "CANCELLED" })
             .HasPostgresEnum("transaction_type_enum", new[] { "PAYMENT", "REFUND" })
             .HasPostgresEnum("transport_mode", new[] { "TRUCK", "SHIP", "PLANE", "TRAIN" })
+            .HasPostgresEnum("user_role_enum", new[] { "CUSTOMER", "STAFF", "ADMIN" })
             .HasPostgresEnum("vetting_decision_enum", new[] { "APPROVED", "REJECTED", "PENDING" })
             .HasPostgresEnum("vetting_result_enum", new[] { "APPROVED", "REJECTED", "PENDING" })
             .HasPostgresEnum("visual_type_enum", new[] { "TABLE", "BAR", "COLUMN", "LINE", "PIE", "AREA" });
 
         modelBuilder.Entity<Airport>(entity =>
         {
-            entity.HasKey(e => e.HubId).HasName("airport_pkey");
+            entity.HasKey("HubId").HasName("airport_pkey");
 
             entity.ToTable("airport");
 
-            entity.Property(e => e.HubId)
+            entity.Property("HubId")
+                .HasField("_hubId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .ValueGeneratedNever()
                 .HasColumnName("hub_id");
-            entity.Property(e => e.AircraftSize).HasColumnName("aircraft_size");
-            entity.Property(e => e.AirportCode)
+            entity.Property("AircraftSize")
+                .HasField("_aircraftSize")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("aircraft_size");
+            entity.Property("AirportCode")
+                .HasField("_airportCode")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(10)
                 .HasColumnName("airport_code");
-            entity.Property(e => e.AirportName)
+            entity.Property("AirportName")
+                .HasField("_airportName")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("airport_name");
-            entity.Property(e => e.Terminal).HasColumnName("terminal");
+            entity.Property("Terminal")
+                .HasField("_terminal")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("terminal");
 
             entity.HasOne(d => d.Hub).WithOne(p => p.Airport)
-                .HasForeignKey<Airport>(d => d.HubId)
+                .HasForeignKey<Airport>("HubId")
                 .HasConstraintName("fk_airport_hub");
         });
 
         modelBuilder.Entity<Alert>(entity =>
         {
-            entity.HasKey(e => e.Alertid).HasName("alert_pkey");
+            entity.HasKey("Alertid").HasName("alert_pkey");
 
             entity.ToTable("alert");
 
-            entity.Property(e => e.Alertid)
+            entity.Property("Alertid")
+                .HasField("_alertid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("alertid");
-            entity.Property(e => e.Createdat)
+            entity.Property("Createdat")
+                .HasField("_createdat")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnType("timestamp without time zone")
                 .HasColumnName("createdat");
-            entity.Property(e => e.Currentstock).HasColumnName("currentstock");
-            entity.Property(e => e.Message)
+            entity.Property("Currentstock")
+                .HasField("_currentstock")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("currentstock");
+            entity.Property("Message")
+                .HasField("_message")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("message");
-            entity.Property(e => e.Minthreshold).HasColumnName("minthreshold");
-            entity.Property(e => e.Productid).HasColumnName("productid");
-            entity.Property(e => e.Updatedat)
+            entity.Property("Minthreshold")
+                .HasField("_minthreshold")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("minthreshold");
+            entity.Property("Productid")
+                .HasField("_productid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("productid");
+            entity.Property("Updatedat")
+                .HasField("_updatedat")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnType("timestamp without time zone")
                 .HasColumnName("updatedat");
 
             entity.HasOne(d => d.Product).WithMany(p => p.Alerts)
-                .HasForeignKey(d => d.Productid)
+                .HasForeignKey("Productid")
                 .HasConstraintName("fk_alert_product");
         });
 
         modelBuilder.Entity<Analytic>(entity =>
         {
-            entity.HasKey(e => e.Analyticsid).HasName("analytics_pkey");
+            entity.HasKey("Analyticsid").HasName("analytics_pkey");
 
             entity.ToTable("analytics");
 
-            entity.Property(e => e.Analyticsid)
+            entity.Property("Analyticsid")
+                .HasField("_analyticsid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("analyticsid");
-            entity.Property(e => e.Enddate)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("enddate");
-            entity.Property(e => e.Loanamt).HasColumnName("loanamt");
-            entity.Property(e => e.Primaryitem)
+            entity.Property("Enddate")
+                .HasField("_enddate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("enddate");
+            entity.Property("Loanamt")
+                .HasField("_loanamt")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("loanamt");
+            entity.Property("Refprimaryid")
+                .HasField("_refprimaryid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("refprimaryid");
+            entity.Property("Refprimaryname")
+                .HasField("_refprimaryname")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
-                .HasColumnName("primaryitem");
-            entity.Property(e => e.Primarysupplier)
-                .HasMaxLength(255)
-                .HasColumnName("primarysupplier");
-            entity.Property(e => e.Returnamt).HasColumnName("returnamt");
-            entity.Property(e => e.Startdate)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("startdate");
-            entity.Property(e => e.Supplierreliability)
+                .HasColumnName("refprimaryname");
+            entity.Property("Refvalue")
+                .HasField("_refvalue")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasPrecision(10, 2)
-                .HasColumnName("supplierreliability");
-            entity.Property(e => e.Turnoverrate)
-                .HasPrecision(10, 2)
-                .HasColumnName("turnoverrate");
+                .HasColumnName("refvalue");
+            entity.Property("Returnamt")
+                .HasField("_returnamt")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("returnamt");
+            entity.Property("Startdate")
+                .HasField("_startdate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("startdate");
 
             entity.HasMany(d => d.Transactionlogs).WithMany(p => p.Analytics)
                 .UsingEntity<Dictionary<string, object>>(
@@ -322,1960 +359,2665 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<BatchOrder>(entity =>
         {
-            entity.HasKey(e => new { e.BatchId, e.OrderId }).HasName("batch_order_pkey");
+            entity.HasKey("BatchId", "OrderId").HasName("batch_order_pkey");
 
             entity.ToTable("batch_order");
 
-            entity.HasIndex(e => e.OrderId, "batch_order_order_id_key").IsUnique();
+            // entity.HasIndex("OrderId", "batch_order_order_id_key").IsUnique();
+            entity.HasIndex("OrderId").HasDatabaseName("batch_order_order_id_key").IsUnique();
 
-            entity.Property(e => e.BatchId).HasColumnName("batch_id");
-            entity.Property(e => e.OrderId).HasColumnName("order_id");
-            entity.Property(e => e.AddedTimestamp)
+            entity.Property("BatchId")
+                .HasField("_batchId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("batch_id");
+            entity.Property("OrderId")
+                .HasField("_orderId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("order_id");
+            entity.Property("AddedTimestamp")
+                .HasField("_addedTimestamp")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("now()")
-                .HasColumnType("timestamp without time zone")
                 .HasColumnName("added_timestamp");
 
             entity.HasOne(d => d.Batch).WithMany(p => p.BatchOrders)
-                .HasForeignKey(d => d.BatchId)
+                .HasForeignKey("BatchId")
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_batch_order_batch");
 
             entity.HasOne(d => d.Order).WithOne(p => p.BatchOrder)
-                .HasForeignKey<BatchOrder>(d => d.OrderId)
+                .HasForeignKey<BatchOrder>("OrderId")
                 .HasConstraintName("fk_batch_order_order");
         });
 
         modelBuilder.Entity<Buildingfootprint>(entity =>
         {
-            entity.HasKey(e => e.Buildingcarbonfootprintid).HasName("buildingfootprint_pkey");
+            entity.HasKey("Buildingcarbonfootprintid").HasName("buildingfootprint_pkey");
 
             entity.ToTable("buildingfootprint");
 
-            entity.Property(e => e.Buildingcarbonfootprintid)
+            entity.Property("Buildingcarbonfootprintid")
+                .HasField("_buildingcarbonfootprintid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("buildingcarbonfootprintid");
-            entity.Property(e => e.Block)
+            entity.Property("Block")
+                .HasField("_block")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("block");
-            entity.Property(e => e.Floor)
+            entity.Property("Floor")
+                .HasField("_floor")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("floor");
-            entity.Property(e => e.Room)
+            entity.Property("Room")
+                .HasField("_room")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("room");
-            entity.Property(e => e.Timehourly)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("timehourly");
-            entity.Property(e => e.Totalroomco2).HasColumnName("totalroomco2");
-            entity.Property(e => e.Zone)
+            entity.Property("Timehourly")
+                .HasField("_timehourly")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("timehourly");
+            entity.Property("Totalroomco2")
+                .HasField("_totalroomco2")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("totalroomco2");
+            entity.Property("Zone")
+                .HasField("_zone")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("zone");
         });
 
         modelBuilder.Entity<CarbonEmission>(entity =>
         {
-            entity.HasKey(e => e.EmissionId).HasName("carbon_emission_pkey");
+            entity.HasKey("EmissionId").HasName("carbon_emission_pkey");
 
             entity.ToTable("carbon_emission");
 
-            entity.Property(e => e.EmissionId)
+            entity.Property("EmissionId")
+                .HasField("_emissionId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("emission_id");
-            entity.Property(e => e.CarbonKg).HasColumnName("carbon_kg");
-            entity.Property(e => e.StageId).HasColumnName("stage_id");
+            entity.Property("CarbonKg")
+                .HasField("_carbonKg")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("carbon_kg");
+            entity.Property("StageId")
+                .HasField("_stageId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("stage_id");
 
             entity.HasOne(d => d.Stage).WithMany(p => p.CarbonEmissions)
-                .HasForeignKey(d => d.StageId)
+                .HasForeignKey("StageId")
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_carbon_emission_stage");
         });
 
         modelBuilder.Entity<CarbonResult>(entity =>
         {
-            entity.HasKey(e => e.CarbonResultId).HasName("carbon_result_pkey");
+            entity.HasKey("CarbonResultId").HasName("carbon_result_pkey");
 
             entity.ToTable("carbon_result");
 
-            entity.Property(e => e.CarbonResultId)
+            entity.Property("CarbonResultId")
+                .HasField("_carbonResultId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("carbon_result_id");
-            entity.Property(e => e.CreatedAt)
+            entity.Property("CreatedAt")
+                .HasField("_createdAt")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("now()")
-                .HasColumnType("timestamp without time zone")
                 .HasColumnName("created_at");
-            entity.Property(e => e.TotalCarbonKg).HasColumnName("total_carbon_kg");
-            entity.Property(e => e.ValidationPassed)
+            entity.Property("TotalCarbonKg")
+                .HasField("_totalCarbonKg")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("total_carbon_kg");
+            entity.Property("ValidationPassed")
+                .HasField("_validationPassed")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValue(false)
                 .HasColumnName("validation_passed");
         });
 
         modelBuilder.Entity<Cart>(entity =>
         {
-            entity.HasKey(e => e.Cartid).HasName("cart_pkey");
+            entity.HasKey("Cartid").HasName("cart_pkey");
 
             entity.ToTable("cart");
 
-            entity.Property(e => e.Cartid)
+            entity.Property("Cartid")
+                .HasField("_cartid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("cartid");
-            entity.Property(e => e.Customerid).HasColumnName("customerid");
-            entity.Property(e => e.Rentalend)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("rentalend");
-            entity.Property(e => e.Rentalstart)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("rentalstart");
-            entity.Property(e => e.Sessionid).HasColumnName("sessionid");
+            entity.Property("Customerid")
+                .HasField("_customerid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("customerid");
+            entity.Property("Rentalend")
+                .HasField("_rentalend")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("rentalend");
+            entity.Property("Rentalstart")
+                .HasField("_rentalstart")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("rentalstart");
+            entity.Property("Sessionid")
+                .HasField("_sessionid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("sessionid");
 
             entity.HasOne(d => d.Customer).WithMany(p => p.Carts)
-                .HasForeignKey(d => d.Customerid)
+                .HasForeignKey("Customerid")
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("fk_cart_customer");
 
             entity.HasOne(d => d.Session).WithMany(p => p.Carts)
-                .HasForeignKey(d => d.Sessionid)
+                .HasForeignKey("Sessionid")
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("fk_cart_session");
         });
 
         modelBuilder.Entity<Cartitem>(entity =>
         {
-            entity.HasKey(e => e.Cartitemid).HasName("cartitem_pkey");
+            entity.HasKey("Cartitemid").HasName("cartitem_pkey");
 
             entity.ToTable("cartitem");
 
-            entity.Property(e => e.Cartitemid)
+            entity.Property("Cartitemid")
+                .HasField("_cartitemid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("cartitemid");
-            entity.Property(e => e.Cartid).HasColumnName("cartid");
-            entity.Property(e => e.Isselected)
+            entity.Property("Cartid")
+                .HasField("_cartid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("cartid");
+            entity.Property("Isselected")
+                .HasField("_isselected")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValue(true)
                 .HasColumnName("isselected");
-            entity.Property(e => e.Productid).HasColumnName("productid");
-            entity.Property(e => e.Quantity).HasColumnName("quantity");
+            entity.Property("Productid")
+                .HasField("_productid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("productid");
+            entity.Property("Quantity")
+                .HasField("_quantity")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("quantity");
 
             entity.HasOne(d => d.Cart).WithMany(p => p.Cartitems)
-                .HasForeignKey(d => d.Cartid)
+                .HasForeignKey("Cartid")
                 .HasConstraintName("fk_cartitem_cart");
 
             entity.HasOne(d => d.Product).WithMany(p => p.Cartitems)
-                .HasForeignKey(d => d.Productid)
+                .HasForeignKey("Productid")
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_cartitem_product");
         });
 
         modelBuilder.Entity<Category>(entity =>
         {
-            entity.HasKey(e => e.Categoryid).HasName("category_pkey");
+            entity.HasKey("Categoryid").HasName("category_pkey");
 
             entity.ToTable("category");
 
-            entity.Property(e => e.Categoryid)
+            entity.Property("Categoryid")
+                .HasField("_categoryid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("categoryid");
-            entity.Property(e => e.Createddate)
+            entity.Property("Createddate")
+                .HasField("_createddate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnType("timestamp without time zone")
                 .HasColumnName("createddate");
-            entity.Property(e => e.Description).HasColumnName("description");
-            entity.Property(e => e.Name)
+            entity.Property("Description")
+                .HasField("_description")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("description");
+            entity.Property("Name")
+                .HasField("_name")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("name");
-            entity.Property(e => e.Updateddate)
+            entity.Property("Updateddate")
+                .HasField("_updateddate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnType("timestamp without time zone")
                 .HasColumnName("updateddate");
         });
 
         modelBuilder.Entity<Checkout>(entity =>
         {
-            entity.HasKey(e => e.Checkoutid).HasName("checkout_pkey");
+            entity.HasKey("Checkoutid").HasName("checkout_pkey");
 
             entity.ToTable("checkout");
 
-            entity.Property(e => e.Checkoutid)
+            entity.Property("Checkoutid")
+                .HasField("_checkoutid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("checkoutid");
-            entity.Property(e => e.Cartid).HasColumnName("cartid");
-            entity.Property(e => e.Createdat)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("createdat");
-            entity.Property(e => e.Customerid).HasColumnName("customerid");
-            entity.Property(e => e.Deliveryid).HasColumnName("deliveryid");
-            entity.Property(e => e.Notifyoptin)
+            entity.Property("Cartid")
+                .HasField("_cartid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("cartid");
+            entity.Property("Createdat")
+                .HasField("_createdat")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("createdat");
+            entity.Property("Customerid")
+                .HasField("_customerid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("customerid");
+            entity.Property("Notifyoptin")
+                .HasField("_notifyoptin")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValue(false)
                 .HasColumnName("notifyoptin");
+            entity.Property("OptionId")
+                .HasField("_optionId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("option_id");
 
             entity.HasOne(d => d.Cart).WithMany(p => p.Checkouts)
-                .HasForeignKey(d => d.Cartid)
+                .HasForeignKey("Cartid")
                 .HasConstraintName("fk_checkout_cart");
 
             entity.HasOne(d => d.Customer).WithMany(p => p.Checkouts)
-                .HasForeignKey(d => d.Customerid)
+                .HasForeignKey("Customerid")
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_checkout_customer");
 
-            entity.HasOne(d => d.Delivery).WithMany(p => p.Checkouts)
-                .HasForeignKey(d => d.Deliveryid)
+            entity.HasOne(d => d.Option).WithMany(p => p.Checkouts)
+                .HasForeignKey("OptionId")
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_checkout_delivery");
         });
 
         modelBuilder.Entity<Clearancebatch>(entity =>
         {
-            entity.HasKey(e => e.Clearancebatchid).HasName("clearancebatch_pkey");
+            entity.HasKey("Clearancebatchid").HasName("clearancebatch_pkey");
 
             entity.ToTable("clearancebatch");
 
-            entity.Property(e => e.Clearancebatchid)
+            entity.Property("Clearancebatchid")
+                .HasField("_clearancebatchid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("clearancebatchid");
-            entity.Property(e => e.Batchname)
+            entity.Property("Batchname")
+                .HasField("_batchname")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("batchname");
-            entity.Property(e => e.Clearancedate)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("clearancedate");
-            entity.Property(e => e.Createddate)
+            entity.Property("Clearancedate")
+                .HasField("_clearancedate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("clearancedate");
+            entity.Property("Createddate")
+                .HasField("_createddate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnType("timestamp without time zone")
                 .HasColumnName("createddate");
         });
 
         modelBuilder.Entity<Clearanceitem>(entity =>
         {
-            entity.HasKey(e => e.Clearanceitemid).HasName("clearanceitem_pkey");
+            entity.HasKey("Clearanceitemid").HasName("clearanceitem_pkey");
 
             entity.ToTable("clearanceitem");
 
-            entity.HasIndex(e => e.Inventoryitemid, "clearanceitem_inventoryitemid_key").IsUnique();
+            // entity.HasIndex("Inventoryitemid", "clearanceitem_inventoryitemid_key").IsUnique();
+            entity.HasIndex("Inventoryitemid").HasDatabaseName("clearanceitem_inventoryitemid_key").IsUnique();
 
-            entity.Property(e => e.Clearanceitemid)
+            entity.Property("Clearanceitemid")
+                .HasField("_clearanceitemid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("clearanceitemid");
-            entity.Property(e => e.Clearancebatchid).HasColumnName("clearancebatchid");
-            entity.Property(e => e.Finalprice)
+            entity.Property("Clearancebatchid")
+                .HasField("_clearancebatchid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("clearancebatchid");
+            entity.Property("Finalprice")
+                .HasField("_finalprice")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasPrecision(10, 2)
                 .HasColumnName("finalprice");
-            entity.Property(e => e.Inventoryitemid).HasColumnName("inventoryitemid");
-            entity.Property(e => e.Recommendedprice)
+            entity.Property("Inventoryitemid")
+                .HasField("_inventoryitemid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("inventoryitemid");
+            entity.Property("Recommendedprice")
+                .HasField("_recommendedprice")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasPrecision(10, 2)
                 .HasColumnName("recommendedprice");
-            entity.Property(e => e.Saledate)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("saledate");
+            entity.Property("Saledate")
+                .HasField("_saledate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("saledate");
 
             entity.HasOne(d => d.Clearancebatch).WithMany(p => p.Clearanceitems)
-                .HasForeignKey(d => d.Clearancebatchid)
+                .HasForeignKey("Clearancebatchid")
                 .HasConstraintName("fk_clearance_batch");
 
             entity.HasOne(d => d.Inventoryitem).WithOne(p => p.Clearanceitem)
-                .HasForeignKey<Clearanceitem>(d => d.Inventoryitemid)
+                .HasForeignKey<Clearanceitem>("Inventoryitemid")
                 .HasConstraintName("fk_clearance_inventory");
         });
 
         modelBuilder.Entity<Clearancelog>(entity =>
         {
-            entity.HasKey(e => e.Clearancelogid).HasName("clearancelog_pkey");
+            entity.HasKey("Clearancelogid").HasName("clearancelog_pkey");
 
             entity.ToTable("clearancelog");
 
-            entity.Property(e => e.Clearancelogid)
+            entity.Property("Clearancelogid")
+                .HasField("_clearancelogid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .ValueGeneratedNever()
                 .HasColumnName("clearancelogid");
-            entity.Property(e => e.Batchname)
+            entity.Property("Batchname")
+                .HasField("_batchname")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("batchname");
-            entity.Property(e => e.Clearancebatchid).HasColumnName("clearancebatchid");
-            entity.Property(e => e.Clearancedate)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("clearancedate");
-            entity.Property(e => e.Detailsjson).HasColumnName("detailsjson");
+            entity.Property("Clearancebatchid")
+                .HasField("_clearancebatchid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("clearancebatchid");
+            entity.Property("Clearancedate")
+                .HasField("_clearancedate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("clearancedate");
+            entity.Property("Detailsjson")
+                .HasField("_detailsjson")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("detailsjson");
 
             entity.HasOne(d => d.Clearancebatch).WithMany(p => p.Clearancelogs)
-                .HasForeignKey(d => d.Clearancebatchid)
+                .HasForeignKey("Clearancebatchid")
                 .HasConstraintName("fk_clearance_batch");
 
             entity.HasOne(d => d.ClearancelogNavigation).WithOne(p => p.Clearancelog)
-                .HasForeignKey<Clearancelog>(d => d.Clearancelogid)
+                .HasForeignKey<Clearancelog>("Clearancelogid")
                 .HasConstraintName("fk_clearance_transaction");
         });
 
         modelBuilder.Entity<Customer>(entity =>
         {
-            entity.HasKey(e => e.Customerid).HasName("customer_pkey");
+            entity.HasKey("Customerid").HasName("customer_pkey");
 
             entity.ToTable("customer");
 
-            entity.HasIndex(e => e.Userid, "customer_userid_key").IsUnique();
+            // entity.HasIndex("Userid", "customer_userid_key").IsUnique();
+            entity.HasIndex("Userid").HasDatabaseName("customer_userid_key").IsUnique();
 
-            entity.Property(e => e.Customerid)
+            entity.Property("Customerid")
+                .HasField("_customerid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("customerid");
-            entity.Property(e => e.Address)
+            entity.Property("Address")
+                .HasField("_address")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("address");
-            entity.Property(e => e.Customertype).HasColumnName("customertype");
-            entity.Property(e => e.Userid).HasColumnName("userid");
+            entity.Property("Customertype")
+                .HasField("_customertype")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("customertype");
+            entity.Property("Userid")
+                .HasField("_userid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("userid");
 
             entity.HasOne(d => d.User).WithOne(p => p.Customer)
-                .HasForeignKey<Customer>(d => d.Userid)
+                .HasForeignKey<Customer>("Userid")
                 .HasConstraintName("fk_customer_user");
         });
 
         modelBuilder.Entity<CustomerChoice>(entity =>
         {
-            entity.HasKey(e => new { e.CustomerId, e.OrderId }).HasName("customer_choice_pkey");
+            entity.HasKey("CustomerId", "OrderId").HasName("customer_choice_pkey");
 
             entity.ToTable("customer_choice");
 
-            entity.Property(e => e.CustomerId).HasColumnName("customer_id");
-            entity.Property(e => e.OrderId).HasColumnName("order_id");
-            entity.Property(e => e.CreatedAt)
+            entity.Property("CustomerId")
+                .HasField("_customerId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("customer_id");
+            entity.Property("OrderId")
+                .HasField("_orderId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("order_id");
+            entity.Property("CreatedAt")
+                .HasField("_createdAt")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("now()")
-                .HasColumnType("timestamp without time zone")
                 .HasColumnName("created_at");
 
             entity.HasOne(d => d.Customer).WithMany(p => p.CustomerChoices)
-                .HasForeignKey(d => d.CustomerId)
+                .HasForeignKey("CustomerId")
                 .HasConstraintName("fk_customerchoice_customer");
 
             entity.HasOne(d => d.Order).WithMany(p => p.CustomerChoices)
-                .HasForeignKey(d => d.OrderId)
+                .HasForeignKey("OrderId")
                 .HasConstraintName("fk_customerchoice_order");
         });
 
         modelBuilder.Entity<Customerreward>(entity =>
         {
-            entity.HasKey(e => e.Rewardid).HasName("customerrewards_pkey");
+            entity.HasKey("Rewardid").HasName("customerrewards_pkey");
 
             entity.ToTable("customerrewards");
 
-            entity.Property(e => e.Rewardid)
+            entity.Property("Rewardid")
+                .HasField("_rewardid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("rewardid");
-            entity.Property(e => e.Createdat)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("createdat");
-            entity.Property(e => e.Customerid).HasColumnName("customerid");
-            entity.Property(e => e.Ordercarbondataid).HasColumnName("ordercarbondataid");
-            entity.Property(e => e.Rewardtype)
+            entity.Property("Createdat")
+                .HasField("_createdat")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("createdat");
+            entity.Property("Customerid")
+                .HasField("_customerid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("customerid");
+            entity.Property("Ordercarbondataid")
+                .HasField("_ordercarbondataid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("ordercarbondataid");
+            entity.Property("Rewardtype")
+                .HasField("_rewardtype")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("rewardtype");
-            entity.Property(e => e.Rewardvalue).HasColumnName("rewardvalue");
+            entity.Property("Rewardvalue")
+                .HasField("_rewardvalue")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("rewardvalue");
 
             entity.HasOne(d => d.Customer).WithMany(p => p.Customerrewards)
-                .HasForeignKey(d => d.Customerid)
+                .HasForeignKey("Customerid")
                 .HasConstraintName("fk_customerrewards_customer");
 
             entity.HasOne(d => d.Ordercarbondata).WithMany(p => p.Customerrewards)
-                .HasForeignKey(d => d.Ordercarbondataid)
+                .HasForeignKey("Ordercarbondataid")
                 .HasConstraintName("fk_customerrewards_ordercarbondata");
         });
 
         modelBuilder.Entity<Damagereport>(entity =>
         {
-            entity.HasKey(e => e.Damagereportid).HasName("damagereport_pkey");
+            entity.HasKey("Damagereportid").HasName("damagereport_pkey");
 
             entity.ToTable("damagereport");
 
-            entity.Property(e => e.Damagereportid)
+            entity.Property("Damagereportid")
+                .HasField("_damagereportid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("damagereportid");
-            entity.Property(e => e.Description).HasColumnName("description");
-            entity.Property(e => e.Images)
+            entity.Property("Description")
+                .HasField("_description")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("description");
+            entity.Property("Images")
+                .HasField("_images")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("images");
-            entity.Property(e => e.Repaircost)
+            entity.Property("Repaircost")
+                .HasField("_repaircost")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasPrecision(10, 2)
                 .HasColumnName("repaircost");
-            entity.Property(e => e.Reportdate)
+            entity.Property("Reportdate")
+                .HasField("_reportdate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnType("timestamp without time zone")
                 .HasColumnName("reportdate");
-            entity.Property(e => e.Returnitemid).HasColumnName("returnitemid");
-            entity.Property(e => e.Severity)
+            entity.Property("Returnitemid")
+                .HasField("_returnitemid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("returnitemid");
+            entity.Property("Severity")
+                .HasField("_severity")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("severity");
 
             entity.HasOne(d => d.Returnitem).WithMany(p => p.Damagereports)
-                .HasForeignKey(d => d.Returnitemid)
+                .HasForeignKey("Returnitemid")
                 .HasConstraintName("fk_damagereport_returnitem");
         });
 
         modelBuilder.Entity<DeliveryBatch>(entity =>
         {
-            entity.HasKey(e => e.DeliveryBatchId).HasName("delivery_batch_pkey");
+            entity.HasKey("DeliveryBatchId").HasName("delivery_batch_pkey");
 
             entity.ToTable("delivery_batch");
 
-            entity.Property(e => e.DeliveryBatchId)
+            entity.Property("DeliveryBatchId")
+                .HasField("_deliveryBatchId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("delivery_batch_id");
-            entity.Property(e => e.BatchWeightKg).HasColumnName("batch_weight_kg");
-            entity.Property(e => e.CarbonSavings).HasColumnName("carbon_savings");
-            entity.Property(e => e.DestinationAddress)
+            entity.Property("BatchWeightKg")
+                .HasField("_batchWeightKg")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("batch_weight_kg");
+            entity.Property("CarbonSavings")
+                .HasField("_carbonSavings")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("carbon_savings");
+            entity.Property("DestinationAddress")
+                .HasField("_destinationAddress")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("destination_address");
-            entity.Property(e => e.HubId).HasColumnName("hub_id");
-            entity.Property(e => e.TotalOrders)
+            entity.Property("HubId")
+                .HasField("_hubId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("hub_id");
+            entity.Property("TotalOrders")
+                .HasField("_totalOrders")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValue(0)
                 .HasColumnName("total_orders");
 
             entity.HasOne(d => d.Hub).WithMany(p => p.DeliveryBatches)
-                .HasForeignKey(d => d.HubId)
+                .HasForeignKey("HubId")
                 .HasConstraintName("fk_delivery_batch_hub");
         });
 
         modelBuilder.Entity<DeliveryRoute>(entity =>
         {
-            entity.HasKey(e => e.RouteId).HasName("delivery_route_pkey");
+            entity.HasKey("RouteId").HasName("delivery_route_pkey");
 
             entity.ToTable("delivery_route");
 
-            entity.Property(e => e.RouteId)
+            entity.Property("RouteId")
+                .HasField("_routeId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("route_id");
-            entity.Property(e => e.DestinationAddress)
+            entity.Property("DestinationAddress")
+                .HasField("_destinationAddress")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("destination_address");
-            entity.Property(e => e.DestinationHubId).HasColumnName("destination_hub_id");
-            entity.Property(e => e.IsValid)
+            entity.Property("DestinationHubId")
+                .HasField("_destinationHubId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("destination_hub_id");
+            entity.Property("IsValid")
+                .HasField("_isValid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValue(true)
                 .HasColumnName("is_valid");
-            entity.Property(e => e.OriginAddress)
+            entity.Property("OriginAddress")
+                .HasField("_originAddress")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("origin_address");
-            entity.Property(e => e.OriginHubId).HasColumnName("origin_hub_id");
-            entity.Property(e => e.TotalDistanceKm).HasColumnName("total_distance_km");
+            entity.Property("OriginHubId")
+                .HasField("_originHubId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("origin_hub_id");
+            entity.Property("TotalDistanceKm")
+                .HasField("_totalDistanceKm")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("total_distance_km");
 
             entity.HasOne(d => d.DestinationHub).WithMany(p => p.DeliveryRouteDestinationHubs)
-                .HasForeignKey(d => d.DestinationHubId)
+                .HasForeignKey("DestinationHubId")
                 .HasConstraintName("fk_route_destination_hub");
 
             entity.HasOne(d => d.OriginHub).WithMany(p => p.DeliveryRouteOriginHubs)
-                .HasForeignKey(d => d.OriginHubId)
+                .HasForeignKey("OriginHubId")
                 .HasConstraintName("fk_route_origin_hub");
-        });
-
-        modelBuilder.Entity<Deliverymethod>(entity =>
-        {
-            entity.HasKey(e => e.Deliveryid).HasName("deliverymethod_pkey");
-
-            entity.ToTable("deliverymethod");
-
-            entity.Property(e => e.Deliveryid)
-                .UseIdentityAlwaysColumn()
-                .HasColumnName("deliveryid");
-            entity.Property(e => e.Carrierid)
-                .HasMaxLength(50)
-                .HasColumnName("carrierid");
-            entity.Property(e => e.Deliverycost)
-                .HasPrecision(10, 2)
-                .HasColumnName("deliverycost");
-            entity.Property(e => e.Durationdays).HasColumnName("durationdays");
-            entity.Property(e => e.Orderid).HasColumnName("orderid");
-
-            entity.HasOne(d => d.Order).WithMany(p => p.Deliverymethods)
-                .HasForeignKey(d => d.Orderid)
-                .OnDelete(DeleteBehavior.Restrict)
-                .HasConstraintName("fk_deliverymethod_order");
         });
 
         modelBuilder.Entity<Deposit>(entity =>
         {
-            entity.HasKey(e => e.Depositid).HasName("deposit_pkey");
+            entity.HasKey("Depositid").HasName("deposit_pkey");
 
             entity.ToTable("deposit");
 
-            entity.Property(e => e.Depositid)
+            entity.Property("Depositid")
+                .HasField("_depositid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("depositid");
-            entity.Property(e => e.Createdat)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("createdat");
-            entity.Property(e => e.Forfeitedamount)
+            entity.Property("Createdat")
+                .HasField("_createdat")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("createdat");
+            entity.Property("Forfeitedamount")
+                .HasField("_forfeitedamount")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasPrecision(10, 2)
                 .HasDefaultValueSql("0")
                 .HasColumnName("forfeitedamount");
-            entity.Property(e => e.Heldamount)
+            entity.Property("Heldamount")
+                .HasField("_heldamount")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasPrecision(10, 2)
                 .HasColumnName("heldamount");
-            entity.Property(e => e.Orderid).HasColumnName("orderid");
-            entity.Property(e => e.Originalamount)
+            entity.Property("Orderid")
+                .HasField("_orderid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("orderid");
+            entity.Property("Originalamount")
+                .HasField("_originalamount")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasPrecision(10, 2)
                 .HasColumnName("originalamount");
-            entity.Property(e => e.Refundedamount)
+            entity.Property("Refundedamount")
+                .HasField("_refundedamount")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasPrecision(10, 2)
                 .HasDefaultValueSql("0")
                 .HasColumnName("refundedamount");
-            entity.Property(e => e.Transactionid).HasColumnName("transactionid");
+            entity.Property("Transactionid")
+                .HasField("_transactionid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("transactionid");
 
             entity.HasOne(d => d.Order).WithMany(p => p.Deposits)
-                .HasForeignKey(d => d.Orderid)
+                .HasForeignKey("Orderid")
                 .HasConstraintName("fk_deposit_order");
 
             entity.HasOne(d => d.Transaction).WithMany(p => p.Deposits)
-                .HasForeignKey(d => d.Transactionid)
+                .HasForeignKey("Transactionid")
                 .HasConstraintName("fk_deposit_transaction");
         });
 
         modelBuilder.Entity<Ecobadge>(entity =>
         {
-            entity.HasKey(e => e.Badgeid).HasName("ecobadge_pkey");
+            entity.HasKey("Badgeid").HasName("ecobadge_pkey");
 
             entity.ToTable("ecobadge");
 
-            entity.Property(e => e.Badgeid)
+            entity.Property("Badgeid")
+                .HasField("_badgeid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("badgeid");
-            entity.Property(e => e.Badgename)
+            entity.Property("Badgename")
+                .HasField("_badgename")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(100)
                 .HasColumnName("badgename");
-            entity.Property(e => e.Criteriadescription)
+            entity.Property("Criteriadescription")
+                .HasField("_criteriadescription")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("criteriadescription");
-            entity.Property(e => e.Maxcarbong).HasColumnName("maxcarbong");
+            entity.Property("Maxcarbong")
+                .HasField("_maxcarbong")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("maxcarbong");
         });
 
         modelBuilder.Entity<Inventoryitem>(entity =>
         {
-            entity.HasKey(e => e.Inventoryid).HasName("inventoryitem_pkey");
+            entity.HasKey("Inventoryid").HasName("inventoryitem_pkey");
 
             entity.ToTable("inventoryitem");
 
-            entity.HasIndex(e => e.Serialnumber, "inventoryitem_serialnumber_key").IsUnique();
+            // entity.HasIndex("Serialnumber", "inventoryitem_serialnumber_key").IsUnique();
+            entity.HasIndex("Serialnumber").HasDatabaseName("inventoryitem_serialnumber_key").IsUnique();
 
-            entity.Property(e => e.Inventoryid)
+            entity.Property("Inventoryid")
+                .HasField("_inventoryid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("inventoryid");
-            entity.Property(e => e.Createdat)
+            entity.Property("Createdat")
+                .HasField("_createdat")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnType("timestamp without time zone")
                 .HasColumnName("createdat");
-            entity.Property(e => e.Expirydate)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("expirydate");
-            entity.Property(e => e.Productid).HasColumnName("productid");
-            entity.Property(e => e.Serialnumber)
+            entity.Property("Expirydate")
+                .HasField("_expirydate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("expirydate");
+            entity.Property("Productid")
+                .HasField("_productid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("productid");
+            entity.Property("Serialnumber")
+                .HasField("_serialnumber")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("serialnumber");
-            entity.Property(e => e.Updatedat)
+            entity.Property("Updatedat")
+                .HasField("_updatedat")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnType("timestamp without time zone")
                 .HasColumnName("updatedat");
 
             entity.HasOne(d => d.Product).WithMany(p => p.Inventoryitems)
-                .HasForeignKey(d => d.Productid)
+                .HasForeignKey("Productid")
                 .HasConstraintName("fk_inventory_product");
         });
 
         modelBuilder.Entity<LegCarbon>(entity =>
         {
-            entity.HasKey(e => e.LegId).HasName("leg_carbon_pkey");
+            entity.HasKey("LegId").HasName("leg_carbon_pkey");
 
             entity.ToTable("leg_carbon");
 
-            entity.Property(e => e.LegId)
+            entity.Property("LegId")
+                .HasField("_legId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("leg_id");
-            entity.Property(e => e.CarbonKg).HasColumnName("carbon_kg");
-            entity.Property(e => e.CarbonRate).HasColumnName("carbon_rate");
-            entity.Property(e => e.CarbonResultId).HasColumnName("carbon_result_id");
-            entity.Property(e => e.DistanceKm).HasColumnName("distance_km");
-            entity.Property(e => e.RouteLegId).HasColumnName("route_leg_id");
-            entity.Property(e => e.WeightKg).HasColumnName("weight_kg");
+            entity.Property("CarbonKg")
+                .HasField("_carbonKg")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("carbon_kg");
+            entity.Property("CarbonRate")
+                .HasField("_carbonRate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("carbon_rate");
+            entity.Property("CarbonResultId")
+                .HasField("_carbonResultId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("carbon_result_id");
+            entity.Property("DistanceKm")
+                .HasField("_distanceKm")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("distance_km");
+            entity.Property("RouteLegId")
+                .HasField("_routeLegId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("route_leg_id");
+            entity.Property("WeightKg")
+                .HasField("_weightKg")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("weight_kg");
 
             entity.HasOne(d => d.CarbonResult).WithMany(p => p.LegCarbons)
-                .HasForeignKey(d => d.CarbonResultId)
+                .HasForeignKey("CarbonResultId")
                 .HasConstraintName("fk_leg_carbon_result");
 
             entity.HasOne(d => d.RouteLeg).WithMany(p => p.LegCarbons)
-                .HasForeignKey(d => d.RouteLegId)
+                .HasForeignKey("RouteLegId")
                 .HasConstraintName("fk_leg_carbon_leg");
         });
 
         modelBuilder.Entity<Lineitem>(entity =>
         {
-            entity.HasKey(e => e.Lineitemid).HasName("lineitem_pkey");
+            entity.HasKey("Lineitemid").HasName("lineitem_pkey");
 
             entity.ToTable("lineitem");
 
-            entity.Property(e => e.Lineitemid)
+            entity.Property("Lineitemid")
+                .HasField("_lineitemid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("lineitemid");
-            entity.Property(e => e.Productid).HasColumnName("productid");
-            entity.Property(e => e.Quantityrequest).HasColumnName("quantityrequest");
-            entity.Property(e => e.Remarks).HasColumnName("remarks");
-            entity.Property(e => e.Requestid).HasColumnName("requestid");
+            entity.Property("Productid")
+                .HasField("_productid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("productid");
+            entity.Property("Quantityrequest")
+                .HasField("_quantityrequest")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("quantityrequest");
+            entity.Property("Remarks")
+                .HasField("_remarks")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("remarks");
+            entity.Property("Requestid")
+                .HasField("_requestid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("requestid");
 
             entity.HasOne(d => d.Product).WithMany(p => p.Lineitems)
-                .HasForeignKey(d => d.Productid)
+                .HasForeignKey("Productid")
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("fk_lineitem_product");
 
             entity.HasOne(d => d.Request).WithMany(p => p.Lineitems)
-                .HasForeignKey(d => d.Requestid)
+                .HasForeignKey("Requestid")
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("fk_lineitem_request");
         });
 
         modelBuilder.Entity<Loanitem>(entity =>
         {
-            entity.HasKey(e => e.Loanitemid).HasName("loanitem_pkey");
+            entity.HasKey("Loanitemid").HasName("loanitem_pkey");
 
             entity.ToTable("loanitem");
 
-            entity.Property(e => e.Loanitemid)
+            entity.Property("Loanitemid")
+                .HasField("_loanitemid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("loanitemid");
-            entity.Property(e => e.Inventoryitemid).HasColumnName("inventoryitemid");
-            entity.Property(e => e.Loanlistid).HasColumnName("loanlistid");
-            entity.Property(e => e.Remarks).HasColumnName("remarks");
+            entity.Property("Inventoryitemid")
+                .HasField("_inventoryitemid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("inventoryitemid");
+            entity.Property("Loanlistid")
+                .HasField("_loanlistid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("loanlistid");
+            entity.Property("Remarks")
+                .HasField("_remarks")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("remarks");
 
             entity.HasOne(d => d.Inventoryitem).WithMany(p => p.Loanitems)
-                .HasForeignKey(d => d.Inventoryitemid)
+                .HasForeignKey("Inventoryitemid")
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_loanitem_inventory");
 
             entity.HasOne(d => d.Loanlist).WithMany(p => p.Loanitems)
-                .HasForeignKey(d => d.Loanlistid)
+                .HasForeignKey("Loanlistid")
                 .HasConstraintName("fk_loanitem_loan");
         });
 
         modelBuilder.Entity<Loanlist>(entity =>
         {
-            entity.HasKey(e => e.Loanlistid).HasName("loanlist_pkey");
+            entity.HasKey("Loanlistid").HasName("loanlist_pkey");
 
             entity.ToTable("loanlist");
 
-            entity.Property(e => e.Loanlistid)
+            entity.Property("Loanlistid")
+                .HasField("_loanlistid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("loanlistid");
-            entity.Property(e => e.Customerid).HasColumnName("customerid");
-            entity.Property(e => e.Duedate)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("duedate");
-            entity.Property(e => e.Loandate)
+            entity.Property("Customerid")
+                .HasField("_customerid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("customerid");
+            entity.Property("Duedate")
+                .HasField("_duedate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("duedate");
+            entity.Property("Loandate")
+                .HasField("_loandate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnType("timestamp without time zone")
                 .HasColumnName("loandate");
-            entity.Property(e => e.Orderid).HasColumnName("orderid");
-            entity.Property(e => e.Remarks).HasColumnName("remarks");
-            entity.Property(e => e.Returndate)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("returndate");
+            entity.Property("Orderid")
+                .HasField("_orderid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("orderid");
+            entity.Property("Remarks")
+                .HasField("_remarks")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("remarks");
+            entity.Property("Returndate")
+                .HasField("_returndate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("returndate");
 
             entity.HasOne(d => d.Customer).WithMany(p => p.Loanlists)
-                .HasForeignKey(d => d.Customerid)
+                .HasForeignKey("Customerid")
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_loan_customer");
 
             entity.HasOne(d => d.Order).WithMany(p => p.Loanlists)
-                .HasForeignKey(d => d.Orderid)
+                .HasForeignKey("Orderid")
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_loan_order");
         });
 
         modelBuilder.Entity<Loanlog>(entity =>
         {
-            entity.HasKey(e => e.Loanlogid).HasName("loanlog_pkey");
+            entity.HasKey("Loanlogid").HasName("loanlog_pkey");
 
             entity.ToTable("loanlog");
 
-            entity.Property(e => e.Loanlogid)
+            entity.Property("Loanlogid")
+                .HasField("_loanlogid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .ValueGeneratedNever()
                 .HasColumnName("loanlogid");
-            entity.Property(e => e.Detailsjson).HasColumnName("detailsjson");
-            entity.Property(e => e.Duedate)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("duedate");
-            entity.Property(e => e.Loandate)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("loandate");
-            entity.Property(e => e.Loanlistid).HasColumnName("loanlistid");
-            entity.Property(e => e.Rentalorderlogid).HasColumnName("rentalorderlogid");
-            entity.Property(e => e.Returndate)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("returndate");
+            entity.Property("Detailsjson")
+                .HasField("_detailsjson")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("detailsjson");
+            entity.Property("Duedate")
+                .HasField("_duedate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("duedate");
+            entity.Property("Loandate")
+                .HasField("_loandate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("loandate");
+            entity.Property("Loanlistid")
+                .HasField("_loanlistid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("loanlistid");
+            entity.Property("Rentalorderlogid")
+                .HasField("_rentalorderlogid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("rentalorderlogid");
+            entity.Property("Returndate")
+                .HasField("_returndate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("returndate");
 
             entity.HasOne(d => d.Loanlist).WithMany(p => p.Loanlogs)
-                .HasForeignKey(d => d.Loanlistid)
+                .HasForeignKey("Loanlistid")
                 .HasConstraintName("fk_loan_list");
 
             entity.HasOne(d => d.LoanlogNavigation).WithOne(p => p.Loanlog)
-                .HasForeignKey<Loanlog>(d => d.Loanlogid)
+                .HasForeignKey<Loanlog>("Loanlogid")
                 .HasConstraintName("fk_loan_transaction");
 
             entity.HasOne(d => d.Rentalorderlog).WithMany(p => p.Loanlogs)
-                .HasForeignKey(d => d.Rentalorderlogid)
+                .HasForeignKey("Rentalorderlogid")
                 .HasConstraintName("fk_loan_rental");
         });
 
         modelBuilder.Entity<Notification>(entity =>
         {
-            entity.HasKey(e => e.Notificationid).HasName("notification_pkey");
+            entity.HasKey("Notificationid").HasName("notification_pkey");
 
             entity.ToTable("notification");
 
-            entity.Property(e => e.Notificationid)
+            entity.Property("Notificationid")
+                .HasField("_notificationid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("notificationid");
-            entity.Property(e => e.Datesent)
+            entity.Property("Datesent")
+                .HasField("_datesent")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnType("timestamp without time zone")
                 .HasColumnName("datesent");
-            entity.Property(e => e.Isread)
+            entity.Property("Isread")
+                .HasField("_isread")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValue(false)
                 .HasColumnName("isread");
-            entity.Property(e => e.Message)
+            entity.Property("Message")
+                .HasField("_message")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("message");
-            entity.Property(e => e.Userid).HasColumnName("userid");
+            entity.Property("Userid")
+                .HasField("_userid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("userid");
 
             entity.HasOne(d => d.User).WithMany(p => p.Notifications)
-                .HasForeignKey(d => d.Userid)
+                .HasForeignKey("Userid")
                 .HasConstraintName("fk_notification_user");
         });
 
         modelBuilder.Entity<Notificationpreference>(entity =>
         {
-            entity.HasKey(e => e.Preferenceid).HasName("notificationpreference_pkey");
+            entity.HasKey("Preferenceid").HasName("notificationpreference_pkey");
 
             entity.ToTable("notificationpreference");
 
-            entity.Property(e => e.Preferenceid)
+            entity.Property("Preferenceid")
+                .HasField("_preferenceid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("preferenceid");
-            entity.Property(e => e.Emailenabled)
+            entity.Property("Emailenabled")
+                .HasField("_emailenabled")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValue(true)
                 .HasColumnName("emailenabled");
-            entity.Property(e => e.Smsenabled)
+            entity.Property("Smsenabled")
+                .HasField("_smsenabled")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValue(false)
                 .HasColumnName("smsenabled");
-            entity.Property(e => e.Userid).HasColumnName("userid");
+            entity.Property("Userid")
+                .HasField("_userid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("userid");
 
             entity.HasOne(d => d.User).WithMany(p => p.Notificationpreferences)
-                .HasForeignKey(d => d.Userid)
+                .HasForeignKey("Userid")
                 .HasConstraintName("fk_notificationpref_user");
         });
 
         modelBuilder.Entity<Order>(entity =>
         {
-            entity.HasKey(e => e.Orderid).HasName("Order_pkey");
+            entity.HasKey("Orderid").HasName("Order_pkey");
 
             entity.ToTable("Order");
 
-            entity.Property(e => e.Orderid)
+            entity.Property("Orderid")
+                .HasField("_orderid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("orderid");
-            entity.Property(e => e.Checkoutid).HasColumnName("checkoutid");
-            entity.Property(e => e.Customerid).HasColumnName("customerid");
-            entity.Property(e => e.Orderdate)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("orderdate");
-            entity.Property(e => e.Totalamount)
+            entity.Property("Checkoutid")
+                .HasField("_checkoutid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("checkoutid");
+            entity.Property("Customerid")
+                .HasField("_customerid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("customerid");
+            entity.Property("Orderdate")
+                .HasField("_orderdate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("orderdate");
+            entity.Property("Totalamount")
+                .HasField("_totalamount")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasPrecision(10, 2)
                 .HasColumnName("totalamount");
-            entity.Property(e => e.Transactionid).HasColumnName("transactionid");
+            entity.Property("Transactionid")
+                .HasField("_transactionid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("transactionid");
 
             entity.HasOne(d => d.Checkout).WithMany(p => p.Orders)
-                .HasForeignKey(d => d.Checkoutid)
+                .HasForeignKey("Checkoutid")
                 .HasConstraintName("fk_order_checkout");
 
             entity.HasOne(d => d.Customer).WithMany(p => p.Orders)
-                .HasForeignKey(d => d.Customerid)
+                .HasForeignKey("Customerid")
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_order_customer");
 
             entity.HasOne(d => d.Transaction).WithMany(p => p.Orders)
-                .HasForeignKey(d => d.Transactionid)
+                .HasForeignKey("Transactionid")
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("fk_order_transaction");
         });
 
         modelBuilder.Entity<Ordercarbondatum>(entity =>
         {
-            entity.HasKey(e => e.Ordercarbondataid).HasName("ordercarbondata_pkey");
+            entity.HasKey("Ordercarbondataid").HasName("ordercarbondata_pkey");
 
             entity.ToTable("ordercarbondata");
 
-            entity.Property(e => e.Ordercarbondataid)
+            entity.Property("Ordercarbondataid")
+                .HasField("_ordercarbondataid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("ordercarbondataid");
-            entity.Property(e => e.Buildingcarbon).HasColumnName("buildingcarbon");
-            entity.Property(e => e.Calculatedat)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("calculatedat");
-            entity.Property(e => e.Impactlevel)
+            entity.Property("Buildingcarbon")
+                .HasField("_buildingcarbon")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("buildingcarbon");
+            entity.Property("Calculatedat")
+                .HasField("_calculatedat")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("calculatedat");
+            entity.Property("Impactlevel")
+                .HasField("_impactlevel")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(20)
                 .HasColumnName("impactlevel");
-            entity.Property(e => e.Orderid).HasColumnName("orderid");
-            entity.Property(e => e.Packagingcarbon).HasColumnName("packagingcarbon");
-            entity.Property(e => e.Productcarbon).HasColumnName("productcarbon");
-            entity.Property(e => e.Staffcarbon).HasColumnName("staffcarbon");
-            entity.Property(e => e.Totalcarbon).HasColumnName("totalcarbon");
+            entity.Property("Orderid")
+                .HasField("_orderid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("orderid");
+            entity.Property("Packagingcarbon")
+                .HasField("_packagingcarbon")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("packagingcarbon");
+            entity.Property("Productcarbon")
+                .HasField("_productcarbon")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("productcarbon");
+            entity.Property("Staffcarbon")
+                .HasField("_staffcarbon")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("staffcarbon");
+            entity.Property("Totalcarbon")
+                .HasField("_totalcarbon")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("totalcarbon");
 
             entity.HasOne(d => d.Order).WithMany(p => p.Ordercarbondata)
-                .HasForeignKey(d => d.Orderid)
+                .HasForeignKey("Orderid")
                 .HasConstraintName("fk_ordercarbondata_order");
         });
 
         modelBuilder.Entity<Orderitem>(entity =>
         {
-            entity.HasKey(e => e.Orderitemid).HasName("orderitem_pkey");
+            entity.HasKey("Orderitemid").HasName("orderitem_pkey");
 
             entity.ToTable("orderitem");
 
-            entity.Property(e => e.Orderitemid)
+            entity.Property("Orderitemid")
+                .HasField("_orderitemid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("orderitemid");
-            entity.Property(e => e.Orderid).HasColumnName("orderid");
-            entity.Property(e => e.Productid).HasColumnName("productid");
-            entity.Property(e => e.Quantity).HasColumnName("quantity");
-            entity.Property(e => e.Rentalenddate)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("rentalenddate");
-            entity.Property(e => e.Rentalstartdate)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("rentalstartdate");
-            entity.Property(e => e.Unitprice)
+            entity.Property("Orderid")
+                .HasField("_orderid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("orderid");
+            entity.Property("Productid")
+                .HasField("_productid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("productid");
+            entity.Property("Quantity")
+                .HasField("_quantity")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("quantity");
+            entity.Property("Rentalenddate")
+                .HasField("_rentalenddate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("rentalenddate");
+            entity.Property("Rentalstartdate")
+                .HasField("_rentalstartdate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("rentalstartdate");
+            entity.Property("Unitprice")
+                .HasField("_unitprice")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasPrecision(10, 2)
                 .HasColumnName("unitprice");
 
             entity.HasOne(d => d.Order).WithMany(p => p.Orderitems)
-                .HasForeignKey(d => d.Orderid)
+                .HasForeignKey("Orderid")
                 .HasConstraintName("fk_orderitem_order");
 
             entity.HasOne(d => d.Product).WithMany(p => p.Orderitems)
-                .HasForeignKey(d => d.Productid)
+                .HasForeignKey("Productid")
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_orderitem_product");
         });
 
         modelBuilder.Entity<Orderstatushistory>(entity =>
         {
-            entity.HasKey(e => e.Historyid).HasName("orderstatushistory_pkey");
+            entity.HasKey("Historyid").HasName("orderstatushistory_pkey");
 
             entity.ToTable("orderstatushistory");
 
-            entity.Property(e => e.Historyid)
+            entity.Property("Historyid")
+                .HasField("_historyid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("historyid");
-            entity.Property(e => e.Orderid).HasColumnName("orderid");
-            entity.Property(e => e.Remark)
+            entity.Property("Orderid")
+                .HasField("_orderid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("orderid");
+            entity.Property("Remark")
+                .HasField("_remark")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("remark");
-            entity.Property(e => e.Timestamp)
+            entity.Property("Timestamp")
+                .HasField("_timestamp")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnType("timestamp without time zone")
                 .HasColumnName("timestamp");
-            entity.Property(e => e.Updatedby)
+            entity.Property("Updatedby")
+                .HasField("_updatedby")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("updatedby");
 
             entity.HasOne(d => d.Order).WithMany(p => p.Orderstatushistories)
-                .HasForeignKey(d => d.Orderid)
+                .HasForeignKey("Orderid")
                 .HasConstraintName("fk_order_status_history_order");
         });
 
         modelBuilder.Entity<Packagingconfigmaterial>(entity =>
         {
-            entity.HasKey(e => new { e.Configurationid, e.Materialid }).HasName("packagingconfigmaterials_pkey");
+            entity.HasKey("Configurationid", "Materialid").HasName("packagingconfigmaterials_pkey");
 
             entity.ToTable("packagingconfigmaterials");
 
-            entity.Property(e => e.Configurationid).HasColumnName("configurationid");
-            entity.Property(e => e.Materialid).HasColumnName("materialid");
-            entity.Property(e => e.Category)
+            entity.Property("Configurationid")
+                .HasField("_configurationid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("configurationid");
+            entity.Property("Materialid")
+                .HasField("_materialid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("materialid");
+            entity.Property("Category")
+                .HasField("_category")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("category");
-            entity.Property(e => e.Quantity).HasColumnName("quantity");
+            entity.Property("Quantity")
+                .HasField("_quantity")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("quantity");
 
             entity.HasOne(d => d.Configuration).WithMany(p => p.Packagingconfigmaterials)
-                .HasForeignKey(d => d.Configurationid)
+                .HasForeignKey("Configurationid")
                 .HasConstraintName("fk_pcm_configuration");
 
             entity.HasOne(d => d.Material).WithMany(p => p.Packagingconfigmaterials)
-                .HasForeignKey(d => d.Materialid)
+                .HasForeignKey("Materialid")
                 .HasConstraintName("fk_pcm_material");
         });
 
         modelBuilder.Entity<Packagingconfiguration>(entity =>
         {
-            entity.HasKey(e => e.Configurationid).HasName("packagingconfiguration_pkey");
+            entity.HasKey("Configurationid").HasName("packagingconfiguration_pkey");
 
             entity.ToTable("packagingconfiguration");
 
-            entity.Property(e => e.Configurationid)
+            entity.Property("Configurationid")
+                .HasField("_configurationid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("configurationid");
-            entity.Property(e => e.Profileid).HasColumnName("profileid");
+            entity.Property("Profileid")
+                .HasField("_profileid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("profileid");
 
             entity.HasOne(d => d.Profile).WithMany(p => p.Packagingconfigurations)
-                .HasForeignKey(d => d.Profileid)
+                .HasForeignKey("Profileid")
                 .HasConstraintName("fk_packagingconfiguration_profile");
         });
 
         modelBuilder.Entity<Packagingmaterial>(entity =>
         {
-            entity.HasKey(e => e.Materialid).HasName("packagingmaterial_pkey");
+            entity.HasKey("Materialid").HasName("packagingmaterial_pkey");
 
             entity.ToTable("packagingmaterial");
 
-            entity.Property(e => e.Materialid)
+            entity.Property("Materialid")
+                .HasField("_materialid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("materialid");
-            entity.Property(e => e.Name)
+            entity.Property("Name")
+                .HasField("_name")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(100)
                 .HasColumnName("name");
-            entity.Property(e => e.Recyclable)
+            entity.Property("Recyclable")
+                .HasField("_recyclable")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValue(false)
                 .HasColumnName("recyclable");
-            entity.Property(e => e.Reusable)
+            entity.Property("Reusable")
+                .HasField("_reusable")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValue(false)
                 .HasColumnName("reusable");
-            entity.Property(e => e.Type)
+            entity.Property("Type")
+                .HasField("_type")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("type");
         });
 
         modelBuilder.Entity<Packagingprofile>(entity =>
         {
-            entity.HasKey(e => e.Profileid).HasName("packagingprofile_pkey");
+            entity.HasKey("Profileid").HasName("packagingprofile_pkey");
 
             entity.ToTable("packagingprofile");
 
-            entity.Property(e => e.Profileid)
+            entity.Property("Profileid")
+                .HasField("_profileid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("profileid");
-            entity.Property(e => e.Fragilitylevel)
+            entity.Property("Fragilitylevel")
+                .HasField("_fragilitylevel")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("fragilitylevel");
-            entity.Property(e => e.Orderid).HasColumnName("orderid");
-            entity.Property(e => e.Volume).HasColumnName("volume");
+            entity.Property("Orderid")
+                .HasField("_orderid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("orderid");
+            entity.Property("Volume")
+                .HasField("_volume")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("volume");
 
             entity.HasOne(d => d.Order).WithMany(p => p.Packagingprofiles)
-                .HasForeignKey(d => d.Orderid)
+                .HasForeignKey("Orderid")
                 .HasConstraintName("fk_packagingprofile_order");
         });
 
         modelBuilder.Entity<Payment>(entity =>
         {
-            entity.HasKey(e => e.Paymentid).HasName("payment_pkey");
+            entity.HasKey("Paymentid").HasName("payment_pkey");
 
             entity.ToTable("payment");
 
-            entity.Property(e => e.Paymentid)
+            entity.Property("Paymentid")
+                .HasField("_paymentid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("paymentid");
-            entity.Property(e => e.Amount)
+            entity.Property("Amount")
+                .HasField("_amount")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasPrecision(10, 2)
                 .HasColumnName("amount");
-            entity.Property(e => e.Createdat)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("createdat");
-            entity.Property(e => e.Orderid).HasColumnName("orderid");
-            entity.Property(e => e.Transactionid).HasColumnName("transactionid");
+            entity.Property("Createdat")
+                .HasField("_createdat")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("createdat");
+            entity.Property("Orderid")
+                .HasField("_orderid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("orderid");
+            entity.Property("Transactionid")
+                .HasField("_transactionid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("transactionid");
 
             entity.HasOne(d => d.Order).WithMany(p => p.Payments)
-                .HasForeignKey(d => d.Orderid)
+                .HasForeignKey("Orderid")
                 .HasConstraintName("fk_payment_order");
 
             entity.HasOne(d => d.Transaction).WithMany(p => p.Payments)
-                .HasForeignKey(d => d.Transactionid)
+                .HasForeignKey("Transactionid")
                 .HasConstraintName("fk_payment_transaction");
         });
 
         modelBuilder.Entity<Plane>(entity =>
         {
-            entity.HasKey(e => e.TransportId).HasName("plane_pkey");
+            entity.HasKey("TransportId").HasName("plane_pkey");
 
             entity.ToTable("plane");
 
-            entity.Property(e => e.TransportId)
+            entity.Property("TransportId")
+                .HasField("_transportId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .ValueGeneratedNever()
                 .HasColumnName("transport_id");
-            entity.Property(e => e.PlaneCallsign)
+            entity.Property("PlaneCallsign")
+                .HasField("_planeCallsign")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("plane_callsign");
-            entity.Property(e => e.PlaneId).HasColumnName("plane_id");
-            entity.Property(e => e.PlaneType)
+            entity.Property("PlaneId")
+                .HasField("_planeId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("plane_id");
+            entity.Property("PlaneType")
+                .HasField("_planeType")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("plane_type");
 
             entity.HasOne(d => d.Transport).WithOne(p => p.Plane)
-                .HasForeignKey<Plane>(d => d.TransportId)
+                .HasForeignKey<Plane>("TransportId")
                 .HasConstraintName("fk_plane_transport");
         });
 
         modelBuilder.Entity<Polineitem>(entity =>
         {
-            entity.HasKey(e => e.Polineid).HasName("polineitem_pkey");
+            entity.HasKey("Polineid").HasName("polineitem_pkey");
 
             entity.ToTable("polineitem");
 
-            entity.Property(e => e.Polineid)
+            entity.Property("Polineid")
+                .HasField("_polineid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("polineid");
-            entity.Property(e => e.Linetotal)
+            entity.Property("Linetotal")
+                .HasField("_linetotal")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasPrecision(10, 2)
                 .HasColumnName("linetotal");
-            entity.Property(e => e.Poid).HasColumnName("poid");
-            entity.Property(e => e.Productid).HasColumnName("productid");
-            entity.Property(e => e.Qty).HasColumnName("qty");
-            entity.Property(e => e.Unitprice)
+            entity.Property("Poid")
+                .HasField("_poid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("poid");
+            entity.Property("Productid")
+                .HasField("_productid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("productid");
+            entity.Property("Qty")
+                .HasField("_qty")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("qty");
+            entity.Property("Unitprice")
+                .HasField("_unitprice")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasPrecision(10, 2)
                 .HasColumnName("unitprice");
 
             entity.HasOne(d => d.Po).WithMany(p => p.Polineitems)
-                .HasForeignKey(d => d.Poid)
+                .HasForeignKey("Poid")
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("fk_polineitem_po");
 
             entity.HasOne(d => d.Product).WithMany(p => p.Polineitems)
-                .HasForeignKey(d => d.Productid)
+                .HasForeignKey("Productid")
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("fk_product_stock");
         });
 
         modelBuilder.Entity<PricingRule>(entity =>
         {
-            entity.HasKey(e => e.RuleId).HasName("pricing_rule_pkey");
+            entity.HasKey("RuleId").HasName("pricing_rule_pkey");
 
             entity.ToTable("pricing_rule");
 
-            entity.Property(e => e.RuleId)
+            entity.Property("RuleId")
+                .HasField("_ruleId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("rule_id");
-            entity.Property(e => e.BaseRatePerKm)
+            entity.Property("BaseRatePerKm")
+                .HasField("_baseRatePerKm")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasPrecision(10, 4)
                 .HasColumnName("base_rate_per_km");
-            entity.Property(e => e.CarbonSurcharge)
+            entity.Property("CarbonSurcharge")
+                .HasField("_carbonSurcharge")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasPrecision(10, 4)
                 .HasColumnName("carbon_surcharge");
-            entity.Property(e => e.IsActive)
+            entity.Property("IsActive")
+                .HasField("_isActive")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValue(true)
                 .HasColumnName("is_active");
         });
 
         modelBuilder.Entity<Product>(entity =>
         {
-            entity.HasKey(e => e.Productid).HasName("product_pkey");
+            entity.HasKey("Productid").HasName("product_pkey");
 
             entity.ToTable("product");
 
-            entity.Property(e => e.Productid)
+            entity.Property("Productid")
+                .HasField("_productid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("productid");
-            entity.Property(e => e.Categoryid).HasColumnName("categoryid");
-            entity.Property(e => e.Createdat)
+            entity.Property("Categoryid")
+                .HasField("_categoryid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("categoryid");
+            entity.Property("Createdat")
+                .HasField("_createdat")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnType("timestamp without time zone")
                 .HasColumnName("createdat");
-            entity.Property(e => e.Sku)
+            entity.Property("Sku")
+                .HasField("_sku")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("sku");
-            entity.Property(e => e.Threshold)
+            entity.Property("Threshold")
+                .HasField("_threshold")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasPrecision(5, 4)
                 .HasColumnName("threshold");
-            entity.Property(e => e.Updatedat)
+            entity.Property("Updatedat")
+                .HasField("_updatedat")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnType("timestamp without time zone")
                 .HasColumnName("updatedat");
 
             entity.HasOne(d => d.Category).WithMany(p => p.Products)
-                .HasForeignKey(d => d.Categoryid)
+                .HasForeignKey("Categoryid")
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_product_category");
         });
 
         modelBuilder.Entity<ProductReturn>(entity =>
         {
-            entity.HasKey(e => e.ReturnId).HasName("product_return_pkey");
+            entity.HasKey("ReturnId").HasName("product_return_pkey");
 
             entity.ToTable("product_return");
 
-            entity.Property(e => e.ReturnId)
+            entity.Property("ReturnId")
+                .HasField("_returnId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("return_id");
-            entity.Property(e => e.DateIn).HasColumnName("date_in");
-            entity.Property(e => e.DateOn).HasColumnName("date_on");
-            entity.Property(e => e.ReturnStatus)
+            entity.Property("DateIn")
+                .HasField("_dateIn")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("date_in");
+            entity.Property("DateOn")
+                .HasField("_dateOn")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("date_on");
+            entity.Property("ReturnStatus")
+                .HasField("_returnStatus")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("return_status");
-            entity.Property(e => e.TotalCarbon).HasColumnName("total_carbon");
+            entity.Property("TotalCarbon")
+                .HasField("_totalCarbon")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("total_carbon");
         });
 
         modelBuilder.Entity<Productdetail>(entity =>
         {
-            entity.HasKey(e => e.Detailsid).HasName("productdetails_pkey");
+            entity.HasKey("Detailsid").HasName("productdetails_pkey");
 
             entity.ToTable("productdetails");
 
-            entity.HasIndex(e => e.Productid, "productdetails_productid_key").IsUnique();
+            // entity.HasIndex("Productid", "productdetails_productid_key").IsUnique();
+            entity.HasIndex("Productid").HasDatabaseName("productdetails_productid_key").IsUnique();
 
-            entity.Property(e => e.Detailsid)
+            entity.Property("Detailsid")
+                .HasField("_detailsid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("detailsid");
-            entity.Property(e => e.Depositrate)
+            entity.Property("Depositrate")
+                .HasField("_depositrate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasPrecision(10, 2)
                 .HasDefaultValueSql("0")
                 .HasColumnName("depositrate");
-            entity.Property(e => e.Description).HasColumnName("description");
-            entity.Property(e => e.Image)
+            entity.Property("Description")
+                .HasField("_description")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("description");
+            entity.Property("Image")
+                .HasField("_image")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("image");
-            entity.Property(e => e.Name)
+            entity.Property("Name")
+                .HasField("_name")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("name");
-            entity.Property(e => e.Price)
+            entity.Property("Price")
+                .HasField("_price")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasPrecision(10, 2)
                 .HasColumnName("price");
-            entity.Property(e => e.Productid).HasColumnName("productid");
-            entity.Property(e => e.Totalquantity)
+            entity.Property("Productid")
+                .HasField("_productid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("productid");
+            entity.Property("Totalquantity")
+                .HasField("_totalquantity")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValue(0)
                 .HasColumnName("totalquantity");
-            entity.Property(e => e.Weight)
+            entity.Property("Weight")
+                .HasField("_weight")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasPrecision(10, 2)
                 .HasColumnName("weight");
 
             entity.HasOne(d => d.Product).WithOne(p => p.Productdetail)
-                .HasForeignKey<Productdetail>(d => d.Productid)
+                .HasForeignKey<Productdetail>("Productid")
                 .HasConstraintName("fk_productdetails_product");
         });
 
         modelBuilder.Entity<Productfootprint>(entity =>
         {
-            entity.HasKey(e => e.Productcarbonfootprintid).HasName("productfootprint_pkey");
+            entity.HasKey("Productcarbonfootprintid").HasName("productfootprint_pkey");
 
             entity.ToTable("productfootprint");
 
-            entity.Property(e => e.Productcarbonfootprintid)
+            entity.Property("Productcarbonfootprintid")
+                .HasField("_productcarbonfootprintid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("productcarbonfootprintid");
-            entity.Property(e => e.Badgeid).HasColumnName("badgeid");
-            entity.Property(e => e.Calculatedat)
+            entity.Property("Badgeid")
+                .HasField("_badgeid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("badgeid");
+            entity.Property("Calculatedat")
+                .HasField("_calculatedat")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("now()")
                 .HasColumnName("calculatedat");
-            entity.Property(e => e.Productid).HasColumnName("productid");
-            entity.Property(e => e.Producttoxicpercentage).HasColumnName("producttoxicpercentage");
-            entity.Property(e => e.Totalco2).HasColumnName("totalco2");
+            entity.Property("Productid")
+                .HasField("_productid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("productid");
+            entity.Property("Producttoxicpercentage")
+                .HasField("_producttoxicpercentage")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("producttoxicpercentage");
+            entity.Property("Totalco2")
+                .HasField("_totalco2")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("totalco2");
 
             entity.HasOne(d => d.Badge).WithMany(p => p.Productfootprints)
-                .HasForeignKey(d => d.Badgeid)
+                .HasForeignKey("Badgeid")
                 .HasConstraintName("fk_productfootprint_badge");
 
             entity.HasOne(d => d.Product).WithMany(p => p.Productfootprints)
-                .HasForeignKey(d => d.Productid)
+                .HasForeignKey("Productid")
                 .HasConstraintName("fk_productfootprint_product");
         });
 
         modelBuilder.Entity<Purchaseorder>(entity =>
         {
-            entity.HasKey(e => e.Poid).HasName("purchaseorder_pkey");
+            entity.HasKey("Poid").HasName("purchaseorder_pkey");
 
             entity.ToTable("purchaseorder");
 
-            entity.Property(e => e.Poid)
+            entity.Property("Poid")
+                .HasField("_poid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("poid");
-            entity.Property(e => e.Expecteddeliverydate).HasColumnName("expecteddeliverydate");
-            entity.Property(e => e.Podate).HasColumnName("podate");
-            entity.Property(e => e.Supplierid).HasColumnName("supplierid");
-            entity.Property(e => e.Totalamount)
+            entity.Property("Expecteddeliverydate")
+                .HasField("_expecteddeliverydate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("expecteddeliverydate");
+            entity.Property("Podate")
+                .HasField("_podate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("podate");
+            entity.Property("Supplierid")
+                .HasField("_supplierid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("supplierid");
+            entity.Property("Totalamount")
+                .HasField("_totalamount")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasPrecision(10, 2)
                 .HasColumnName("totalamount");
         });
 
         modelBuilder.Entity<Purchaseorderlog>(entity =>
         {
-            entity.HasKey(e => e.Purchaseorderlogid).HasName("purchaseorderlog_pkey");
+            entity.HasKey("Purchaseorderlogid").HasName("purchaseorderlog_pkey");
 
             entity.ToTable("purchaseorderlog");
 
-            entity.Property(e => e.Purchaseorderlogid)
+            entity.Property("Purchaseorderlogid")
+                .HasField("_purchaseorderlogid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .ValueGeneratedOnAdd()
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("purchaseorderlogid");
-            entity.Property(e => e.Detailsjson).HasColumnName("detailsjson");
-            entity.Property(e => e.Expecteddeliverydate)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("expecteddeliverydate");
-            entity.Property(e => e.Podate)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("podate");
-            entity.Property(e => e.Poid).HasColumnName("poid");
-            entity.Property(e => e.Supplierid).HasColumnName("supplierid");
-            entity.Property(e => e.Totalamount)
+            entity.Property("Detailsjson")
+                .HasField("_detailsjson")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("detailsjson");
+            entity.Property("Expecteddeliverydate")
+                .HasField("_expecteddeliverydate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("expecteddeliverydate");
+            entity.Property("Podate")
+                .HasField("_podate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("podate");
+            entity.Property("Poid")
+                .HasField("_poid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("poid");
+            entity.Property("Supplierid")
+                .HasField("_supplierid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("supplierid");
+            entity.Property("Totalamount")
+                .HasField("_totalamount")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasPrecision(10, 2)
                 .HasColumnName("totalamount");
 
             entity.HasOne(d => d.Po).WithMany(p => p.Purchaseorderlogs)
-                .HasForeignKey(d => d.Poid)
+                .HasForeignKey("Poid")
                 .HasConstraintName("fk_po_log_po");
 
             entity.HasOne(d => d.PurchaseorderlogNavigation).WithOne(p => p.Purchaseorderlog)
-                .HasForeignKey<Purchaseorderlog>(d => d.Purchaseorderlogid)
+                .HasForeignKey<Purchaseorderlog>("Purchaseorderlogid")
                 .HasConstraintName("fk_po_transaction");
         });
 
         modelBuilder.Entity<Refund>(entity =>
         {
-            entity.HasKey(e => e.Refundid).HasName("refund_pkey");
+            entity.HasKey("Refundid").HasName("refund_pkey");
 
             entity.ToTable("refund");
 
-            entity.Property(e => e.Refundid)
+            entity.Property("Refundid")
+                .HasField("_refundid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("refundid");
-            entity.Property(e => e.Customerid).HasColumnName("customerid");
-            entity.Property(e => e.Depositrefundamount)
+            entity.Property("Customerid")
+                .HasField("_customerid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("customerid");
+            entity.Property("Depositrefundamount")
+                .HasField("_depositrefundamount")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasPrecision(10, 2)
                 .HasColumnName("depositrefundamount");
-            entity.Property(e => e.Orderid).HasColumnName("orderid");
-            entity.Property(e => e.Penaltyamount)
+            entity.Property("Orderid")
+                .HasField("_orderid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("orderid");
+            entity.Property("Penaltyamount")
+                .HasField("_penaltyamount")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasPrecision(10, 2)
                 .HasDefaultValueSql("0.00")
                 .HasColumnName("penaltyamount");
-            entity.Property(e => e.Returndate)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("returndate");
-            entity.Property(e => e.Returnmethod)
+            entity.Property("Returndate")
+                .HasField("_returndate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("returndate");
+            entity.Property("Returnmethod")
+                .HasField("_returnmethod")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("returnmethod");
-            entity.Property(e => e.Returnrequestid).HasColumnName("returnrequestid");
-            entity.Property(e => e.Transactionid).HasColumnName("transactionid");
+            entity.Property("Returnrequestid")
+                .HasField("_returnrequestid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("returnrequestid");
+            entity.Property("Transactionid")
+                .HasField("_transactionid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("transactionid");
 
             entity.HasOne(d => d.Customer).WithMany(p => p.Refunds)
-                .HasForeignKey(d => d.Customerid)
+                .HasForeignKey("Customerid")
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_refund_customer");
 
             entity.HasOne(d => d.Order).WithMany(p => p.Refunds)
-                .HasForeignKey(d => d.Orderid)
+                .HasForeignKey("Orderid")
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_refund_order");
 
             entity.HasOne(d => d.Returnrequest).WithMany(p => p.Refunds)
-                .HasForeignKey(d => d.Returnrequestid)
+                .HasForeignKey("Returnrequestid")
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_refund_return");
 
             entity.HasOne(d => d.Transaction).WithMany(p => p.Refunds)
-                .HasForeignKey(d => d.Transactionid)
+                .HasForeignKey("Transactionid")
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("fk_refund_transaction");
         });
 
         modelBuilder.Entity<Reliabilityrating>(entity =>
         {
-            entity.HasKey(e => e.Ratingid).HasName("reliabilityrating_pkey");
+            entity.HasKey("Ratingid").HasName("reliabilityrating_pkey");
 
             entity.ToTable("reliabilityrating");
 
-            entity.Property(e => e.Ratingid)
+            entity.Property("Ratingid")
+                .HasField("_ratingid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("ratingid");
-            entity.Property(e => e.Calculatedat)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("calculatedat");
-            entity.Property(e => e.Calculatedbyuserid).HasColumnName("calculatedbyuserid");
-            entity.Property(e => e.Rationale).HasColumnName("rationale");
-            entity.Property(e => e.Score)
+            entity.Property("Calculatedat")
+                .HasField("_calculatedat")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("calculatedat");
+            entity.Property("Calculatedbyuserid")
+                .HasField("_calculatedbyuserid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("calculatedbyuserid");
+            entity.Property("Rationale")
+                .HasField("_rationale")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("rationale");
+            entity.Property("Score")
+                .HasField("_score")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasPrecision(5, 2)
                 .HasColumnName("score");
-            entity.Property(e => e.Supplierid).HasColumnName("supplierid");
+            entity.Property("Supplierid")
+                .HasField("_supplierid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("supplierid");
 
             entity.HasOne(d => d.Supplier).WithMany(p => p.Reliabilityratings)
-                .HasForeignKey(d => d.Supplierid)
+                .HasForeignKey("Supplierid")
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("fk_reliabilityrating_supplier");
         });
 
         modelBuilder.Entity<Rentalorderlog>(entity =>
         {
-            entity.HasKey(e => e.Rentalorderlogid).HasName("rentalorderlog_pkey");
+            entity.HasKey("Rentalorderlogid").HasName("rentalorderlog_pkey");
 
             entity.ToTable("rentalorderlog");
 
-            entity.Property(e => e.Rentalorderlogid)
+            entity.Property("Rentalorderlogid")
+                .HasField("_rentalorderlogid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .ValueGeneratedNever()
                 .HasColumnName("rentalorderlogid");
-            entity.Property(e => e.Customerid).HasColumnName("customerid");
-            entity.Property(e => e.Detailsjson).HasColumnName("detailsjson");
-            entity.Property(e => e.Orderdate)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("orderdate");
-            entity.Property(e => e.Orderid).HasColumnName("orderid");
-            entity.Property(e => e.Totalamount)
+            entity.Property("Customerid")
+                .HasField("_customerid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("customerid");
+            entity.Property("Detailsjson")
+                .HasField("_detailsjson")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("detailsjson");
+            entity.Property("Orderdate")
+                .HasField("_orderdate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("orderdate");
+            entity.Property("Orderid")
+                .HasField("_orderid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("orderid");
+            entity.Property("Totalamount")
+                .HasField("_totalamount")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasPrecision(10, 2)
                 .HasColumnName("totalamount");
 
             entity.HasOne(d => d.Order).WithMany(p => p.Rentalorderlogs)
-                .HasForeignKey(d => d.Orderid)
+                .HasForeignKey("Orderid")
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("fk_rental_order");
 
             entity.HasOne(d => d.RentalorderlogNavigation).WithOne(p => p.Rentalorderlog)
-                .HasForeignKey<Rentalorderlog>(d => d.Rentalorderlogid)
+                .HasForeignKey<Rentalorderlog>("Rentalorderlogid")
                 .HasConstraintName("fk_rental_transaction");
         });
 
         modelBuilder.Entity<Replenishmentrequest>(entity =>
         {
-            entity.HasKey(e => e.Requestid).HasName("replenishmentrequest_pkey");
+            entity.HasKey("Requestid").HasName("replenishmentrequest_pkey");
 
             entity.ToTable("replenishmentrequest");
 
-            entity.Property(e => e.Requestid)
+            entity.Property("Requestid")
+                .HasField("_requestid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("requestid");
-            entity.Property(e => e.Completedat)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("completedat");
-            entity.Property(e => e.Completedby)
+            entity.Property("Completedat")
+                .HasField("_completedat")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("completedat");
+            entity.Property("Completedby")
+                .HasField("_completedby")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("completedby");
-            entity.Property(e => e.Createdat)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("createdat");
-            entity.Property(e => e.Remarks).HasColumnName("remarks");
-            entity.Property(e => e.Requestedby)
+            entity.Property("Createdat")
+                .HasField("_createdat")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("createdat");
+            entity.Property("Remarks")
+                .HasField("_remarks")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("remarks");
+            entity.Property("Requestedby")
+                .HasField("_requestedby")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("requestedby");
         });
 
         modelBuilder.Entity<Reportexport>(entity =>
         {
-            entity.HasKey(e => e.Reportid).HasName("reportexport_pkey");
+            entity.HasKey("Reportid").HasName("reportexport_pkey");
 
             entity.ToTable("reportexport");
 
-            entity.Property(e => e.Reportid)
+            entity.Property("Reportid")
+                .HasField("_reportid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("reportid");
-            entity.Property(e => e.Refanalyticsid).HasColumnName("refanalyticsid");
-            entity.Property(e => e.Title)
+            entity.Property("Refanalyticsid")
+                .HasField("_refanalyticsid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("refanalyticsid");
+            entity.Property("Title")
+                .HasField("_title")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("title");
-            entity.Property(e => e.Url)
+            entity.Property("Url")
+                .HasField("_url")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(500)
                 .HasColumnName("url");
 
             entity.HasOne(d => d.Refanalytics).WithMany(p => p.Reportexports)
-                .HasForeignKey(d => d.Refanalyticsid)
+                .HasForeignKey("Refanalyticsid")
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("fk_reportexport_analytics");
         });
 
         modelBuilder.Entity<ReturnStage>(entity =>
         {
-            entity.HasKey(e => e.StageId).HasName("return_stage_pkey");
+            entity.HasKey("StageId").HasName("return_stage_pkey");
 
             entity.ToTable("return_stage");
 
-            entity.Property(e => e.StageId)
+            entity.Property("StageId")
+                .HasField("_stageId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("stage_id");
-            entity.Property(e => e.CleaningSuppliesQty).HasColumnName("cleaning_supplies_qty");
-            entity.Property(e => e.EnergyKwh).HasColumnName("energy_kwh");
-            entity.Property(e => e.LabourHours).HasColumnName("labour_hours");
-            entity.Property(e => e.MaterialsKg).HasColumnName("materials_kg");
-            entity.Property(e => e.PackagingKg).HasColumnName("packaging_kg");
-            entity.Property(e => e.ReturnId).HasColumnName("return_id");
-            entity.Property(e => e.SurchargeRate)
+            entity.Property("CleaningSuppliesQty")
+                .HasField("_cleaningSuppliesQty")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("cleaning_supplies_qty");
+            entity.Property("EnergyKwh")
+                .HasField("_energyKwh")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("energy_kwh");
+            entity.Property("LabourHours")
+                .HasField("_labourHours")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("labour_hours");
+            entity.Property("MaterialsKg")
+                .HasField("_materialsKg")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("materials_kg");
+            entity.Property("PackagingKg")
+                .HasField("_packagingKg")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("packaging_kg");
+            entity.Property("ReturnId")
+                .HasField("_returnId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("return_id");
+            entity.Property("SurchargeRate")
+                .HasField("_surchargeRate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasPrecision(10, 4)
                 .HasColumnName("surcharge_rate");
-            entity.Property(e => e.WaterLitres).HasColumnName("water_litres");
+            entity.Property("WaterLitres")
+                .HasField("_waterLitres")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("water_litres");
 
             entity.HasOne(d => d.Return).WithMany(p => p.ReturnStages)
-                .HasForeignKey(d => d.ReturnId)
+                .HasForeignKey("ReturnId")
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_return_stage_return_request");
         });
 
         modelBuilder.Entity<Returnitem>(entity =>
         {
-            entity.HasKey(e => e.Returnitemid).HasName("returnitem_pkey");
+            entity.HasKey("Returnitemid").HasName("returnitem_pkey");
 
             entity.ToTable("returnitem");
 
-            entity.Property(e => e.Returnitemid)
+            entity.Property("Returnitemid")
+                .HasField("_returnitemid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("returnitemid");
-            entity.Property(e => e.Completiondate)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("completiondate");
-            entity.Property(e => e.Image)
+            entity.Property("Completiondate")
+                .HasField("_completiondate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("completiondate");
+            entity.Property("Image")
+                .HasField("_image")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("image");
-            entity.Property(e => e.Inventoryitemid).HasColumnName("inventoryitemid");
-            entity.Property(e => e.Returnrequestid).HasColumnName("returnrequestid");
+            entity.Property("Inventoryitemid")
+                .HasField("_inventoryitemid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("inventoryitemid");
+            entity.Property("Returnrequestid")
+                .HasField("_returnrequestid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("returnrequestid");
 
             entity.HasOne(d => d.Inventoryitem).WithMany(p => p.Returnitems)
-                .HasForeignKey(d => d.Inventoryitemid)
+                .HasForeignKey("Inventoryitemid")
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_returnitem_inventory");
 
             entity.HasOne(d => d.Returnrequest).WithMany(p => p.Returnitems)
-                .HasForeignKey(d => d.Returnrequestid)
+                .HasForeignKey("Returnrequestid")
                 .HasConstraintName("fk_returnitem_request");
         });
 
         modelBuilder.Entity<Returnlog>(entity =>
         {
-            entity.HasKey(e => e.Returnlogid).HasName("returnlog_pkey");
+            entity.HasKey("Returnlogid").HasName("returnlog_pkey");
 
             entity.ToTable("returnlog");
 
-            entity.Property(e => e.Returnlogid)
+            entity.Property("Returnlogid")
+                .HasField("_returnlogid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .ValueGeneratedNever()
                 .HasColumnName("returnlogid");
-            entity.Property(e => e.Completiondate)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("completiondate");
-            entity.Property(e => e.Customerid)
+            entity.Property("Completiondate")
+                .HasField("_completiondate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("completiondate");
+            entity.Property("Customerid")
+                .HasField("_customerid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("customerid");
-            entity.Property(e => e.Detailsjson).HasColumnName("detailsjson");
-            entity.Property(e => e.Imageurl)
+            entity.Property("Detailsjson")
+                .HasField("_detailsjson")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("detailsjson");
+            entity.Property("Imageurl")
+                .HasField("_imageurl")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(500)
                 .HasColumnName("imageurl");
-            entity.Property(e => e.Rentalorderlogid).HasColumnName("rentalorderlogid");
-            entity.Property(e => e.Requestdate)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("requestdate");
-            entity.Property(e => e.Returnrequestid).HasColumnName("returnrequestid");
+            entity.Property("Rentalorderlogid")
+                .HasField("_rentalorderlogid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("rentalorderlogid");
+            entity.Property("Requestdate")
+                .HasField("_requestdate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("requestdate");
+            entity.Property("Returnrequestid")
+                .HasField("_returnrequestid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("returnrequestid");
 
             entity.HasOne(d => d.Rentalorderlog).WithMany(p => p.Returnlogs)
-                .HasForeignKey(d => d.Rentalorderlogid)
+                .HasForeignKey("Rentalorderlogid")
                 .HasConstraintName("fk_return_rental");
 
             entity.HasOne(d => d.ReturnlogNavigation).WithOne(p => p.Returnlog)
-                .HasForeignKey<Returnlog>(d => d.Returnlogid)
+                .HasForeignKey<Returnlog>("Returnlogid")
                 .HasConstraintName("fk_return_transaction");
 
             entity.HasOne(d => d.Returnrequest).WithMany(p => p.Returnlogs)
-                .HasForeignKey(d => d.Returnrequestid)
+                .HasForeignKey("Returnrequestid")
                 .HasConstraintName("fk_return_request");
         });
 
         modelBuilder.Entity<Returnrequest>(entity =>
         {
-            entity.HasKey(e => e.Returnrequestid).HasName("returnrequest_pkey");
+            entity.HasKey("Returnrequestid").HasName("returnrequest_pkey");
 
             entity.ToTable("returnrequest");
 
-            entity.Property(e => e.Returnrequestid)
+            entity.Property("Returnrequestid")
+                .HasField("_returnrequestid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("returnrequestid");
-            entity.Property(e => e.Completiondate)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("completiondate");
-            entity.Property(e => e.Customerid).HasColumnName("customerid");
-            entity.Property(e => e.Orderid).HasColumnName("orderid");
-            entity.Property(e => e.Requestdate)
+            entity.Property("Completiondate")
+                .HasField("_completiondate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("completiondate");
+            entity.Property("Customerid")
+                .HasField("_customerid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("customerid");
+            entity.Property("Orderid")
+                .HasField("_orderid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("orderid");
+            entity.Property("Requestdate")
+                .HasField("_requestdate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnType("timestamp without time zone")
                 .HasColumnName("requestdate");
 
             entity.HasOne(d => d.Customer).WithMany(p => p.Returnrequests)
-                .HasForeignKey(d => d.Customerid)
+                .HasForeignKey("Customerid")
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_returnrequest_customer");
 
             entity.HasOne(d => d.Order).WithMany(p => p.Returnrequests)
-                .HasForeignKey(d => d.Orderid)
+                .HasForeignKey("Orderid")
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_returnrequest_order");
         });
 
         modelBuilder.Entity<RouteLeg>(entity =>
         {
-            entity.HasKey(e => e.LegId).HasName("route_leg_pkey");
+            entity.HasKey("LegId").HasName("route_leg_pkey");
 
             entity.ToTable("route_leg");
 
-            entity.Property(e => e.LegId)
+            entity.Property("LegId")
+                .HasField("_legId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("leg_id");
-            entity.Property(e => e.DistanceKm).HasColumnName("distance_km");
-            entity.Property(e => e.EndPoint)
+            entity.Property("DistanceKm")
+                .HasField("_distanceKm")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("distance_km");
+            entity.Property("EndPoint")
+                .HasField("_endPoint")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("end_point");
-            entity.Property(e => e.IsFirstMile)
+            entity.Property("IsFirstMile")
+                .HasField("_isFirstMile")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValue(false)
                 .HasColumnName("is_first_mile");
-            entity.Property(e => e.IsLastMile)
+            entity.Property("IsLastMile")
+                .HasField("_isLastMile")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValue(false)
                 .HasColumnName("is_last_mile");
-            entity.Property(e => e.RouteId).HasColumnName("route_id");
-            entity.Property(e => e.Sequence).HasColumnName("sequence");
-            entity.Property(e => e.StartPoint)
+            entity.Property("RouteId")
+                .HasField("_routeId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("route_id");
+            entity.Property("Sequence")
+                .HasField("_sequence")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("sequence");
+            entity.Property("StartPoint")
+                .HasField("_startPoint")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("start_point");
-            entity.Property(e => e.TransportId).HasColumnName("transport_id");
+            entity.Property("TransportId")
+                .HasField("_transportId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("transport_id");
 
             entity.HasOne(d => d.Route).WithMany(p => p.RouteLegs)
-                .HasForeignKey(d => d.RouteId)
+                .HasForeignKey("RouteId")
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_route_leg_route");
 
             entity.HasOne(d => d.Transport).WithMany(p => p.RouteLegs)
-                .HasForeignKey(d => d.TransportId)
+                .HasForeignKey("TransportId")
                 .HasConstraintName("fk_route_leg_transport");
         });
 
         modelBuilder.Entity<Session>(entity =>
         {
-            entity.HasKey(e => e.Sessionid).HasName("session_pkey");
+            entity.HasKey("Sessionid").HasName("session_pkey");
 
             entity.ToTable("session");
 
-            entity.Property(e => e.Sessionid)
+            entity.Property("Sessionid")
+                .HasField("_sessionid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("sessionid");
-            entity.Property(e => e.Createdat)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("createdat");
-            entity.Property(e => e.Expiresat)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("expiresat");
-            entity.Property(e => e.Role)
+            entity.Property("Createdat")
+                .HasField("_createdat")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("createdat");
+            entity.Property("Expiresat")
+                .HasField("_expiresat")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("expiresat");
+            entity.Property("Role")
+                .HasField("_role")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("role");
-            entity.Property(e => e.Userid).HasColumnName("userid");
+            entity.Property("Userid")
+                .HasField("_userid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("userid");
 
             entity.HasOne(d => d.User).WithMany(p => p.Sessions)
-                .HasForeignKey(d => d.Userid)
+                .HasForeignKey("Userid")
                 .HasConstraintName("fk_session_user");
         });
 
         modelBuilder.Entity<Ship>(entity =>
         {
-            entity.HasKey(e => e.TransportId).HasName("ship_pkey");
+            entity.HasKey("TransportId").HasName("ship_pkey");
 
             entity.ToTable("ship");
 
-            entity.Property(e => e.TransportId)
+            entity.Property("TransportId")
+                .HasField("_transportId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .ValueGeneratedNever()
                 .HasColumnName("transport_id");
-            entity.Property(e => e.MaxVesselSize)
+            entity.Property("MaxVesselSize")
+                .HasField("_maxVesselSize")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("max_vessel_size");
-            entity.Property(e => e.ShipId).HasColumnName("ship_id");
-            entity.Property(e => e.VesselNumber)
+            entity.Property("ShipId")
+                .HasField("_shipId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("ship_id");
+            entity.Property("VesselNumber")
+                .HasField("_vesselNumber")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("vessel_number");
-            entity.Property(e => e.VesselType)
+            entity.Property("VesselType")
+                .HasField("_vesselType")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("vessel_type");
 
             entity.HasOne(d => d.Transport).WithOne(p => p.Ship)
-                .HasForeignKey<Ship>(d => d.TransportId)
+                .HasForeignKey<Ship>("TransportId")
                 .HasConstraintName("fk_ship_transport");
         });
 
         modelBuilder.Entity<Shipment>(entity =>
         {
-            entity.HasKey(e => e.Trackingid).HasName("shipment_pkey");
+            entity.HasKey("Trackingid").HasName("shipment_pkey");
 
             entity.ToTable("shipment");
 
-            entity.Property(e => e.Trackingid)
+            entity.Property("Trackingid")
+                .HasField("_trackingid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("trackingid");
-            entity.Property(e => e.Batchid).HasColumnName("batchid");
-            entity.Property(e => e.Destination)
+            entity.Property("Batchid")
+                .HasField("_batchid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("batchid");
+            entity.Property("Destination")
+                .HasField("_destination")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("destination");
-            entity.Property(e => e.Orderid).HasColumnName("orderid");
-            entity.Property(e => e.Weight).HasColumnName("weight");
+            entity.Property("Orderid")
+                .HasField("_orderid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("orderid");
+            entity.Property("Weight")
+                .HasField("_weight")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("weight");
 
             entity.HasOne(d => d.Batch).WithMany(p => p.Shipments)
-                .HasForeignKey(d => d.Batchid)
+                .HasForeignKey("Batchid")
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_shipment_batch");
 
             entity.HasOne(d => d.Order).WithMany(p => p.Shipments)
-                .HasForeignKey(d => d.Orderid)
+                .HasForeignKey("Orderid")
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_shipment_order");
         });
 
         modelBuilder.Entity<ShippingOption>(entity =>
         {
-            entity.HasKey(e => e.OptionId).HasName("shipping_option_pkey");
+            entity.HasKey("OptionId").HasName("shipping_option_pkey");
 
             entity.ToTable("shipping_option");
 
-            entity.Property(e => e.OptionId)
+            entity.Property("OptionId")
+                .HasField("_optionId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("option_id");
-            entity.Property(e => e.Carbonfootprintkg).HasColumnName("carbonfootprintkg");
-            entity.Property(e => e.Cost)
+            entity.Property("Carbonfootprintkg")
+                .HasField("_carbonfootprintkg")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("carbonfootprintkg");
+            entity.Property("Cost")
+                .HasField("_cost")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasPrecision(10, 2)
                 .HasColumnName("cost");
-            entity.Property(e => e.DeliveryDays).HasColumnName("delivery_days");
-            entity.Property(e => e.DisplayName)
+            entity.Property("DeliveryDays")
+                .HasField("_deliveryDays")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("delivery_days");
+            entity.Property("DisplayName")
+                .HasField("_displayName")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("display_name");
-            entity.Property(e => e.OrderId).HasColumnName("order_id");
-            entity.Property(e => e.RouteId).HasColumnName("route_id");
+            entity.Property("OrderId")
+                .HasField("_orderId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("order_id");
+            entity.Property("RouteId")
+                .HasField("_routeId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("route_id");
 
             entity.HasOne(d => d.Order).WithMany(p => p.ShippingOptions)
-                .HasForeignKey(d => d.OrderId)
+                .HasForeignKey("OrderId")
                 .HasConstraintName("fk_shipping_option_order");
 
             entity.HasOne(d => d.Route).WithMany(p => p.ShippingOptions)
-                .HasForeignKey(d => d.RouteId)
+                .HasForeignKey("RouteId")
                 .HasConstraintName("fk_shipping_option_route");
         });
 
         modelBuilder.Entity<ShippingPort>(entity =>
         {
-            entity.HasKey(e => e.HubId).HasName("shipping_port_pkey");
+            entity.HasKey("HubId").HasName("shipping_port_pkey");
 
             entity.ToTable("shipping_port");
 
-            entity.Property(e => e.HubId)
+            entity.Property("HubId")
+                .HasField("_hubId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .ValueGeneratedNever()
                 .HasColumnName("hub_id");
-            entity.Property(e => e.PortCode)
+            entity.Property("PortCode")
+                .HasField("_portCode")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(20)
                 .HasColumnName("port_code");
-            entity.Property(e => e.PortName)
+            entity.Property("PortName")
+                .HasField("_portName")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("port_name");
-            entity.Property(e => e.PortType)
+            entity.Property("PortType")
+                .HasField("_portType")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("port_type");
-            entity.Property(e => e.VesselSize).HasColumnName("vessel_size");
+            entity.Property("VesselSize")
+                .HasField("_vesselSize")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("vessel_size");
 
             entity.HasOne(d => d.Hub).WithOne(p => p.ShippingPort)
-                .HasForeignKey<ShippingPort>(d => d.HubId)
+                .HasForeignKey<ShippingPort>("HubId")
                 .HasConstraintName("fk_shipping_port_hub");
         });
 
         modelBuilder.Entity<Staff>(entity =>
         {
-            entity.HasKey(e => e.Staffid).HasName("staff_pkey");
+            entity.HasKey("Staffid").HasName("staff_pkey");
 
             entity.ToTable("staff");
 
-            entity.HasIndex(e => e.Userid, "staff_userid_key").IsUnique();
+            // entity.HasIndex("Userid", "staff_userid_key").IsUnique();
+            entity.HasIndex("Userid").HasDatabaseName("staff_userid_key").IsUnique();
 
-            entity.Property(e => e.Staffid)
+            entity.Property("Staffid")
+                .HasField("_staffid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("staffid");
-            entity.Property(e => e.Department)
+            entity.Property("Department")
+                .HasField("_department")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("department");
-            entity.Property(e => e.Userid).HasColumnName("userid");
+            entity.Property("Userid")
+                .HasField("_userid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("userid");
 
             entity.HasOne(d => d.User).WithOne(p => p.Staff)
-                .HasForeignKey<Staff>(d => d.Userid)
+                .HasForeignKey<Staff>("Userid")
                 .HasConstraintName("fk_staff_user");
         });
 
         modelBuilder.Entity<Staffaccesslog>(entity =>
         {
-            entity.HasKey(e => e.Accessid).HasName("staffaccesslog_pkey");
+            entity.HasKey("Accessid").HasName("staffaccesslog_pkey");
 
             entity.ToTable("staffaccesslog");
 
-            entity.Property(e => e.Accessid)
+            entity.Property("Accessid")
+                .HasField("_accessid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("accessid");
-            entity.Property(e => e.Eventtime)
+            entity.Property("Eventtime")
+                .HasField("_eventtime")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("now()")
                 .HasColumnName("eventtime");
-            entity.Property(e => e.Staffid).HasColumnName("staffid");
+            entity.Property("Staffid")
+                .HasField("_staffid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("staffid");
 
             entity.HasOne(d => d.Staff).WithMany(p => p.Staffaccesslogs)
-                .HasForeignKey(d => d.Staffid)
+                .HasForeignKey("Staffid")
                 .HasConstraintName("fk_staffaccesslog_staff");
         });
 
         modelBuilder.Entity<Stafffootprint>(entity =>
         {
-            entity.HasKey(e => e.Staffcarbonfootprintid).HasName("stafffootprint_pkey");
+            entity.HasKey("Staffcarbonfootprintid").HasName("stafffootprint_pkey");
 
             entity.ToTable("stafffootprint");
 
-            entity.Property(e => e.Staffcarbonfootprintid)
+            entity.Property("Staffcarbonfootprintid")
+                .HasField("_staffcarbonfootprintid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("staffcarbonfootprintid");
-            entity.Property(e => e.Hoursworked).HasColumnName("hoursworked");
-            entity.Property(e => e.Staffid).HasColumnName("staffid");
-            entity.Property(e => e.Time)
+            entity.Property("Hoursworked")
+                .HasField("_hoursworked")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("hoursworked");
+            entity.Property("Staffid")
+                .HasField("_staffid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("staffid");
+            entity.Property("Time")
+                .HasField("_time")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("now()")
                 .HasColumnName("time");
-            entity.Property(e => e.Totalstaffco2).HasColumnName("totalstaffco2");
+            entity.Property("Totalstaffco2")
+                .HasField("_totalstaffco2")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("totalstaffco2");
 
             entity.HasOne(d => d.Staff).WithMany(p => p.Stafffootprints)
-                .HasForeignKey(d => d.Staffid)
+                .HasForeignKey("Staffid")
                 .HasConstraintName("fk_stafffootprint_staff");
         });
 
         modelBuilder.Entity<Stockitem>(entity =>
         {
-            entity.HasKey(e => e.Productid).HasName("stockitem_pkey");
+            entity.HasKey("Productid").HasName("stockitem_pkey");
 
             entity.ToTable("stockitem");
 
-            entity.Property(e => e.Productid)
+            entity.Property("Productid")
+                .HasField("_productid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .ValueGeneratedNever()
                 .HasColumnName("productid");
-            entity.Property(e => e.Name)
+            entity.Property("Name")
+                .HasField("_name")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("name");
-            entity.Property(e => e.Sku)
+            entity.Property("Sku")
+                .HasField("_sku")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(100)
                 .HasColumnName("sku");
-            entity.Property(e => e.Uom)
+            entity.Property("Uom")
+                .HasField("_uom")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("uom");
         });
 
         modelBuilder.Entity<Supplier>(entity =>
         {
-            entity.HasKey(e => e.Supplierid).HasName("supplier_pkey");
+            entity.HasKey("Supplierid").HasName("supplier_pkey");
 
             entity.ToTable("supplier");
 
-            entity.Property(e => e.Supplierid)
+            entity.Property("Supplierid")
+                .HasField("_supplierid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .ValueGeneratedNever()
                 .HasColumnName("supplierid");
-            entity.Property(e => e.Avgturnaroundtime).HasColumnName("avgturnaroundtime");
-            entity.Property(e => e.Creditperiod).HasColumnName("creditperiod");
-            entity.Property(e => e.Details)
+            entity.Property("Avgturnaroundtime")
+                .HasField("_avgturnaroundtime")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("avgturnaroundtime");
+            entity.Property("Creditperiod")
+                .HasField("_creditperiod")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("creditperiod");
+            entity.Property("Details")
+                .HasField("_details")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(500)
                 .HasColumnName("details");
-            entity.Property(e => e.Isverified).HasColumnName("isverified");
-            entity.Property(e => e.Name)
+            entity.Property("Isverified")
+                .HasField("_isverified")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("isverified");
+            entity.Property("Name")
+                .HasField("_name")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("name");
         });
 
         modelBuilder.Entity<Suppliercategorychangelog>(entity =>
         {
-            entity.HasKey(e => e.Logid).HasName("suppliercategorychangelog_pkey");
+            entity.HasKey("Logid").HasName("suppliercategorychangelog_pkey");
 
             entity.ToTable("suppliercategorychangelog");
 
-            entity.Property(e => e.Logid)
+            entity.Property("Logid")
+                .HasField("_logid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("logid");
-            entity.Property(e => e.Changedat)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("changedat");
-            entity.Property(e => e.Changereason)
+            entity.Property("Changedat")
+                .HasField("_changedat")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("changedat");
+            entity.Property("Changereason")
+                .HasField("_changereason")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("changereason");
-            entity.Property(e => e.Supplierid).HasColumnName("supplierid");
+            entity.Property("Supplierid")
+                .HasField("_supplierid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("supplierid");
 
             entity.HasOne(d => d.Supplier).WithMany(p => p.Suppliercategorychangelogs)
-                .HasForeignKey(d => d.Supplierid)
+                .HasForeignKey("Supplierid")
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("fk_suppliercatelog_supplier");
         });
 
         modelBuilder.Entity<Train>(entity =>
         {
-            entity.HasKey(e => e.TransportId).HasName("train_pkey");
+            entity.HasKey("TransportId").HasName("train_pkey");
 
             entity.ToTable("train");
 
-            entity.Property(e => e.TransportId)
+            entity.Property("TransportId")
+                .HasField("_transportId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .ValueGeneratedNever()
                 .HasColumnName("transport_id");
-            entity.Property(e => e.TrainId).HasColumnName("train_id");
-            entity.Property(e => e.TrainNumber)
+            entity.Property("TrainId")
+                .HasField("_trainId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("train_id");
+            entity.Property("TrainNumber")
+                .HasField("_trainNumber")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("train_number");
-            entity.Property(e => e.TrainType)
+            entity.Property("TrainType")
+                .HasField("_trainType")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("train_type");
 
             entity.HasOne(d => d.Transport).WithOne(p => p.Train)
-                .HasForeignKey<Train>(d => d.TransportId)
+                .HasForeignKey<Train>("TransportId")
                 .HasConstraintName("fk_train_transport");
         });
 
         modelBuilder.Entity<Transaction>(entity =>
         {
-            entity.HasKey(e => e.Transactionid).HasName("transaction_pkey");
+            entity.HasKey("Transactionid").HasName("transaction_pkey");
 
             entity.ToTable("transaction");
 
-            entity.Property(e => e.Transactionid)
+            entity.Property("Transactionid")
+                .HasField("_transactionid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("transactionid");
-            entity.Property(e => e.Amount)
+            entity.Property("Amount")
+                .HasField("_amount")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasPrecision(10, 2)
                 .HasColumnName("amount");
-            entity.Property(e => e.Createdat)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("createdat");
-            entity.Property(e => e.Providertransactionid)
+            entity.Property("Createdat")
+                .HasField("_createdat")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("createdat");
+            entity.Property("Providertransactionid")
+                .HasField("_providertransactionid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(100)
                 .HasColumnName("providertransactionid");
         });
 
         modelBuilder.Entity<Transactionlog>(entity =>
         {
-            entity.HasKey(e => e.Transactionlogid).HasName("transactionlog_pkey");
+            entity.HasKey("Transactionlogid").HasName("transactionlog_pkey");
 
             entity.ToTable("transactionlog");
 
-            entity.Property(e => e.Transactionlogid)
+            entity.Property("Transactionlogid")
+                .HasField("_transactionlogid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("transactionlogid");
-            entity.Property(e => e.Createdat)
+            entity.Property("Createdat")
+                .HasField("_createdat")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnType("timestamp without time zone")
                 .HasColumnName("createdat");
         });
 
         modelBuilder.Entity<Transport>(entity =>
         {
-            entity.HasKey(e => e.TransportId).HasName("transport_pkey");
+            entity.HasKey("TransportId").HasName("transport_pkey");
 
             entity.ToTable("transport");
 
-            entity.Property(e => e.TransportId)
+            entity.Property("TransportId")
+                .HasField("_transportId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("transport_id");
-            entity.Property(e => e.IsAvailable)
+            entity.Property("IsAvailable")
+                .HasField("_isAvailable")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValue(true)
                 .HasColumnName("is_available");
-            entity.Property(e => e.MaxLoadKg).HasColumnName("max_load_kg");
-            entity.Property(e => e.VehicleSizeM2).HasColumnName("vehicle_size_m2");
+            entity.Property("MaxLoadKg")
+                .HasField("_maxLoadKg")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("max_load_kg");
+            entity.Property("VehicleSizeM2")
+                .HasField("_vehicleSizeM2")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("vehicle_size_m2");
         });
 
         modelBuilder.Entity<TransportationHub>(entity =>
         {
-            entity.HasKey(e => e.HubId).HasName("transportation_hub_pkey");
+            entity.HasKey("HubId").HasName("transportation_hub_pkey");
 
             entity.ToTable("transportation_hub");
 
-            entity.Property(e => e.HubId)
+            entity.Property("HubId")
+                .HasField("_hubId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("hub_id");
-            entity.Property(e => e.Address)
+            entity.Property("Address")
+                .HasField("_address")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("address");
-            entity.Property(e => e.CountryCode)
+            entity.Property("CountryCode")
+                .HasField("_countryCode")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(10)
                 .HasColumnName("country_code");
-            entity.Property(e => e.Latitude).HasColumnName("latitude");
-            entity.Property(e => e.Longitude).HasColumnName("longitude");
-            entity.Property(e => e.OperationTime)
+            entity.Property("Latitude")
+                .HasField("_latitude")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("latitude");
+            entity.Property("Longitude")
+                .HasField("_longitude")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("longitude");
+            entity.Property("OperationTime")
+                .HasField("_operationTime")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("operation_time");
-            entity.Property(e => e.OperationalStatus)
+            entity.Property("OperationalStatus")
+                .HasField("_operationalStatus")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("operational_status");
         });
 
         modelBuilder.Entity<Truck>(entity =>
         {
-            entity.HasKey(e => e.TransportId).HasName("truck_pkey");
+            entity.HasKey("TransportId").HasName("truck_pkey");
 
             entity.ToTable("truck");
 
-            entity.Property(e => e.TransportId)
+            entity.Property("TransportId")
+                .HasField("_transportId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .ValueGeneratedNever()
                 .HasColumnName("transport_id");
-            entity.Property(e => e.LicensePlate)
+            entity.Property("LicensePlate")
+                .HasField("_licensePlate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("license_plate");
-            entity.Property(e => e.TruckId).HasColumnName("truck_id");
-            entity.Property(e => e.TruckType)
+            entity.Property("TruckId")
+                .HasField("_truckId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("truck_id");
+            entity.Property("TruckType")
+                .HasField("_truckType")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("truck_type");
 
             entity.HasOne(d => d.Transport).WithOne(p => p.Truck)
-                .HasForeignKey<Truck>(d => d.TransportId)
+                .HasForeignKey<Truck>("TransportId")
                 .HasConstraintName("fk_truck_transport");
         });
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.Userid).HasName("User_pkey");
+            entity.HasKey("Userid").HasName("User_pkey");
 
             entity.ToTable("User");
 
-            entity.HasIndex(e => e.Email, "User_email_key").IsUnique();
+            // entity.HasIndex("Email", "User_email_key").IsUnique();
+            entity.HasIndex("Email").HasDatabaseName("User_email_key").IsUnique();
 
-            entity.Property(e => e.Userid)
+            entity.Property("Userid")
+                .HasField("_userid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("userid");
-            entity.Property(e => e.Email)
+            entity.Property("Email")
+                .HasField("_email")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(100)
                 .HasColumnName("email");
-            entity.Property(e => e.Name)
+            entity.Property("Name")
+                .HasField("_name")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(100)
                 .HasColumnName("name");
-            entity.Property(e => e.Passwordhash)
+            entity.Property("Passwordhash")
+                .HasField("_passwordhash")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("passwordhash");
-            entity.Property(e => e.Phonecountry).HasColumnName("phonecountry");
-            entity.Property(e => e.Phonenumber)
+            entity.Property("Phonecountry")
+                .HasField("_phonecountry")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("phonecountry");
+            entity.Property("Phonenumber")
+                .HasField("_phonenumber")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(20)
                 .HasColumnName("phonenumber");
         });
 
         modelBuilder.Entity<Vettingrecord>(entity =>
         {
-            entity.HasKey(e => e.Vettingid).HasName("vettingrecord_pkey");
+            entity.HasKey("Vettingid").HasName("vettingrecord_pkey");
 
             entity.ToTable("vettingrecord");
 
-            entity.Property(e => e.Vettingid)
+            entity.Property("Vettingid")
+                .HasField("_vettingid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("vettingid");
-            entity.Property(e => e.Notes).HasColumnName("notes");
-            entity.Property(e => e.Ratingid).HasColumnName("ratingid");
-            entity.Property(e => e.Supplierid).HasColumnName("supplierid");
-            entity.Property(e => e.Vettedat)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("vettedat");
-            entity.Property(e => e.Vettedbyuserid).HasColumnName("vettedbyuserid");
+            entity.Property("Notes")
+                .HasField("_notes")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("notes");
+            entity.Property("Ratingid")
+                .HasField("_ratingid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("ratingid");
+            entity.Property("Supplierid")
+                .HasField("_supplierid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("supplierid");
+            entity.Property("Vettedat")
+                .HasField("_vettedat")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("vettedat");
+            entity.Property("Vettedbyuserid")
+                .HasField("_vettedbyuserid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("vettedbyuserid");
 
             entity.HasOne(d => d.Rating).WithMany(p => p.Vettingrecords)
-                .HasForeignKey(d => d.Ratingid)
+                .HasForeignKey("Ratingid")
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("fk_vettingrecord_rating");
 
             entity.HasOne(d => d.Supplier).WithMany(p => p.Vettingrecords)
-                .HasForeignKey(d => d.Supplierid)
+                .HasForeignKey("Supplierid")
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("fk_vettingrecord_supplier");
         });
 
         modelBuilder.Entity<Warehouse>(entity =>
         {
-            entity.HasKey(e => e.HubId).HasName("warehouse_pkey");
+            entity.HasKey("HubId").HasName("warehouse_pkey");
 
             entity.ToTable("warehouse");
 
-            entity.Property(e => e.HubId)
+            entity.Property("HubId")
+                .HasField("_hubId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .ValueGeneratedNever()
                 .HasColumnName("hub_id");
-            entity.Property(e => e.ClimateControlEmissionRate).HasColumnName("climate_control_emission_rate");
-            entity.Property(e => e.LightingEmissionRate).HasColumnName("lighting_emission_rate");
-            entity.Property(e => e.MaxProductCapacity).HasColumnName("max_product_capacity");
-            entity.Property(e => e.SecuritySystemEmissionRate).HasColumnName("security_system_emission_rate");
-            entity.Property(e => e.TotalWarehouseVolume).HasColumnName("total_warehouse_volume");
-            entity.Property(e => e.WarehouseCode)
+            entity.Property("ClimateControlEmissionRate")
+                .HasField("_climateControlEmissionRate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("climate_control_emission_rate");
+            entity.Property("LightingEmissionRate")
+                .HasField("_lightingEmissionRate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("lighting_emission_rate");
+            entity.Property("MaxProductCapacity")
+                .HasField("_maxProductCapacity")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("max_product_capacity");
+            entity.Property("SecuritySystemEmissionRate")
+                .HasField("_securitySystemEmissionRate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("security_system_emission_rate");
+            entity.Property("TotalWarehouseVolume")
+                .HasField("_totalWarehouseVolume")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("total_warehouse_volume");
+            entity.Property("WarehouseCode")
+                .HasField("_warehouseCode")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(100)
                 .HasColumnName("warehouse_code");
 
             entity.HasOne(d => d.Hub).WithOne(p => p.Warehouse)
-                .HasForeignKey<Warehouse>(d => d.HubId)
+                .HasForeignKey<Warehouse>("HubId")
                 .HasConstraintName("fk_warehouse_hub");
         });
 

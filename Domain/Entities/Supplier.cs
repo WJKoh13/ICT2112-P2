@@ -5,17 +5,23 @@ namespace ProRental.Domain.Entities;
 
 public partial class Supplier
 {
-    public int Supplierid { get; private set; }
+    private int _supplierid;
+    private int Supplierid { get => _supplierid; set => _supplierid = value; }
 
-    public string? Name { get; private set; }
+    private string? _name;
+    private string? Name { get => _name; set => _name = value; }
 
-    public string? Details { get; private set; }
+    private string? _details;
+    private string? Details { get => _details; set => _details = value; }
 
-    public int? Creditperiod { get; private set; }
+    private int? _creditperiod;
+    private int? Creditperiod { get => _creditperiod; set => _creditperiod = value; }
 
-    public double? Avgturnaroundtime { get; private set; }
+    private double? _avgturnaroundtime;
+    private double? Avgturnaroundtime { get => _avgturnaroundtime; set => _avgturnaroundtime = value; }
 
-    public bool? Isverified { get; private set; }
+    private bool? _isverified;
+    private bool? Isverified { get => _isverified; set => _isverified = value; }
 
     public virtual ICollection<Reliabilityrating> Reliabilityratings { get; private set; } = new List<Reliabilityrating>();
 

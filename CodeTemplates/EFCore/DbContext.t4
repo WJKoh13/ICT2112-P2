@@ -138,7 +138,7 @@ public partial class <#= Options.ContextName #> : DbContext
                     usings.AddRange(keyFluentApiCalls.GetRequiredUsings());
                 }
 #>
-            entity.HasKey(<#= code.Lambda(key.Properties, "e") #>)<#= code.Fragment(keyFluentApiCalls, indent: 4) #>;
+            entity.HasKey(<#= code.Arguments(key.Properties.Select(e => e.Name)) #>)<#= code.Fragment(keyFluentApiCalls, indent: 4) #>;
 <#
                 anyEntityTypeConfiguration = true;
             }
@@ -174,7 +174,8 @@ public partial class <#= Options.ContextName #> : DbContext
                 usings.AddRange(indexFluentApiCalls.GetRequiredUsings());
             }
 #>
-            entity.HasIndex(<#= code.Lambda(index.Properties, "e") #>, <#= code.Literal(index.GetDatabaseName()) #>)<#= code.Fragment(indexFluentApiCalls, indent: 4) #>;
+            // entity.HasIndex(<#= code.Arguments(index.Properties.Select(e => e.Name)) #>, <#= code.Literal(index.GetDatabaseName()) #>)<#= code.Fragment(indexFluentApiCalls, indent: 4) #>;
+            entity.HasIndex(<#= code.Arguments(index.Properties.Select(e => e.Name)) #>).HasDatabaseName(<#= code.Literal(index.GetDatabaseName()) #>)<#= code.Fragment(indexFluentApiCalls, indent: 4) #>;
 <#
             anyEntityTypeConfiguration = true;
         }
@@ -182,22 +183,23 @@ public partial class <#= Options.ContextName #> : DbContext
         var firstProperty = true;
         foreach (var property in entityType.GetProperties())
         {
+            var fieldName = "_" + char.ToLowerInvariant(property.Name[0]) + property.Name.Substring(1);
             var propertyFluentApiCalls = property.GetFluentApiCalls(annotationCodeGenerator)
                 ?.FilterChain(c => !(Options.UseDataAnnotations && c.IsHandledByDataAnnotations)
                     && !(c.Method == "IsRequired" && Options.UseNullableReferenceTypes && !property.ClrType.IsValueType));
-            if (propertyFluentApiCalls == null)
+            if (propertyFluentApiCalls != null)
             {
-                continue;
+                usings.AddRange(propertyFluentApiCalls.GetRequiredUsings());
             }
-
-            usings.AddRange(propertyFluentApiCalls.GetRequiredUsings());
 
             if (anyEntityTypeConfiguration && firstProperty)
             {
                 WriteLine("");
             }
 #>
-            entity.Property(e => e.<#= property.Name #>)<#= code.Fragment(propertyFluentApiCalls, indent: 4) #>;
+            entity.Property(<#= code.Literal(property.Name) #>)
+                .HasField(<#= code.Literal(fieldName) #>)
+                .UsePropertyAccessMode(PropertyAccessMode.Field)<#= code.Fragment(propertyFluentApiCalls, indent: 4) #>;
 <#
             anyEntityTypeConfiguration = true;
             firstProperty = false;
@@ -205,7 +207,7 @@ public partial class <#= Options.ContextName #> : DbContext
 
         foreach (var foreignKey in entityType.GetForeignKeys())
         {
-            var foreignKeyFluentApiCalls = foreignKey.GetFluentApiCalls(annotationCodeGenerator)
+            var foreignKeyFluentApiCalls = foreignKey.GetFluentApiCalls(annotationCodeGenerator, useStrings: true)
                 ?.FilterChain(c => !(Options.UseDataAnnotations && c.IsHandledByDataAnnotations));
             if (foreignKeyFluentApiCalls == null)
             {

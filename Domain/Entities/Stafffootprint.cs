@@ -5,15 +5,20 @@ namespace ProRental.Domain.Entities;
 
 public partial class Stafffootprint
 {
-    public int Staffcarbonfootprintid { get; private set; }
+    private int _staffcarbonfootprintid;
+    private int Staffcarbonfootprintid { get => _staffcarbonfootprintid; set => _staffcarbonfootprintid = value; }
 
-    public int Staffid { get; private set; }
+    private int _staffid;
+    private int Staffid { get => _staffid; set => _staffid = value; }
 
-    public DateTime Time { get; private set; }
+    private DateTime _time;
+    private DateTime Time { get => _time; set => _time = value; }
 
-    public double Hoursworked { get; private set; }
+    private double _hoursworked;
+    private double Hoursworked { get => _hoursworked; set => _hoursworked = value; }
 
-    public double Totalstaffco2 { get; private set; }
+    private double _totalstaffco2;
+    private double Totalstaffco2 { get => _totalstaffco2; set => _totalstaffco2 = value; }
 
     public virtual Staff Staff { get; private set; } = null!;
 }

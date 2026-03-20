@@ -5,15 +5,20 @@ namespace ProRental.Domain.Entities;
 
 public partial class Returnitem
 {
-    public int Returnitemid { get; private set; }
+    private int _returnitemid;
+    private int Returnitemid { get => _returnitemid; set => _returnitemid = value; }
 
-    public int Returnrequestid { get; private set; }
+    private int _returnrequestid;
+    private int Returnrequestid { get => _returnrequestid; set => _returnrequestid = value; }
 
-    public int Inventoryitemid { get; private set; }
+    private int _inventoryitemid;
+    private int Inventoryitemid { get => _inventoryitemid; set => _inventoryitemid = value; }
 
-    public DateTime? Completiondate { get; private set; }
+    private DateTime? _completiondate;
+    private DateTime? Completiondate { get => _completiondate; set => _completiondate = value; }
 
-    public string? Image { get; private set; }
+    private string? _image;
+    private string? Image { get => _image; set => _image = value; }
 
     public virtual ICollection<Damagereport> Damagereports { get; private set; } = new List<Damagereport>();
 

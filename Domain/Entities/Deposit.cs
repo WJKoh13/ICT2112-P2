@@ -5,21 +5,29 @@ namespace ProRental.Domain.Entities;
 
 public partial class Deposit
 {
-    public string Depositid { get; private set; } = null!;
+    private string _depositid = null!;
+    private string Depositid { get => _depositid; set => _depositid = value; }
 
-    public int Orderid { get; private set; }
+    private int _orderid;
+    private int Orderid { get => _orderid; set => _orderid = value; }
 
-    public int Transactionid { get; private set; }
+    private int _transactionid;
+    private int Transactionid { get => _transactionid; set => _transactionid = value; }
 
-    public decimal Originalamount { get; private set; }
+    private decimal _originalamount;
+    private decimal Originalamount { get => _originalamount; set => _originalamount = value; }
 
-    public decimal Heldamount { get; private set; }
+    private decimal _heldamount;
+    private decimal Heldamount { get => _heldamount; set => _heldamount = value; }
 
-    public decimal? Refundedamount { get; private set; }
+    private decimal? _refundedamount;
+    private decimal? Refundedamount { get => _refundedamount; set => _refundedamount = value; }
 
-    public decimal? Forfeitedamount { get; private set; }
+    private decimal? _forfeitedamount;
+    private decimal? Forfeitedamount { get => _forfeitedamount; set => _forfeitedamount = value; }
 
-    public DateTime Createdat { get; private set; }
+    private DateTime _createdat;
+    private DateTime Createdat { get => _createdat; set => _createdat = value; }
 
     public virtual Order Order { get; private set; } = null!;
 

@@ -5,17 +5,23 @@ namespace ProRental.Domain.Entities;
 
 public partial class Product
 {
-    public int Productid { get; private set; }
+    private int _productid;
+    private int Productid { get => _productid; set => _productid = value; }
 
-    public int Categoryid { get; private set; }
+    private int _categoryid;
+    private int Categoryid { get => _categoryid; set => _categoryid = value; }
 
-    public string Sku { get; private set; } = null!;
+    private string _sku = null!;
+    private string Sku { get => _sku; set => _sku = value; }
 
-    public decimal Threshold { get; private set; }
+    private decimal _threshold;
+    private decimal Threshold { get => _threshold; set => _threshold = value; }
 
-    public DateTime Createdat { get; private set; }
+    private DateTime _createdat;
+    private DateTime Createdat { get => _createdat; set => _createdat = value; }
 
-    public DateTime Updatedat { get; private set; }
+    private DateTime _updatedat;
+    private DateTime Updatedat { get => _updatedat; set => _updatedat = value; }
 
     public virtual ICollection<Alert> Alerts { get; private set; } = new List<Alert>();
 

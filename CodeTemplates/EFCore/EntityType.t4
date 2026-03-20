@@ -100,8 +100,11 @@ public partial class <#= EntityType.Name #>
 
         var needsNullable = Options.UseNullableReferenceTypes && property.IsNullable && !property.ClrType.IsValueType;
         var needsInitializer = Options.UseNullableReferenceTypes && !property.IsNullable && !property.ClrType.IsValueType;
+        var typeName = code.Reference(property.ClrType) + (needsNullable ? "?" : "");
+        var fieldName = "_" + char.ToLowerInvariant(property.Name[0]) + property.Name.Substring(1);
 #>
-    public <#= code.Reference(property.ClrType) #><#= needsNullable ? "?" : "" #> <#= property.Name #> { get; private set; }<#= needsInitializer ? " = null!;" : "" #>
+    private <#= typeName #> <#= fieldName #><#= needsInitializer ? " = null!" : "" #>;
+    private <#= typeName #> <#= property.Name #> { get => <#= fieldName #>; set => <#= fieldName #> = value; }
 <#
         firstProperty = false;
     }

@@ -5,13 +5,17 @@ namespace ProRental.Domain.Entities;
 
 public partial class Suppliercategorychangelog
 {
-    public int Logid { get; private set; }
+    private int _logid;
+    private int Logid { get => _logid; set => _logid = value; }
 
-    public int? Supplierid { get; private set; }
+    private int? _supplierid;
+    private int? Supplierid { get => _supplierid; set => _supplierid = value; }
 
-    public string? Changereason { get; private set; }
+    private string? _changereason;
+    private string? Changereason { get => _changereason; set => _changereason = value; }
 
-    public DateTime? Changedat { get; private set; }
+    private DateTime? _changedat;
+    private DateTime? Changedat { get => _changedat; set => _changedat = value; }
 
     public virtual Supplier? Supplier { get; private set; }
 }

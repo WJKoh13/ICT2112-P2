@@ -5,23 +5,32 @@ namespace ProRental.Domain.Entities;
 
 public partial class Productdetail
 {
-    public int Detailsid { get; private set; }
+    private int _detailsid;
+    private int Detailsid { get => _detailsid; set => _detailsid = value; }
 
-    public int Productid { get; private set; }
+    private int _productid;
+    private int Productid { get => _productid; set => _productid = value; }
 
-    public int Totalquantity { get; private set; }
+    private int _totalquantity;
+    private int Totalquantity { get => _totalquantity; set => _totalquantity = value; }
 
-    public string Name { get; private set; } = null!;
+    private string _name = null!;
+    private string Name { get => _name; set => _name = value; }
 
-    public string? Description { get; private set; }
+    private string? _description;
+    private string? Description { get => _description; set => _description = value; }
 
-    public decimal? Weight { get; private set; }
+    private decimal? _weight;
+    private decimal? Weight { get => _weight; set => _weight = value; }
 
-    public string? Image { get; private set; }
+    private string? _image;
+    private string? Image { get => _image; set => _image = value; }
 
-    public decimal Price { get; private set; }
+    private decimal _price;
+    private decimal Price { get => _price; set => _price = value; }
 
-    public decimal? Depositrate { get; private set; }
+    private decimal? _depositrate;
+    private decimal? Depositrate { get => _depositrate; set => _depositrate = value; }
 
     public virtual Product Product { get; private set; } = null!;
 }

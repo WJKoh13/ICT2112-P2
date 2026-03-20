@@ -5,21 +5,29 @@ namespace ProRental.Domain.Entities;
 
 public partial class Returnlog
 {
-    public int Returnlogid { get; private set; }
+    private int _returnlogid;
+    private int Returnlogid { get => _returnlogid; set => _returnlogid = value; }
 
-    public int Returnrequestid { get; private set; }
+    private int _returnrequestid;
+    private int Returnrequestid { get => _returnrequestid; set => _returnrequestid = value; }
 
-    public int Rentalorderlogid { get; private set; }
+    private int _rentalorderlogid;
+    private int Rentalorderlogid { get => _rentalorderlogid; set => _rentalorderlogid = value; }
 
-    public string? Customerid { get; private set; }
+    private string? _customerid;
+    private string? Customerid { get => _customerid; set => _customerid = value; }
 
-    public DateTime? Requestdate { get; private set; }
+    private DateTime? _requestdate;
+    private DateTime? Requestdate { get => _requestdate; set => _requestdate = value; }
 
-    public DateTime? Completiondate { get; private set; }
+    private DateTime? _completiondate;
+    private DateTime? Completiondate { get => _completiondate; set => _completiondate = value; }
 
-    public string? Imageurl { get; private set; }
+    private string? _imageurl;
+    private string? Imageurl { get => _imageurl; set => _imageurl = value; }
 
-    public string? Detailsjson { get; private set; }
+    private string? _detailsjson;
+    private string? Detailsjson { get => _detailsjson; set => _detailsjson = value; }
 
     public virtual Rentalorderlog Rentalorderlog { get; private set; } = null!;
 

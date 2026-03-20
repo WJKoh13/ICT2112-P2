@@ -5,7 +5,7 @@
 --   * Removed T-SQL (GO, USE DATABASE) and MySQL syntax
 --   * Converted all inline ENUM to named CREATE TYPE
 --   * AUTO_INCREMENT → GENERATED ALWAYS AS IDENTITY
---   * DATETIME → TIMESTAMP
+--   * DATETIME → TIMESTAMPTZ
 --   * Fixed broken FK targets, duplicate tables, forward references
 
 -- ============================================================
@@ -77,6 +77,8 @@ CREATE TYPE order_history_status_enum AS ENUM (
 );
 
 CREATE TYPE shipment_status_enum AS ENUM ('PENDING', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED');
+
+CREATE TYPE user_role_enum AS ENUM ('CUSTOMER', 'STAFF', 'ADMIN');
 
 --TEAM 1 PRIMARY KEY TABLES
 -- ============================================================
@@ -216,7 +218,7 @@ CREATE TABLE route_leg (
 CREATE TABLE carbon_result (
     carbon_result_id  INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     total_carbon_kg   DOUBLE PRECISION,
-    created_at        TIMESTAMP DEFAULT NOW(),
+    created_at        TIMESTAMPTZ DEFAULT NOW(),
     validation_passed BOOLEAN   DEFAULT FALSE
 );
 
@@ -272,7 +274,7 @@ CREATE TABLE customer_choice (
     customer_id     INT             NOT NULL,
     order_id        INT             NOT NULL,
     preference_type preference_type,
-    created_at      TIMESTAMP       DEFAULT NOW(),
+    created_at      TIMESTAMPTZ       DEFAULT NOW(),
     PRIMARY KEY (customer_id, order_id)
 );
 
@@ -336,7 +338,7 @@ CREATE TABLE carbon_emission (
 CREATE TABLE batch_order ( 
     batch_id        INT       NOT NULL,
     order_id        INT       NOT NULL UNIQUE,
-    added_timestamp TIMESTAMP DEFAULT NOW(),
+    added_timestamp TIMESTAMPTZ DEFAULT NOW(),
     PRIMARY KEY (batch_id, order_id),
     CONSTRAINT fk_batch_order_batch FOREIGN KEY (batch_id)
         REFERENCES delivery_batch(delivery_batch_id)
@@ -395,7 +397,7 @@ CREATE TABLE IF NOT EXISTS SupplierCategoryChangeLog (
     PreviousCategory supplier_category_enum,
     NewCategory      supplier_category_enum,
     ChangeReason     VARCHAR(255),
-    ChangedAt        TIMESTAMP,
+    ChangedAt        TIMESTAMPTZ,
     CONSTRAINT fk_suppliercatelog_supplier FOREIGN KEY (SupplierID) REFERENCES Supplier(SupplierID) ON DELETE CASCADE
 );
 
@@ -407,7 +409,7 @@ CREATE TABLE IF NOT EXISTS ReliabilityRating (
     Rationale          TEXT,
     RatingBand         rating_band_enum,
     CalculatedByUserID INT,
-    CalculatedAt       TIMESTAMP,
+    CalculatedAt       TIMESTAMPTZ,
     CONSTRAINT fk_reliabilityrating_supplier FOREIGN KEY (SupplierID) REFERENCES Supplier(SupplierID) ON DELETE SET NULL
 );
 
@@ -416,7 +418,7 @@ CREATE TABLE IF NOT EXISTS VettingRecord (
     RatingID       INT,
     SupplierID     INT,
     VettedByUserID INT,
-    VettedAt       TIMESTAMP,
+    VettedAt       TIMESTAMPTZ,
     Decision       vetting_decision_enum,
     Notes          TEXT,
     CONSTRAINT fk_vettingrecord_rating   FOREIGN KEY (RatingID)   REFERENCES ReliabilityRating(RatingID) ON DELETE SET NULL,
@@ -429,9 +431,9 @@ CREATE TABLE IF NOT EXISTS ReplenishmentRequest (
     RequestId   INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     RequestedBy VARCHAR(255),
     Status      replenishment_status_enum,
-    CreatedAt   TIMESTAMP,
+    CreatedAt   TIMESTAMPTZ,
     Remarks     TEXT,
-    CompletedAt TIMESTAMP,
+    CompletedAt TIMESTAMPTZ,
     CompletedBy VARCHAR(255)
 );
 
@@ -440,16 +442,16 @@ CREATE TABLE IF NOT EXISTS ReplenishmentRequest (
 CREATE TABLE IF NOT EXISTS TransactionLog (
     TransactionLogID INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     LogType log_type_enum NOT NULL,
-    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    CreatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS PurchaseOrderLog (
     PurchaseOrderLogId      INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     PoID                    INT NOT NULL,
-    PoDate                  TIMESTAMP,
+    PoDate                  TIMESTAMPTZ,
     SupplierId              INT,
     Status                  rental_status_enum,
-    ExpectedDeliveryDate    TIMESTAMP,
+    ExpectedDeliveryDate    TIMESTAMPTZ,
     TotalAmount             DECIMAL(10,2),
     DetailsJSON             TEXT,
 
@@ -461,8 +463,8 @@ CREATE TABLE IF NOT EXISTS PurchaseOrderLog (
 CREATE TABLE IF NOT EXISTS Analytics (
     AnalyticsID         INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     AnalyticsType       analytics_type_enum,
-    StartDate           TIMESTAMP,
-    EndDate             TIMESTAMP,
+    StartDate           TIMESTAMPTZ,
+    EndDate             TIMESTAMPTZ,
     LoanAmt             INT,
     ReturnAmt           INT,
     RefPrimaryID        INT,
@@ -508,8 +510,8 @@ CREATE TABLE Category (
     CategoryId INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     Name VARCHAR(255) NOT NULL,
     Description TEXT,
-    CreatedDate TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UpdatedDate TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    CreatedDate TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UpdatedDate TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE Product (
@@ -518,8 +520,8 @@ CREATE TABLE Product (
     Sku VARCHAR(255) NOT NULL,
     Status product_status NOT NULL DEFAULT 'AVAILABLE',
     Threshold DECIMAL(5,4) NOT NULL DEFAULT 0.0,
-    CreatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UpdatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CreatedAt TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_product_category
         FOREIGN KEY (CategoryId)
@@ -549,9 +551,9 @@ CREATE TABLE InventoryItem (
     ProductId INT NOT NULL,
     SerialNumber VARCHAR(255) NOT NULL UNIQUE,
     Status inventory_status NOT NULL DEFAULT 'AVAILABLE',
-    CreatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UpdatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    ExpiryDate TIMESTAMP,
+    CreatedAt TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ExpiryDate TIMESTAMPTZ,
 
     CONSTRAINT fk_inventory_product
         FOREIGN KEY (ProductId)
@@ -566,8 +568,8 @@ CREATE TABLE Alert (
     MinThreshold INT NOT NULL,
     CurrentStock INT NOT NULL,
     Message VARCHAR(255) NOT NULL,
-    CreatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UpdatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CreatedAt TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_alert_product
         FOREIGN KEY (ProductId)
@@ -578,8 +580,8 @@ CREATE TABLE Alert (
 CREATE TABLE ClearanceBatch (
     ClearanceBatchId INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     BatchName VARCHAR(255) NOT NULL,
-    CreatedDate TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    ClearanceDate TIMESTAMP,
+    CreatedDate TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ClearanceDate TIMESTAMPTZ,
     Status clearance_batch_status NOT NULL DEFAULT 'SCHEDULED'
 );
 
@@ -589,7 +591,7 @@ CREATE TABLE ClearanceItem (
     InventoryItemId INT NOT NULL UNIQUE,
     FinalPrice DECIMAL(10,2),
     RecommendedPrice DECIMAL(10,2),
-    SaleDate TIMESTAMP,
+    SaleDate TIMESTAMPTZ,
     Status clearance_status NOT NULL DEFAULT 'CLEARANCE',
 
     CONSTRAINT fk_clearance_batch
@@ -606,6 +608,7 @@ CREATE TABLE ClearanceItem (
 --TEAM 4 PRIMARY KEY TABLES
 CREATE TABLE IF NOT EXISTS "User" (
     userId       INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    userRole   user_role_enum NOT NULL,
     name         VARCHAR(100) NOT NULL,
     email        VARCHAR(100) NOT NULL UNIQUE,
     passwordHash VARCHAR(255) NOT NULL,
@@ -632,7 +635,7 @@ CREATE TABLE IF NOT EXISTS Notification (
     notificationId INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     userId         INT          NOT NULL,
     message        VARCHAR(255) NOT NULL,
-    dateSent       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    dateSent       TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     isRead         BOOLEAN      NOT NULL DEFAULT FALSE,
     type           notification_type_enum NOT NULL,
     CONSTRAINT fk_notification_user FOREIGN KEY (userId) REFERENCES "User"(userId) ON UPDATE CASCADE ON DELETE CASCADE
@@ -653,7 +656,7 @@ CREATE TABLE IF NOT EXISTS NotificationPreference (
 -- 001_building_footprint
 CREATE TABLE IF NOT EXISTS BuildingFootprint (
     buildingCarbonFootprintID INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    timeHourly TIMESTAMP NOT NULL,
+    timeHourly TIMESTAMPTZ NOT NULL,
     zone VARCHAR(50),
     block VARCHAR(50),
     floor VARCHAR(50),
@@ -741,8 +744,8 @@ CREATE TABLE IF NOT EXISTS Session (
     sessionId INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     userId    INT         NOT NULL,
     role      VARCHAR(50) NOT NULL,
-    createdAt TIMESTAMP   NOT NULL,
-    expiresAt TIMESTAMP   NOT NULL,
+    createdAt TIMESTAMPTZ   NOT NULL,
+    expiresAt TIMESTAMPTZ   NOT NULL,
 
     CONSTRAINT fk_session_user FOREIGN KEY (userId) REFERENCES "User"(userId) ON DELETE CASCADE
 );
@@ -752,8 +755,8 @@ CREATE TABLE IF NOT EXISTS Cart (
     cartId      INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     customerId  INT NULL,
     sessionId   INT NULL,
-    rentalStart TIMESTAMP,
-    rentalEnd   TIMESTAMP,
+    rentalStart TIMESTAMPTZ,
+    rentalEnd   TIMESTAMPTZ,
     status      cart_status_enum DEFAULT 'ACTIVE',
 
     CONSTRAINT fk_cart_customer
@@ -791,11 +794,11 @@ CREATE TABLE IF NOT EXISTS Checkout (
     checkoutId        INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     customerId        INT          NOT NULL,
     cartId            INT          NOT NULL,
-    deliveryId        INT,
+    option_id         INT,
     paymentMethodType payment_method_enum,
     status            checkout_status_enum DEFAULT 'IN_PROGRESS',
     notifyOptIn       BOOLEAN DEFAULT FALSE,
-    createdAt         TIMESTAMP NOT NULL,
+    createdAt         TIMESTAMPTZ NOT NULL,
 
     CONSTRAINT fk_checkout_customer
         FOREIGN KEY (customerId)
@@ -816,7 +819,7 @@ CREATE TABLE IF NOT EXISTS Transaction (
     purpose transaction_purpose_enum NOT NULL,
     status transaction_status_enum DEFAULT 'PENDING',
     providerTransactionId VARCHAR(100),
-    createdAt TIMESTAMP NOT NULL
+    createdAt TIMESTAMPTZ NOT NULL
 );
 
 -- ORDER
@@ -825,7 +828,7 @@ CREATE TABLE IF NOT EXISTS "Order" (
     customerId    INT             NOT NULL,
     checkoutId    INT             NOT NULL,
     transactionId INT,                                         
-    orderDate     TIMESTAMP       NOT NULL,
+    orderDate     TIMESTAMPTZ       NOT NULL,
     status        order_status_enum DEFAULT 'PENDING',
     deliveryType  delivery_duration_enum,
     totalAmount   DECIMAL(10,2)   NOT NULL,
@@ -853,8 +856,8 @@ CREATE TABLE IF NOT EXISTS OrderItem (
     productId       INT           NOT NULL,
     quantity        INT           NOT NULL,
     unitPrice       DECIMAL(10,2) NOT NULL,
-    rentalStartDate TIMESTAMP,
-    rentalEndDate   TIMESTAMP,
+    rentalStartDate TIMESTAMPTZ,
+    rentalEndDate   TIMESTAMPTZ,
 
     CONSTRAINT fk_orderitem_order
         FOREIGN KEY (orderId)
@@ -875,7 +878,7 @@ CREATE TABLE IF NOT EXISTS Payment (
     amount DECIMAL(10,2) NOT NULL,
     purpose payment_purpose_enum,
     status transaction_status_enum DEFAULT 'PENDING',
-    createdAt TIMESTAMP NOT NULL,
+    createdAt TIMESTAMPTZ NOT NULL,
 
     CONSTRAINT fk_payment_order
         FOREIGN KEY (orderId)
@@ -897,7 +900,7 @@ CREATE TABLE IF NOT EXISTS Deposit (
     heldAmount DECIMAL(10,2) NOT NULL,
     refundedAmount DECIMAL(10,2) DEFAULT 0,
     forfeitedAmount DECIMAL(10,2) DEFAULT 0,
-    createdAt TIMESTAMP NOT NULL,
+    createdAt TIMESTAMPTZ NOT NULL,
 
     CONSTRAINT fk_deposit_order
         FOREIGN KEY (orderId)
@@ -928,7 +931,7 @@ CREATE TABLE IF NOT EXISTS RentalOrderLog (
     RentalOrderLogId INT PRIMARY KEY,
     OrderId       INT,
     CustomerId    INT,
-    OrderDate     TIMESTAMP,
+    OrderDate     TIMESTAMPTZ,
     TotalAmount   DECIMAL(10,2),
     DeliveryType  delivery_type_enum,
     Status        rental_status_enum,
@@ -942,9 +945,9 @@ CREATE TABLE IF NOT EXISTS LoanLog (
     LoanListId          INT NOT NULL,
     RentalOrderLogId    INT NOT NULL,
     Status              loan_status_enum,
-    LoanDate            TIMESTAMP,
-    ReturnDate          TIMESTAMP,
-    DueDate             TIMESTAMP,
+    LoanDate            TIMESTAMPTZ,
+    ReturnDate          TIMESTAMPTZ,
+    DueDate             TIMESTAMPTZ,
     DetailsJSON         TEXT,
     CONSTRAINT fk_loan_transaction FOREIGN KEY (LoanLogId)        REFERENCES TransactionLog(TransactionLogID) ON DELETE CASCADE,
     CONSTRAINT fk_loan_rental      FOREIGN KEY (RentalOrderLogId) REFERENCES RentalOrderLog(RentalOrderLogId) ON DELETE CASCADE
@@ -956,8 +959,8 @@ CREATE TABLE IF NOT EXISTS ReturnLog (
     RentalOrderLogId    INT NOT NULL,
     CustomerId          VARCHAR(50),
     Status              return_status_enum,
-    RequestDate         TIMESTAMP,
-    CompletionDate      TIMESTAMP,
+    RequestDate         TIMESTAMPTZ,
+    CompletionDate      TIMESTAMPTZ,
     ImageURL            VARCHAR(500),
     DetailsJSON         TEXT,
     CONSTRAINT fk_return_transaction FOREIGN KEY (ReturnLogId)      REFERENCES TransactionLog(TransactionLogID) ON DELETE CASCADE,
@@ -968,7 +971,7 @@ CREATE TABLE IF NOT EXISTS ClearanceLog (
     ClearanceLogId INT PRIMARY KEY,
     ClearanceBatchId INT NOT NULL,
     BatchName VARCHAR(255),
-    ClearanceDate TIMESTAMP,
+    ClearanceDate TIMESTAMPTZ,
     Status clearance_status_enum,
     DetailsJSON TEXT,
     CONSTRAINT fk_clearance_transaction FOREIGN KEY (ClearanceLogId)   REFERENCES TransactionLog(TransactionLogID) ON DELETE CASCADE
@@ -991,9 +994,9 @@ CREATE TABLE LoanList (
     LoanListId INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     OrderId INT NOT NULL,
     CustomerId INT NOT NULL,
-    LoanDate TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    DueDate TIMESTAMP NOT NULL,
-    ReturnDate TIMESTAMP,
+    LoanDate TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    DueDate TIMESTAMPTZ NOT NULL,
+    ReturnDate TIMESTAMPTZ,
     Status loan_status NOT NULL DEFAULT 'OPEN',
     Remarks TEXT,
 
@@ -1030,8 +1033,8 @@ CREATE TABLE ReturnRequest (
     OrderId INT NOT NULL,
     CustomerId INT NOT NULL,
     Status return_request_status NOT NULL DEFAULT 'PROCESSING',
-    RequestDate TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CompletionDate TIMESTAMP,
+    RequestDate TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CompletionDate TIMESTAMPTZ,
 
     CONSTRAINT fk_returnrequest_order
         FOREIGN KEY (OrderId)
@@ -1049,7 +1052,7 @@ CREATE TABLE ReturnItem (
     ReturnRequestId INT NOT NULL,
     InventoryItemId INT NOT NULL,
     Status return_item_status NOT NULL DEFAULT 'DAMAGE_INSPECTION',
-    CompletionDate TIMESTAMP,
+    CompletionDate TIMESTAMPTZ,
     Image VARCHAR(255),
 
     CONSTRAINT fk_returnitem_request
@@ -1070,7 +1073,7 @@ CREATE TABLE DamageReport (
     Severity VARCHAR(255),
     RepairCost DECIMAL(10,2),
     Images VARCHAR(255),
-    ReportDate TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ReportDate TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_damagereport_returnitem
         FOREIGN KEY (ReturnItemId)
@@ -1083,7 +1086,7 @@ CREATE TABLE IF NOT EXISTS OrderStatusHistory (
     historyId  INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     orderId    INT          NOT NULL,
     status     order_history_status_enum NOT NULL,  -- aligned with order_status_enum values
-    timestamp  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    timestamp  TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updatedBy  VARCHAR(50)  NOT NULL,
     remark     VARCHAR(255),
     CONSTRAINT fk_order_status_history_order
@@ -1097,7 +1100,7 @@ CREATE TABLE IF NOT EXISTS Refund (
     transactionId       INT, 
     ReturnRequestId     INT           NOT NULL,
     depositRefundAmount DECIMAL(10,2) NOT NULL,
-    returnDate          TIMESTAMP     NOT NULL,
+    returnDate          TIMESTAMPTZ     NOT NULL,
     penaltyAmount       DECIMAL(10,2) DEFAULT 0.00,
     returnMethod        VARCHAR(50)   NOT NULL,
     CONSTRAINT fk_refund_transaction FOREIGN KEY (transactionId)   REFERENCES Transaction(transactionId)             ON DELETE SET NULL,
@@ -1117,15 +1120,6 @@ CREATE TABLE IF NOT EXISTS Shipment (
     destination  VARCHAR(255)     NOT NULL,
     CONSTRAINT fk_shipment_order FOREIGN KEY (orderId) REFERENCES "Order"(orderId)                     ON UPDATE CASCADE ON DELETE RESTRICT,
     CONSTRAINT fk_shipment_batch FOREIGN KEY (batchId) REFERENCES delivery_batch(delivery_batch_id)    ON UPDATE CASCADE ON DELETE RESTRICT
-  );
-
-CREATE TABLE IF NOT EXISTS DeliveryMethod (
-    deliveryId    INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    orderId       INT           NOT NULL,
-    durationDays  INT           NOT NULL,
-    deliveryCost  DECIMAL(10,2) NOT NULL,
-    carrierId     VARCHAR(50)   NOT NULL,
-    CONSTRAINT fk_deliverymethod_order FOREIGN KEY (orderId) REFERENCES "Order"(orderId) ON UPDATE CASCADE ON DELETE RESTRICT
   );
 
 --TEAM 5 CROSS TEAM FK TABLES
@@ -1195,7 +1189,7 @@ CREATE TABLE IF NOT EXISTS ordercarbondata (
     buildingcarbon DOUBLE PRECISION NOT NULL,
     totalcarbon DOUBLE PRECISION NOT NULL,
     impactlevel VARCHAR(20),
-    calculatedat TIMESTAMP NOT NULL,
+    calculatedat TIMESTAMPTZ NOT NULL,
 
     CONSTRAINT fk_ordercarbondata_order
         FOREIGN KEY (orderid)
@@ -1210,7 +1204,7 @@ CREATE TABLE IF NOT EXISTS customerrewards (
     ordercarbondataid INT NOT NULL,
     rewardtype VARCHAR(50) NOT NULL,
     rewardvalue DOUBLE PRECISION NOT NULL,
-    createdat TIMESTAMP NOT NULL,
+    createdat TIMESTAMPTZ NOT NULL,
 
     CONSTRAINT fk_customerrewards_customer
         FOREIGN KEY (customerid)
@@ -1297,4 +1291,4 @@ ALTER TABLE return_stage
 -- Team 6 → Team 4: Checkout.deliveryId
 ALTER TABLE Checkout
 ADD CONSTRAINT fk_checkout_delivery
-    FOREIGN KEY (deliveryId) REFERENCES DeliveryMethod(deliveryId) ON DELETE RESTRICT; 
+    FOREIGN KEY (option_id) REFERENCES shipping_option(option_id) ON DELETE RESTRICT; 

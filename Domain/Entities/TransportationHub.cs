@@ -5,19 +5,26 @@ namespace ProRental.Domain.Entities;
 
 public partial class TransportationHub
 {
-    public int HubId { get; private set; }
+    private int _hubId;
+    private int HubId { get => _hubId; set => _hubId = value; }
 
-    public double Longitude { get; private set; }
+    private double _longitude;
+    private double Longitude { get => _longitude; set => _longitude = value; }
 
-    public double Latitude { get; private set; }
+    private double _latitude;
+    private double Latitude { get => _latitude; set => _latitude = value; }
 
-    public string CountryCode { get; private set; } = null!;
+    private string _countryCode = null!;
+    private string CountryCode { get => _countryCode; set => _countryCode = value; }
 
-    public string Address { get; private set; } = null!;
+    private string _address = null!;
+    private string Address { get => _address; set => _address = value; }
 
-    public string? OperationalStatus { get; private set; }
+    private string? _operationalStatus;
+    private string? OperationalStatus { get => _operationalStatus; set => _operationalStatus = value; }
 
-    public string? OperationTime { get; private set; }
+    private string? _operationTime;
+    private string? OperationTime { get => _operationTime; set => _operationTime = value; }
 
     public virtual Airport? Airport { get; private set; }
 

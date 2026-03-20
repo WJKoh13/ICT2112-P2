@@ -5,11 +5,14 @@ namespace ProRental.Domain.Entities;
 
 public partial class BatchOrder
 {
-    public int BatchId { get; private set; }
+    private int _batchId;
+    private int BatchId { get => _batchId; set => _batchId = value; }
 
-    public int OrderId { get; private set; }
+    private int _orderId;
+    private int OrderId { get => _orderId; set => _orderId = value; }
 
-    public DateTime? AddedTimestamp { get; private set; }
+    private DateTime? _addedTimestamp;
+    private DateTime? AddedTimestamp { get => _addedTimestamp; set => _addedTimestamp = value; }
 
     public virtual DeliveryBatch Batch { get; private set; } = null!;
 

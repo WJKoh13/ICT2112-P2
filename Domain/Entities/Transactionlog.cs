@@ -5,9 +5,11 @@ namespace ProRental.Domain.Entities;
 
 public partial class Transactionlog
 {
-    public int Transactionlogid { get; private set; }
+    private int _transactionlogid;
+    private int Transactionlogid { get => _transactionlogid; set => _transactionlogid = value; }
 
-    public DateTime? Createdat { get; private set; }
+    private DateTime? _createdat;
+    private DateTime? Createdat { get => _createdat; set => _createdat = value; }
 
     public virtual Clearancelog? Clearancelog { get; private set; }
 

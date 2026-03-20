@@ -5,17 +5,23 @@ namespace ProRental.Domain.Entities;
 
 public partial class Inventoryitem
 {
-    public int Inventoryid { get; private set; }
+    private int _inventoryid;
+    private int Inventoryid { get => _inventoryid; set => _inventoryid = value; }
 
-    public int Productid { get; private set; }
+    private int _productid;
+    private int Productid { get => _productid; set => _productid = value; }
 
-    public string Serialnumber { get; private set; } = null!;
+    private string _serialnumber = null!;
+    private string Serialnumber { get => _serialnumber; set => _serialnumber = value; }
 
-    public DateTime Createdat { get; private set; }
+    private DateTime _createdat;
+    private DateTime Createdat { get => _createdat; set => _createdat = value; }
 
-    public DateTime Updatedat { get; private set; }
+    private DateTime _updatedat;
+    private DateTime Updatedat { get => _updatedat; set => _updatedat = value; }
 
-    public DateTime? Expirydate { get; private set; }
+    private DateTime? _expirydate;
+    private DateTime? Expirydate { get => _expirydate; set => _expirydate = value; }
 
     public virtual Clearanceitem? Clearanceitem { get; private set; }
 

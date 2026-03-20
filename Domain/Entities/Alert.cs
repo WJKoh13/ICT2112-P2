@@ -5,19 +5,26 @@ namespace ProRental.Domain.Entities;
 
 public partial class Alert
 {
-    public int Alertid { get; private set; }
+    private int _alertid;
+    private int Alertid { get => _alertid; set => _alertid = value; }
 
-    public int Productid { get; private set; }
+    private int _productid;
+    private int Productid { get => _productid; set => _productid = value; }
 
-    public int Minthreshold { get; private set; }
+    private int _minthreshold;
+    private int Minthreshold { get => _minthreshold; set => _minthreshold = value; }
 
-    public int Currentstock { get; private set; }
+    private int _currentstock;
+    private int Currentstock { get => _currentstock; set => _currentstock = value; }
 
-    public string Message { get; private set; } = null!;
+    private string _message = null!;
+    private string Message { get => _message; set => _message = value; }
 
-    public DateTime Createdat { get; private set; }
+    private DateTime _createdat;
+    private DateTime Createdat { get => _createdat; set => _createdat = value; }
 
-    public DateTime Updatedat { get; private set; }
+    private DateTime _updatedat;
+    private DateTime Updatedat { get => _updatedat; set => _updatedat = value; }
 
     public virtual Product Product { get; private set; } = null!;
 }

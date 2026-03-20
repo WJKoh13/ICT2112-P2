@@ -5,11 +5,14 @@ namespace ProRental.Domain.Entities;
 
 public partial class Staffaccesslog
 {
-    public int Accessid { get; private set; }
+    private int _accessid;
+    private int Accessid { get => _accessid; set => _accessid = value; }
 
-    public int Staffid { get; private set; }
+    private int _staffid;
+    private int Staffid { get => _staffid; set => _staffid = value; }
 
-    public DateTime Eventtime { get; private set; }
+    private DateTime _eventtime;
+    private DateTime Eventtime { get => _eventtime; set => _eventtime = value; }
 
     public virtual Staff Staff { get; private set; } = null!;
 }

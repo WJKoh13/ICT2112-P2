@@ -5,13 +5,17 @@ namespace ProRental.Domain.Entities;
 
 public partial class Train
 {
-    public int TransportId { get; private set; }
+    private int _transportId;
+    private int TransportId { get => _transportId; set => _transportId = value; }
 
-    public int TrainId { get; private set; }
+    private int _trainId;
+    private int TrainId { get => _trainId; set => _trainId = value; }
 
-    public string? TrainType { get; private set; }
+    private string? _trainType;
+    private string? TrainType { get => _trainType; set => _trainType = value; }
 
-    public string? TrainNumber { get; private set; }
+    private string? _trainNumber;
+    private string? TrainNumber { get => _trainNumber; set => _trainNumber = value; }
 
     public virtual Transport Transport { get; private set; } = null!;
 }

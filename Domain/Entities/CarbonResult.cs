@@ -5,13 +5,17 @@ namespace ProRental.Domain.Entities;
 
 public partial class CarbonResult
 {
-    public int CarbonResultId { get; private set; }
+    private int _carbonResultId;
+    private int CarbonResultId { get => _carbonResultId; set => _carbonResultId = value; }
 
-    public double? TotalCarbonKg { get; private set; }
+    private double? _totalCarbonKg;
+    private double? TotalCarbonKg { get => _totalCarbonKg; set => _totalCarbonKg = value; }
 
-    public DateTime? CreatedAt { get; private set; }
+    private DateTime? _createdAt;
+    private DateTime? CreatedAt { get => _createdAt; set => _createdAt = value; }
 
-    public bool? ValidationPassed { get; private set; }
+    private bool? _validationPassed;
+    private bool? ValidationPassed { get => _validationPassed; set => _validationPassed = value; }
 
     public virtual ICollection<LegCarbon> LegCarbons { get; private set; } = new List<LegCarbon>();
 }

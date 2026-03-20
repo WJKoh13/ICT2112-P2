@@ -5,23 +5,32 @@ namespace ProRental.Domain.Entities;
 
 public partial class ReturnStage
 {
-    public int StageId { get; private set; }
+    private int _stageId;
+    private int StageId { get => _stageId; set => _stageId = value; }
 
-    public int ReturnId { get; private set; }
+    private int _returnId;
+    private int ReturnId { get => _returnId; set => _returnId = value; }
 
-    public double? EnergyKwh { get; private set; }
+    private double? _energyKwh;
+    private double? EnergyKwh { get => _energyKwh; set => _energyKwh = value; }
 
-    public double? LabourHours { get; private set; }
+    private double? _labourHours;
+    private double? LabourHours { get => _labourHours; set => _labourHours = value; }
 
-    public double? MaterialsKg { get; private set; }
+    private double? _materialsKg;
+    private double? MaterialsKg { get => _materialsKg; set => _materialsKg = value; }
 
-    public double? CleaningSuppliesQty { get; private set; }
+    private double? _cleaningSuppliesQty;
+    private double? CleaningSuppliesQty { get => _cleaningSuppliesQty; set => _cleaningSuppliesQty = value; }
 
-    public double? WaterLitres { get; private set; }
+    private double? _waterLitres;
+    private double? WaterLitres { get => _waterLitres; set => _waterLitres = value; }
 
-    public double? PackagingKg { get; private set; }
+    private double? _packagingKg;
+    private double? PackagingKg { get => _packagingKg; set => _packagingKg = value; }
 
-    public decimal? SurchargeRate { get; private set; }
+    private decimal? _surchargeRate;
+    private decimal? SurchargeRate { get => _surchargeRate; set => _surchargeRate = value; }
 
     public virtual ICollection<CarbonEmission> CarbonEmissions { get; private set; } = new List<CarbonEmission>();
 

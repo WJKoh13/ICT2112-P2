@@ -5,13 +5,17 @@ namespace ProRental.Domain.Entities;
 
 public partial class Customer
 {
-    public int Customerid { get; private set; }
+    private int _customerid;
+    private int Customerid { get => _customerid; set => _customerid = value; }
 
-    public int Userid { get; private set; }
+    private int _userid;
+    private int Userid { get => _userid; set => _userid = value; }
 
-    public string Address { get; private set; } = null!;
+    private string _address = null!;
+    private string Address { get => _address; set => _address = value; }
 
-    public int Customertype { get; private set; }
+    private int _customertype;
+    private int Customertype { get => _customertype; set => _customertype = value; }
 
     public virtual ICollection<Cart> Carts { get; private set; } = new List<Cart>();
 

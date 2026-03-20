@@ -5,17 +5,23 @@ namespace ProRental.Domain.Entities;
 
 public partial class Replenishmentrequest
 {
-    public int Requestid { get; private set; }
+    private int _requestid;
+    private int Requestid { get => _requestid; set => _requestid = value; }
 
-    public string? Requestedby { get; private set; }
+    private string? _requestedby;
+    private string? Requestedby { get => _requestedby; set => _requestedby = value; }
 
-    public DateTime? Createdat { get; private set; }
+    private DateTime? _createdat;
+    private DateTime? Createdat { get => _createdat; set => _createdat = value; }
 
-    public string? Remarks { get; private set; }
+    private string? _remarks;
+    private string? Remarks { get => _remarks; set => _remarks = value; }
 
-    public DateTime? Completedat { get; private set; }
+    private DateTime? _completedat;
+    private DateTime? Completedat { get => _completedat; set => _completedat = value; }
 
-    public string? Completedby { get; private set; }
+    private string? _completedby;
+    private string? Completedby { get => _completedby; set => _completedby = value; }
 
     public virtual ICollection<Lineitem> Lineitems { get; private set; } = new List<Lineitem>();
 }

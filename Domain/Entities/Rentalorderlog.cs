@@ -5,17 +5,23 @@ namespace ProRental.Domain.Entities;
 
 public partial class Rentalorderlog
 {
-    public int Rentalorderlogid { get; private set; }
+    private int _rentalorderlogid;
+    private int Rentalorderlogid { get => _rentalorderlogid; set => _rentalorderlogid = value; }
 
-    public int? Orderid { get; private set; }
+    private int? _orderid;
+    private int? Orderid { get => _orderid; set => _orderid = value; }
 
-    public int? Customerid { get; private set; }
+    private int? _customerid;
+    private int? Customerid { get => _customerid; set => _customerid = value; }
 
-    public DateTime? Orderdate { get; private set; }
+    private DateTime? _orderdate;
+    private DateTime? Orderdate { get => _orderdate; set => _orderdate = value; }
 
-    public decimal? Totalamount { get; private set; }
+    private decimal? _totalamount;
+    private decimal? Totalamount { get => _totalamount; set => _totalamount = value; }
 
-    public string? Detailsjson { get; private set; }
+    private string? _detailsjson;
+    private string? Detailsjson { get => _detailsjson; set => _detailsjson = value; }
 
     public virtual ICollection<Loanlog> Loanlogs { get; private set; } = new List<Loanlog>();
 

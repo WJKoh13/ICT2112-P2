@@ -5,13 +5,17 @@ namespace ProRental.Domain.Entities;
 
 public partial class Transport
 {
-    public int TransportId { get; private set; }
+    private int _transportId;
+    private int TransportId { get => _transportId; set => _transportId = value; }
 
-    public double? MaxLoadKg { get; private set; }
+    private double? _maxLoadKg;
+    private double? MaxLoadKg { get => _maxLoadKg; set => _maxLoadKg = value; }
 
-    public double? VehicleSizeM2 { get; private set; }
+    private double? _vehicleSizeM2;
+    private double? VehicleSizeM2 { get => _vehicleSizeM2; set => _vehicleSizeM2 = value; }
 
-    public bool? IsAvailable { get; private set; }
+    private bool? _isAvailable;
+    private bool? IsAvailable { get => _isAvailable; set => _isAvailable = value; }
 
     public virtual Plane? Plane { get; private set; }
 

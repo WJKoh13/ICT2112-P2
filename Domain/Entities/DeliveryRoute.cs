@@ -5,19 +5,26 @@ namespace ProRental.Domain.Entities;
 
 public partial class DeliveryRoute
 {
-    public int RouteId { get; private set; }
+    private int _routeId;
+    private int RouteId { get => _routeId; set => _routeId = value; }
 
-    public string OriginAddress { get; private set; } = null!;
+    private string _originAddress = null!;
+    private string OriginAddress { get => _originAddress; set => _originAddress = value; }
 
-    public string DestinationAddress { get; private set; } = null!;
+    private string _destinationAddress = null!;
+    private string DestinationAddress { get => _destinationAddress; set => _destinationAddress = value; }
 
-    public double? TotalDistanceKm { get; private set; }
+    private double? _totalDistanceKm;
+    private double? TotalDistanceKm { get => _totalDistanceKm; set => _totalDistanceKm = value; }
 
-    public bool? IsValid { get; private set; }
+    private bool? _isValid;
+    private bool? IsValid { get => _isValid; set => _isValid = value; }
 
-    public int? OriginHubId { get; private set; }
+    private int? _originHubId;
+    private int? OriginHubId { get => _originHubId; set => _originHubId = value; }
 
-    public int? DestinationHubId { get; private set; }
+    private int? _destinationHubId;
+    private int? DestinationHubId { get => _destinationHubId; set => _destinationHubId = value; }
 
     public virtual TransportationHub? DestinationHub { get; private set; }
 

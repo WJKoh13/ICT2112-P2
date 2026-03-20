@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace ProRental.Domain.Entities;
@@ -27,3 +27,4 @@ public partial class Route
 
     public virtual ICollection<ShippingOption> ShippingOptions { get; private set; } = new List<ShippingOption>();
 }
+

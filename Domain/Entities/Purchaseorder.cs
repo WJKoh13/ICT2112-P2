@@ -5,15 +5,20 @@ namespace ProRental.Domain.Entities;
 
 public partial class Purchaseorder
 {
-    public int Poid { get; private set; }
+    private int _poid;
+    private int Poid { get => _poid; set => _poid = value; }
 
-    public int? Supplierid { get; private set; }
+    private int? _supplierid;
+    private int? Supplierid { get => _supplierid; set => _supplierid = value; }
 
-    public DateOnly? Podate { get; private set; }
+    private DateOnly? _podate;
+    private DateOnly? Podate { get => _podate; set => _podate = value; }
 
-    public DateOnly? Expecteddeliverydate { get; private set; }
+    private DateOnly? _expecteddeliverydate;
+    private DateOnly? Expecteddeliverydate { get => _expecteddeliverydate; set => _expecteddeliverydate = value; }
 
-    public decimal? Totalamount { get; private set; }
+    private decimal? _totalamount;
+    private decimal? Totalamount { get => _totalamount; set => _totalamount = value; }
 
     public virtual ICollection<Polineitem> Polineitems { get; private set; } = new List<Polineitem>();
 

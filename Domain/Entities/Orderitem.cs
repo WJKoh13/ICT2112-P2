@@ -5,19 +5,26 @@ namespace ProRental.Domain.Entities;
 
 public partial class Orderitem
 {
-    public int Orderitemid { get; private set; }
+    private int _orderitemid;
+    private int Orderitemid { get => _orderitemid; set => _orderitemid = value; }
 
-    public int Orderid { get; private set; }
+    private int _orderid;
+    private int Orderid { get => _orderid; set => _orderid = value; }
 
-    public int Productid { get; private set; }
+    private int _productid;
+    private int Productid { get => _productid; set => _productid = value; }
 
-    public int Quantity { get; private set; }
+    private int _quantity;
+    private int Quantity { get => _quantity; set => _quantity = value; }
 
-    public decimal Unitprice { get; private set; }
+    private decimal _unitprice;
+    private decimal Unitprice { get => _unitprice; set => _unitprice = value; }
 
-    public DateTime? Rentalstartdate { get; private set; }
+    private DateTime? _rentalstartdate;
+    private DateTime? Rentalstartdate { get => _rentalstartdate; set => _rentalstartdate = value; }
 
-    public DateTime? Rentalenddate { get; private set; }
+    private DateTime? _rentalenddate;
+    private DateTime? Rentalenddate { get => _rentalenddate; set => _rentalenddate = value; }
 
     public virtual Order Order { get; private set; } = null!;
 

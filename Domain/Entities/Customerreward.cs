@@ -5,17 +5,23 @@ namespace ProRental.Domain.Entities;
 
 public partial class Customerreward
 {
-    public int Rewardid { get; private set; }
+    private int _rewardid;
+    private int Rewardid { get => _rewardid; set => _rewardid = value; }
 
-    public int Customerid { get; private set; }
+    private int _customerid;
+    private int Customerid { get => _customerid; set => _customerid = value; }
 
-    public int Ordercarbondataid { get; private set; }
+    private int _ordercarbondataid;
+    private int Ordercarbondataid { get => _ordercarbondataid; set => _ordercarbondataid = value; }
 
-    public string Rewardtype { get; private set; } = null!;
+    private string _rewardtype = null!;
+    private string Rewardtype { get => _rewardtype; set => _rewardtype = value; }
 
-    public double Rewardvalue { get; private set; }
+    private double _rewardvalue;
+    private double Rewardvalue { get => _rewardvalue; set => _rewardvalue = value; }
 
-    public DateTime Createdat { get; private set; }
+    private DateTime _createdat;
+    private DateTime Createdat { get => _createdat; set => _createdat = value; }
 
     public virtual Customer Customer { get; private set; } = null!;
 

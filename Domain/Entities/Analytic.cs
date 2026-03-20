@@ -5,23 +5,29 @@ namespace ProRental.Domain.Entities;
 
 public partial class Analytic
 {
-    public int Analyticsid { get; private set; }
+    private int _analyticsid;
+    private int Analyticsid { get => _analyticsid; set => _analyticsid = value; }
 
-    public DateTime? Startdate { get; private set; }
+    private DateTime? _startdate;
+    private DateTime? Startdate { get => _startdate; set => _startdate = value; }
 
-    public DateTime? Enddate { get; private set; }
+    private DateTime? _enddate;
+    private DateTime? Enddate { get => _enddate; set => _enddate = value; }
 
-    public int? Loanamt { get; private set; }
+    private int? _loanamt;
+    private int? Loanamt { get => _loanamt; set => _loanamt = value; }
 
-    public int? Returnamt { get; private set; }
+    private int? _returnamt;
+    private int? Returnamt { get => _returnamt; set => _returnamt = value; }
 
-    public string? Primarysupplier { get; private set; }
+    private int? _refprimaryid;
+    private int? Refprimaryid { get => _refprimaryid; set => _refprimaryid = value; }
 
-    public string? Primaryitem { get; private set; }
+    private string? _refprimaryname;
+    private string? Refprimaryname { get => _refprimaryname; set => _refprimaryname = value; }
 
-    public decimal? Supplierreliability { get; private set; }
-
-    public decimal? Turnoverrate { get; private set; }
+    private decimal? _refvalue;
+    private decimal? Refvalue { get => _refvalue; set => _refvalue = value; }
 
     public virtual ICollection<Reportexport> Reportexports { get; private set; } = new List<Reportexport>();
 

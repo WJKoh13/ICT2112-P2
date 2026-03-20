@@ -5,15 +5,20 @@ namespace ProRental.Domain.Entities;
 
 public partial class Lineitem
 {
-    public int Lineitemid { get; private set; }
+    private int _lineitemid;
+    private int Lineitemid { get => _lineitemid; set => _lineitemid = value; }
 
-    public int? Requestid { get; private set; }
+    private int? _requestid;
+    private int? Requestid { get => _requestid; set => _requestid = value; }
 
-    public int? Productid { get; private set; }
+    private int? _productid;
+    private int? Productid { get => _productid; set => _productid = value; }
 
-    public int? Quantityrequest { get; private set; }
+    private int? _quantityrequest;
+    private int? Quantityrequest { get => _quantityrequest; set => _quantityrequest = value; }
 
-    public string? Remarks { get; private set; }
+    private string? _remarks;
+    private string? Remarks { get => _remarks; set => _remarks = value; }
 
     public virtual Product? Product { get; private set; }
 

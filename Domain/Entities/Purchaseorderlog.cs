@@ -5,19 +5,26 @@ namespace ProRental.Domain.Entities;
 
 public partial class Purchaseorderlog
 {
-    public int Purchaseorderlogid { get; private set; }
+    private int _purchaseorderlogid;
+    private int Purchaseorderlogid { get => _purchaseorderlogid; set => _purchaseorderlogid = value; }
 
-    public int Poid { get; private set; }
+    private int _poid;
+    private int Poid { get => _poid; set => _poid = value; }
 
-    public DateTime? Podate { get; private set; }
+    private DateTime? _podate;
+    private DateTime? Podate { get => _podate; set => _podate = value; }
 
-    public int? Supplierid { get; private set; }
+    private int? _supplierid;
+    private int? Supplierid { get => _supplierid; set => _supplierid = value; }
 
-    public DateTime? Expecteddeliverydate { get; private set; }
+    private DateTime? _expecteddeliverydate;
+    private DateTime? Expecteddeliverydate { get => _expecteddeliverydate; set => _expecteddeliverydate = value; }
 
-    public decimal? Totalamount { get; private set; }
+    private decimal? _totalamount;
+    private decimal? Totalamount { get => _totalamount; set => _totalamount = value; }
 
-    public string? Detailsjson { get; private set; }
+    private string? _detailsjson;
+    private string? Detailsjson { get => _detailsjson; set => _detailsjson = value; }
 
     public virtual Purchaseorder Po { get; private set; } = null!;
 

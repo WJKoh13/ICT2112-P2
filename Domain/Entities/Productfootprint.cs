@@ -5,17 +5,23 @@ namespace ProRental.Domain.Entities;
 
 public partial class Productfootprint
 {
-    public int Productcarbonfootprintid { get; private set; }
+    private int _productcarbonfootprintid;
+    private int Productcarbonfootprintid { get => _productcarbonfootprintid; set => _productcarbonfootprintid = value; }
 
-    public int Productid { get; private set; }
+    private int _productid;
+    private int Productid { get => _productid; set => _productid = value; }
 
-    public int Badgeid { get; private set; }
+    private int _badgeid;
+    private int Badgeid { get => _badgeid; set => _badgeid = value; }
 
-    public double? Producttoxicpercentage { get; private set; }
+    private double? _producttoxicpercentage;
+    private double? Producttoxicpercentage { get => _producttoxicpercentage; set => _producttoxicpercentage = value; }
 
-    public double Totalco2 { get; private set; }
+    private double _totalco2;
+    private double Totalco2 { get => _totalco2; set => _totalco2 = value; }
 
-    public DateTime Calculatedat { get; private set; }
+    private DateTime _calculatedat;
+    private DateTime Calculatedat { get => _calculatedat; set => _calculatedat = value; }
 
     public virtual Ecobadge Badge { get; private set; } = null!;
 

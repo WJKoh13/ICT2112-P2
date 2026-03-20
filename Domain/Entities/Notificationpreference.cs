@@ -5,13 +5,17 @@ namespace ProRental.Domain.Entities;
 
 public partial class Notificationpreference
 {
-    public int Preferenceid { get; private set; }
+    private int _preferenceid;
+    private int Preferenceid { get => _preferenceid; set => _preferenceid = value; }
 
-    public int Userid { get; private set; }
+    private int _userid;
+    private int Userid { get => _userid; set => _userid = value; }
 
-    public bool Emailenabled { get; private set; }
+    private bool _emailenabled;
+    private bool Emailenabled { get => _emailenabled; set => _emailenabled = value; }
 
-    public bool Smsenabled { get; private set; }
+    private bool _smsenabled;
+    private bool Smsenabled { get => _smsenabled; set => _smsenabled = value; }
 
     public virtual User User { get; private set; } = null!;
 }

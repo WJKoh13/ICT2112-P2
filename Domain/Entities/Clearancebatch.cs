@@ -5,13 +5,17 @@ namespace ProRental.Domain.Entities;
 
 public partial class Clearancebatch
 {
-    public int Clearancebatchid { get; private set; }
+    private int _clearancebatchid;
+    private int Clearancebatchid { get => _clearancebatchid; set => _clearancebatchid = value; }
 
-    public string Batchname { get; private set; } = null!;
+    private string _batchname = null!;
+    private string Batchname { get => _batchname; set => _batchname = value; }
 
-    public DateTime Createddate { get; private set; }
+    private DateTime _createddate;
+    private DateTime Createddate { get => _createddate; set => _createddate = value; }
 
-    public DateTime? Clearancedate { get; private set; }
+    private DateTime? _clearancedate;
+    private DateTime? Clearancedate { get => _clearancedate; set => _clearancedate = value; }
 
     public virtual ICollection<Clearanceitem> Clearanceitems { get; private set; } = new List<Clearanceitem>();
 

@@ -5,15 +5,20 @@ namespace ProRental.Domain.Entities;
 
 public partial class Packagingmaterial
 {
-    public int Materialid { get; private set; }
+    private int _materialid;
+    private int Materialid { get => _materialid; set => _materialid = value; }
 
-    public string Name { get; private set; } = null!;
+    private string _name = null!;
+    private string Name { get => _name; set => _name = value; }
 
-    public string? Type { get; private set; }
+    private string? _type;
+    private string? Type { get => _type; set => _type = value; }
 
-    public bool Recyclable { get; private set; }
+    private bool _recyclable;
+    private bool Recyclable { get => _recyclable; set => _recyclable = value; }
 
-    public bool Reusable { get; private set; }
+    private bool _reusable;
+    private bool Reusable { get => _reusable; set => _reusable = value; }
 
     public virtual ICollection<Packagingconfigmaterial> Packagingconfigmaterials { get; private set; } = new List<Packagingconfigmaterial>();
 }

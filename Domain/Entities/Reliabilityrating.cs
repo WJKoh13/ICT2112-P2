@@ -5,17 +5,23 @@ namespace ProRental.Domain.Entities;
 
 public partial class Reliabilityrating
 {
-    public int Ratingid { get; private set; }
+    private int _ratingid;
+    private int Ratingid { get => _ratingid; set => _ratingid = value; }
 
-    public int? Supplierid { get; private set; }
+    private int? _supplierid;
+    private int? Supplierid { get => _supplierid; set => _supplierid = value; }
 
-    public decimal? Score { get; private set; }
+    private decimal? _score;
+    private decimal? Score { get => _score; set => _score = value; }
 
-    public string? Rationale { get; private set; }
+    private string? _rationale;
+    private string? Rationale { get => _rationale; set => _rationale = value; }
 
-    public int? Calculatedbyuserid { get; private set; }
+    private int? _calculatedbyuserid;
+    private int? Calculatedbyuserid { get => _calculatedbyuserid; set => _calculatedbyuserid = value; }
 
-    public DateTime? Calculatedat { get; private set; }
+    private DateTime? _calculatedat;
+    private DateTime? Calculatedat { get => _calculatedat; set => _calculatedat = value; }
 
     public virtual Supplier? Supplier { get; private set; }
 

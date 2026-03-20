@@ -5,15 +5,20 @@ namespace ProRental.Domain.Entities;
 
 public partial class Deliverymethod
 {
-    public int Deliveryid { get; private set; }
+    private int _deliveryid;
+    private int Deliveryid { get => _deliveryid; set => _deliveryid = value; }
 
-    public int Orderid { get; private set; }
+    private int _orderid;
+    private int Orderid { get => _orderid; set => _orderid = value; }
 
-    public int Durationdays { get; private set; }
+    private int _durationdays;
+    private int Durationdays { get => _durationdays; set => _durationdays = value; }
 
-    public decimal Deliverycost { get; private set; }
+    private decimal _deliverycost;
+    private decimal Deliverycost { get => _deliverycost; set => _deliverycost = value; }
 
-    public string Carrierid { get; private set; } = null!;
+    private string _carrierid = null!;
+    private string Carrierid { get => _carrierid; set => _carrierid = value; }
 
     public virtual ICollection<Checkout> Checkouts { get; private set; } = new List<Checkout>();
 

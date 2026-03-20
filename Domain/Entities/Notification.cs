@@ -5,15 +5,20 @@ namespace ProRental.Domain.Entities;
 
 public partial class Notification
 {
-    public int Notificationid { get; private set; }
+    private int _notificationid;
+    private int Notificationid { get => _notificationid; set => _notificationid = value; }
 
-    public int Userid { get; private set; }
+    private int _userid;
+    private int Userid { get => _userid; set => _userid = value; }
 
-    public string Message { get; private set; } = null!;
+    private string _message = null!;
+    private string Message { get => _message; set => _message = value; }
 
-    public DateTime Datesent { get; private set; }
+    private DateTime _datesent;
+    private DateTime Datesent { get => _datesent; set => _datesent = value; }
 
-    public bool Isread { get; private set; }
+    private bool _isread;
+    private bool Isread { get => _isread; set => _isread = value; }
 
     public virtual User User { get; private set; } = null!;
 }

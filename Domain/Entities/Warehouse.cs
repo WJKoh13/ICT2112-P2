@@ -5,19 +5,26 @@ namespace ProRental.Domain.Entities;
 
 public partial class Warehouse
 {
-    public int HubId { get; private set; }
+    private int _hubId;
+    private int HubId { get => _hubId; set => _hubId = value; }
 
-    public string WarehouseCode { get; private set; } = null!;
+    private string _warehouseCode = null!;
+    private string WarehouseCode { get => _warehouseCode; set => _warehouseCode = value; }
 
-    public int? MaxProductCapacity { get; private set; }
+    private int? _maxProductCapacity;
+    private int? MaxProductCapacity { get => _maxProductCapacity; set => _maxProductCapacity = value; }
 
-    public double? TotalWarehouseVolume { get; private set; }
+    private double? _totalWarehouseVolume;
+    private double? TotalWarehouseVolume { get => _totalWarehouseVolume; set => _totalWarehouseVolume = value; }
 
-    public double? ClimateControlEmissionRate { get; private set; }
+    private double? _climateControlEmissionRate;
+    private double? ClimateControlEmissionRate { get => _climateControlEmissionRate; set => _climateControlEmissionRate = value; }
 
-    public double? LightingEmissionRate { get; private set; }
+    private double? _lightingEmissionRate;
+    private double? LightingEmissionRate { get => _lightingEmissionRate; set => _lightingEmissionRate = value; }
 
-    public double? SecuritySystemEmissionRate { get; private set; }
+    private double? _securitySystemEmissionRate;
+    private double? SecuritySystemEmissionRate { get => _securitySystemEmissionRate; set => _securitySystemEmissionRate = value; }
 
     public virtual TransportationHub Hub { get; private set; } = null!;
 }

@@ -6,13 +6,13 @@ namespace ProRental.Domain.Entities;
 public partial class Staff
 {
     private int _staffid;
-    private int Staffid { get => _staffid; set => _staffid = value; }
+    public int Staffid { get => _staffid; set => _staffid = value; }
 
     private int _userid;
-    private int Userid { get => _userid; set => _userid = value; }
+    public int Userid { get => _userid; set => _userid = value; }
 
     private string _department = null!;
-    private string Department { get => _department; set => _department = value; }
+    public string Department { get => _department; set => _department = value; }
 
     public virtual ICollection<Staffaccesslog> Staffaccesslogs { get; private set; } = new List<Staffaccesslog>();
 

@@ -6,22 +6,22 @@ namespace ProRental.Domain.Entities;
 public partial class Order
 {
     private int _orderid;
-    private int Orderid { get => _orderid; set => _orderid = value; }
+    public int Orderid { get => _orderid; set => _orderid = value; }
 
     private int _customerid;
-    private int Customerid { get => _customerid; set => _customerid = value; }
+    public int Customerid { get => _customerid; set => _customerid = value; }
 
     private int _checkoutid;
-    private int Checkoutid { get => _checkoutid; set => _checkoutid = value; }
+    public int Checkoutid { get => _checkoutid; set => _checkoutid = value; }
 
     private int? _transactionid;
-    private int? Transactionid { get => _transactionid; set => _transactionid = value; }
+    public int? Transactionid { get => _transactionid; set => _transactionid = value; }
 
     private DateTime _orderdate;
-    private DateTime Orderdate { get => _orderdate; set => _orderdate = value; }
+    public DateTime Orderdate { get => _orderdate; set => _orderdate = value; }
 
     private decimal _totalamount;
-    private decimal Totalamount { get => _totalamount; set => _totalamount = value; }
+    public decimal Totalamount { get => _totalamount; set => _totalamount = value; }
 
     public virtual BatchOrder? BatchOrder { get; private set; }
 

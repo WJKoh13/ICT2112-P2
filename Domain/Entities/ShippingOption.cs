@@ -6,25 +6,25 @@ namespace ProRental.Domain.Entities;
 public partial class ShippingOption
 {
     private int _optionId;
-    private int OptionId { get => _optionId; set => _optionId = value; }
+    public int OptionId { get => _optionId; set => _optionId = value; }
 
     private string? _displayName;
-    private string? DisplayName { get => _displayName; set => _displayName = value; }
+    public string? DisplayName { get => _displayName; set => _displayName = value; }
 
     private decimal? _cost;
-    private decimal? Cost { get => _cost; set => _cost = value; }
+    public decimal? Cost { get => _cost; set => _cost = value; }
 
     private double? _carbonfootprintkg;
-    private double? Carbonfootprintkg { get => _carbonfootprintkg; set => _carbonfootprintkg = value; }
+    public double? Carbonfootprintkg { get => _carbonfootprintkg; set => _carbonfootprintkg = value; }
 
     private int? _deliveryDays;
-    private int? DeliveryDays { get => _deliveryDays; set => _deliveryDays = value; }
+    public int? DeliveryDays { get => _deliveryDays; set => _deliveryDays = value; }
 
     private int? _orderId;
-    private int? OrderId { get => _orderId; set => _orderId = value; }
+    public int? OrderId { get => _orderId; set => _orderId = value; }
 
     private int? _routeId;
-    private int? RouteId { get => _routeId; set => _routeId = value; }
+    public int? RouteId { get => _routeId; set => _routeId = value; }
 
     public virtual ICollection<Checkout> Checkouts { get; private set; } = new List<Checkout>();
 

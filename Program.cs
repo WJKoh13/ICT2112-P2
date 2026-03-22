@@ -163,8 +163,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 //Team P2-5
 // Data source
-builder.Services.AddScoped<IBuildingFootprintTableGateway, BuildingFootprintTableGateway>();
-builder.Services.AddScoped<IProductFootprintTableGateway, ProductFootprintTableGateway>();
+builder.Services.AddScoped<IBuildingFootprintGateway, BuildingFootprintGateway>();
+builder.Services.AddScoped<IProductFootprintGateway, ProductFootprintGateway>();
 
 // Domain
 builder.Services.AddScoped<ICarbonChartService, CarbonChartControl>();

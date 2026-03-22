@@ -6,11 +6,11 @@ using System.Reflection;
 
 namespace ProRental.Data.Module3.P2_5.Gateways;
 
-public sealed class ProductFootprintTableGateway : IProductFootprintTableGateway
+public sealed class ProductFootprintGateway : IProductFootprintGateway
 {
     private readonly AppDbContext _dbContext;
 
-    public ProductFootprintTableGateway(AppDbContext dbContext)
+    public ProductFootprintGateway(AppDbContext dbContext)
     {
         _dbContext = dbContext;
     }

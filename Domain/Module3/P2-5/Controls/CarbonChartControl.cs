@@ -7,10 +7,14 @@ namespace ProRental.Domain.Module3.P2_5.Controls;
 public sealed class CarbonChartControl : ICarbonChartService
 {
     private readonly IBuildingFootprintTableGateway _buildingFootprintTableGateway;
+    private readonly IProductFootprintTableGateway _productFootprintTableGateway;
 
-    public CarbonChartControl(IBuildingFootprintTableGateway buildingFootprintTableGateway)
+    public CarbonChartControl(
+        IBuildingFootprintTableGateway buildingFootprintTableGateway,
+        IProductFootprintTableGateway productFootprintTableGateway)
     {
         _buildingFootprintTableGateway = buildingFootprintTableGateway;
+        _productFootprintTableGateway = productFootprintTableGateway;
     }
 
     public List<ChartData> Hotspots { get; private set; } = [];
@@ -39,10 +43,14 @@ public sealed class CarbonChartControl : ICarbonChartService
     {
         IdentifyHotspots("room");
 
+        var productGraphData = _productFootprintTableGateway.GetProductGraphData();
         var buildingGraphData = CreateGraphs();
 
         return new CarbonDashboardViewModel
         {
+            ProductTrendline = _productFootprintTableGateway.GetHourlyChartData(),
+            ProductBarChart = productGraphData,
+            ProductPieChart = productGraphData,
             BuildingTrendline = CreateCharts(),
             BuildingBarChart = buildingGraphData,
             BuildingPieChart = buildingGraphData,

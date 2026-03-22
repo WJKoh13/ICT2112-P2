@@ -1,0 +1,248 @@
+@{
+    ViewData["Title"] = "Building Footprint";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Building Footprint - Pro Rentals</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        body { margin-bottom: 0; }
+
+        .carbon-dashboard {
+            background:
+                radial-gradient(circle at top right, rgba(26, 147, 111, 0.18), transparent 28%),
+                linear-gradient(180deg, #f4fbf8 0%, #edf7f2 100%);
+            min-height: 100vh;
+        }
+
+        .dashboard-hero {
+            background: linear-gradient(135deg, #113d2f 0%, #1a936f 55%, #2ec4b6 100%);
+            border-radius: 1.5rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .dashboard-hero::after {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 999px;
+            content: "";
+            height: 18rem;
+            position: absolute;
+            right: -4rem;
+            top: -6rem;
+            width: 18rem;
+        }
+
+        .chart-card {
+            border: 0;
+            border-radius: 1.25rem;
+            box-shadow: 0 1rem 2.5rem rgba(17, 61, 47, 0.08);
+        }
+
+        .chart-shell {
+            align-items: center;
+            background: linear-gradient(180deg, #f8fcfa 0%, #eef7f2 100%);
+            border: 2px dashed #b8d9c9;
+            border-radius: 1rem;
+            color: #4c6b5c;
+            display: flex;
+            flex-direction: column;
+            font-weight: 600;
+            gap: 0.5rem;
+            justify-content: center;
+            min-height: 240px;
+            text-align: center;
+        }
+
+        .chart-shell i {
+            color: #1a936f;
+            font-size: 2rem;
+        }
+
+        .chart-shell small {
+            max-width: 16rem;
+        }
+
+        .chart-shell-hotspot {
+            min-height: 320px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="bi bi-box-seam-fill me-2" style="color: #2d7a4f;"></i>Pro Rentals
+            </a>
+            <button class="navbar-toggler" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#mainNav"
+                    aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/CarbonMonitoring/CarbonDashboardView">Carbon Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="/CarbonFootprint/BuildingFootprintView">Building Footprint</a>
+                    </li>
+                </ul>
+                <div class="d-flex gap-2">
+                    <a href="#" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-box-arrow-in-right me-1"></i>Login
+                    </a>
+                    <a href="#" class="btn btn-primary btn-sm">
+                        <i class="bi bi-person-plus me-1"></i>Register
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="carbon-dashboard py-5">
+        <div class="container">
+            <div class="dashboard-hero text-white p-4 p-lg-5 mb-4">
+                <div class="row align-items-center gy-4 position-relative">
+                    <div class="col-lg-8">
+                        <span class="badge rounded-pill text-bg-light text-success fw-semibold mb-3">Module 3 P2-5</span>
+                        <h1 class="display-6 fw-bold mb-3">Building Footprint Analysis</h1>
+                        <p class="lead mb-0 text-white-50">
+                            Detailed building carbon footprint metrics, trendlines, and environmental impact data.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card chart-card mb-4">
+                <div class="card-body p-4">
+                    <h2 class="h4 mb-1">Building Carbon Trendline</h2>
+                    <p class="text-muted mb-4">Track building carbon emissions over time with hourly or daily data.</p>
+                    <div class="row g-4">
+                        <div class="col-lg-12">
+                            <div class="chart-shell">
+                                <i class="bi bi-graph-up"></i>
+                                <div>Building Carbon Trendline</div>
+                                <small class="text-muted">Use `BuildingFootprint.timeHourly` with `SUM(totalRoomCo2)` by hour or day.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card chart-card mb-4">
+                <div class="card-body p-4">
+                    <h2 class="h4 mb-1">Building Emission Breakdown</h2>
+                    <p class="text-muted mb-4">Compare emissions by block, floor, zone, or room.</p>
+                    <div class="row g-4">
+                        <div class="col-lg-7">
+                            <div class="chart-shell">
+                                <i class="bi bi-bar-chart-line"></i>
+                                <div>Building Bar Chart</div>
+                                <small class="text-muted">Compare emissions by block, floor, zone, or room.</small>
+                            </div>
+                        </div>
+                        <div class="col-lg-5">
+                            <div class="chart-shell">
+                                <i class="bi bi-pie-chart"></i>
+                                <div>Building Pie Chart</div>
+                                <small class="text-muted">Show footprint distribution across facilities.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card chart-card">
+                <div class="card-body p-4">
+                    <h2 class="h4 mb-1">Building Carbon Hotspots</h2>
+                    <p class="text-muted mb-4">Identify and highlight the highest carbon contributors in building operations.</p>
+                    <div class="chart-shell chart-shell-hotspot">
+                        <i class="bi bi-fire"></i>
+                        <div>Building Carbon Hotspot Chart</div>
+                        <small class="text-muted">Highlight top emitting areas like high-usage rooms or inefficient zones.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-dark text-light pt-5 pb-3">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-3 col-md-6">
+                    <h5 class="fw-bold mb-3">
+                        <i class="bi bi-box-seam-fill me-2" style="color: #2d7a4f;"></i>Pro Rentals
+                    </h5>
+                    <p class="text-secondary small">
+                        A unified order processing and inventory management platform for modern rental
+                        operations - fast, efficient, and sustainable.
+                    </p>
+                    <p class="text-secondary small mb-0">
+                        &copy; @DateTime.Now.Year Pro Rentals. All rights reserved.
+                    </p>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="text-uppercase text-secondary fw-semibold small mb-3" style="letter-spacing: 0.05em;">Quick Links</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-1"><a href="/" class="text-secondary text-decoration-none small">Home</a></li>
+                        <li class="mb-1"><a href="/CarbonMonitoring/CarbonDashboardView" class="text-secondary text-decoration-none small">Carbon Dashboard</a></li>
+                        <li class="mb-1"><a href="/CarbonFootprint/BuildingFootprintView" class="text-secondary text-decoration-none small">Building Footprint</a></li>
+                        <li class="mb-1"><a href="#" class="text-secondary text-decoration-none small">Track My Order</a></li>
+                        <li class="mb-1"><a href="#" class="text-secondary text-decoration-none small">Contact Us</a></li>
+                        <li class="mb-1"><a href="/Home/Privacy" class="text-secondary text-decoration-none small">Privacy Policy</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="text-uppercase text-secondary fw-semibold small mb-3" style="letter-spacing: 0.05em;">Modules</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-1"><a href="#" class="text-secondary text-decoration-none small"><i class="bi bi-cart3 me-1"></i>Order Processing</a></li>
+                        <li class="mb-1"><a href="#" class="text-secondary text-decoration-none small"><i class="bi bi-boxes me-1"></i>Inventory Management</a></li>
+                        <li class="mb-1"><a href="/CarbonMonitoring/CarbonDashboardView" class="text-secondary text-decoration-none small"><i class="bi bi-leaf me-1"></i>Carbon Footprint</a></li>
+                        <li class="mb-1"><a href="#" class="text-secondary text-decoration-none small"><i class="bi bi-bar-chart me-1"></i>Analytics &amp; Reports</a></li>
+                        <li class="mb-1"><a href="#" class="text-secondary text-decoration-none small"><i class="bi bi-shield-lock me-1"></i>Staff Portal</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="text-uppercase text-secondary fw-semibold small mb-3" style="letter-spacing: 0.05em;">Contact</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2 text-secondary small">
+                            <i class="bi bi-geo-alt me-2"></i>123 Rental Avenue, Singapore 123456
+                        </li>
+                        <li class="mb-2 text-secondary small">
+                            <i class="bi bi-telephone me-2"></i>+65 6123 4567
+                        </li>
+                        <li class="mb-2 text-secondary small">
+                            <i class="bi bi-envelope me-2"></i>support@@prorentals.sg
+                        </li>
+                        <li class="mb-2 text-secondary small">
+                            <i class="bi bi-clock me-2"></i>Mon - Fri, 9 AM - 6 PM SGT
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <hr class="border-secondary mt-3 mb-3" />
+            <p class="text-center text-secondary small mb-0">
+                Built with Bootstrap 5.3.3 - Pro Rentals Order Processing System v1.0 - 2026
+            </p>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

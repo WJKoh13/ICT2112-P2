@@ -1,5 +1,6 @@
 using ProRental.Data.Module3.P2_5.Interfaces;
 using ProRental.Domain.Module3.P2_5.Entities;
+using ProRental.Domain.Module3.P2_5.Observers;
 using ProRental.Interfaces.Module3.P2_5;
 
 namespace ProRental.Domain.Module3.P2_5.Controls;
@@ -54,6 +55,18 @@ public sealed class CarbonChartControl : ICarbonChartService
             new ChartData("Staff", Math.Round(staffGraphData.Sum(item => item.Value), 2))
         ];
 
+        var hotspotThresholds = new List<ChartData>
+        {
+            new("Product", 500.0),
+            new("Building", 650.0),
+            new("Staff", 40.0)
+        };
+
+        var subject = new Subject(Hotspots, hotspotThresholds);
+        var observer = new Observer();
+        subject.AttachObserver(observer);
+        subject.Evaluate();
+
         return new CarbonDashboardViewModel
         {
             ProductTrendline = _productFootprintGateway.GetHourlyChartData(),
@@ -65,7 +78,9 @@ public sealed class CarbonChartControl : ICarbonChartService
             StaffTrendline = _staffFootprintGateway.GetHourlyChartData(),
             StaffBarChart = staffGraphData,
             StaffPieChart = staffGraphData,
-            Hotspots = GetHotspots()
+            Hotspots = GetHotspots(),
+            HotspotThresholds = hotspotThresholds,
+            HotspotAlerts = observer.Alerts
         };
     }
 }

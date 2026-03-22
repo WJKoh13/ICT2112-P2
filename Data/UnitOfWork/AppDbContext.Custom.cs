@@ -232,10 +232,10 @@ public partial class AppDbContext
         modelBuilder.Entity<ReturnStage>(entity =>
         {
             entity.Property("StageType").HasField("_stageType").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("stagetype").HasColumnType("carbon_stage_type");
+                  .HasColumnName("stage_type").HasColumnType("carbon_stage_type");
 
             entity.Property("StageTypeAlt").HasField("_stageTypeAlt").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("stagetypealt").HasColumnType("stagetype");
+                  .HasColumnName("stagetype").HasColumnType("stagetype");
         });
 
         modelBuilder.Entity<RouteLeg>(entity =>

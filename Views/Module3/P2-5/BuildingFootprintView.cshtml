@@ -95,7 +95,7 @@
                         <a class="nav-link" href="/CarbonMonitoring/CarbonDashboardView">Carbon Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="/CarbonFootprint/BuildingFootprintView">Building Footprint</a>
+                        <a class="nav-link active" aria-current="page" href="/CarbonMonitoring/BuildingFootprintView">Building Footprint</a>
                     </li>
                 </ul>
                 <div class="d-flex gap-2">
@@ -126,51 +126,93 @@
 
             <div class="card chart-card mb-4">
                 <div class="card-body p-4">
-                    <h2 class="h4 mb-1">Building Carbon Trendline</h2>
-                    <p class="text-muted mb-4">Track building carbon emissions over time with hourly or daily data.</p>
-                    <div class="row g-4">
-                        <div class="col-lg-12">
-                            <div class="chart-shell">
-                                <i class="bi bi-graph-up"></i>
-                                <div>Building Carbon Trendline</div>
-                                <small class="text-muted">Use `BuildingFootprint.timeHourly` with `SUM(totalRoomCo2)` by hour or day.</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                    <h2 class="h4 mb-1">Formula: Building Footprint Calculation</h2>
+                    <p class="text-muted mb-4">
+                        <strong>BF = Σ(Sr × Cr × Wz × Wf)</strong><br/>
+                        <small>Where Sr = Room Size, Cr = CO₂ Level, Wz = Zone Weight, Wf = Floor Weight</small>
+                    </p>
 
-            <div class="card chart-card mb-4">
-                <div class="card-body p-4">
-                    <h2 class="h4 mb-1">Building Emission Breakdown</h2>
-                    <p class="text-muted mb-4">Compare emissions by block, floor, zone, or room.</p>
-                    <div class="row g-4">
-                        <div class="col-lg-7">
-                            <div class="chart-shell">
-                                <i class="bi bi-bar-chart-line"></i>
-                                <div>Building Bar Chart</div>
-                                <small class="text-muted">Compare emissions by block, floor, zone, or room.</small>
-                            </div>
-                        </div>
-                        <div class="col-lg-5">
-                            <div class="chart-shell">
-                                <i class="bi bi-pie-chart"></i>
-                                <div>Building Pie Chart</div>
-                                <small class="text-muted">Show footprint distribution across facilities.</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                    <form id="buildingFootprintForm">
+                        <div class="row g-3 mb-4">
+                            <!-- Room Inputs -->
+                            <div class="col-lg-6">
+                                <h5 class="text-success mb-3">Room Inputs</h5>
+                                
+                                <div class="mb-3">
+                                    <label for="roomSize" class="form-label">Room Size (Sr) - m²</label>
+                                    <input type="number" class="form-control room-input" id="roomSize" placeholder="e.g., 200" step="0.1" min="0" />
+                                    <small class="text-muted">Bigger rooms → larger contribution</small>
+                                </div>
 
-            <div class="card chart-card">
-                <div class="card-body p-4">
-                    <h2 class="h4 mb-1">Building Carbon Hotspots</h2>
-                    <p class="text-muted mb-4">Identify and highlight the highest carbon contributors in building operations.</p>
-                    <div class="chart-shell chart-shell-hotspot">
-                        <i class="bi bi-fire"></i>
-                        <div>Building Carbon Hotspot Chart</div>
-                        <small class="text-muted">Highlight top emitting areas like high-usage rooms or inefficient zones.</small>
+                                <div class="mb-3">
+                                    <label for="co2Level" class="form-label">CO₂ Level (Cr) - Usage Intensity (ppm)</label>
+                                    <input type="number" class="form-control room-input" id="co2Level" placeholder="e.g., 400" step="0.1" min="0" />
+                                    <small class="text-muted">Higher CO₂ → more activity → high contribution</small>
+                                </div>
+                            </div>
+
+                            <!-- Weight Inputs -->
+                            <div class="col-lg-6">
+                                <h5 class="text-success mb-3">Zone & Floor Weights</h5>
+                                
+                                <div class="mb-3">
+                                    <label for="zoneWeight" class="form-label">Zone Weight (Wz)</label>
+                                    <select class="form-select room-input" id="zoneWeight">
+                                        <option value="">-- Select Zone --</option>
+                                        <option value="1.0">Storage Zone (1.0)</option>
+                                        <option value="1.3">Packing Zone (1.3)</option>
+                                        <option value="1.5">High-Traffic Zone (1.5)</option>
+                                    </select>
+                                    <small class="text-muted">Different zones have different importance</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="floorWeight" class="form-label">Floor Weight (Wf)</label>
+                                    <select class="form-select room-input" id="floorWeight">
+                                        <option value="">-- Select Floor --</option>
+                                        <option value="1.2">Ground Floor (1.2 - high traffic)</option>
+                                        <option value="1.0">Upper Floor (1.0)</option>
+                                    </select>
+                                    <small class="text-muted">Ground floor has higher usage</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-4">
+                            <div class="col">
+                                <button type="button" id="addRoomBtn" class="btn btn-outline-success" onclick="addRoom()">
+                                    <i class="bi bi-plus-circle me-2"></i>Add Another Room
+                                </button>
+                            </div>
+                            <div class="col">
+                                <button type="button" id="calculateBtn" class="btn btn-success" onclick="calculateFootprint()">
+                                    <i class="bi bi-calculator me-2"></i>Calculate Footprint
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Additional Rooms Container -->
+                        <div id="additionalRooms"></div>
+                    </form>
+
+                    <!-- Results Section -->
+                    <div id="resultsSection" style="display: none;" class="mt-4 pt-4 border-top">
+                        <h4 class="text-success mb-3">Calculation Results</h4>
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <div class="alert alert-light border border-success">
+                                    <h6 class="text-success mb-2">Individual Room Contributions</h6>
+                                    <div id="roomResults"></div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="alert alert-success">
+                                    <h6 class="text-white mb-2">Total Building Footprint (BF)</h6>
+                                    <h3 class="text-white mb-0" id="totalResult">0.00 kg CO₂</h3>
+                                    <small class="text-white-50">Sum of all room contributions</small>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -198,7 +240,7 @@
                     <ul class="list-unstyled">
                         <li class="mb-1"><a href="/" class="text-secondary text-decoration-none small">Home</a></li>
                         <li class="mb-1"><a href="/CarbonMonitoring/CarbonDashboardView" class="text-secondary text-decoration-none small">Carbon Dashboard</a></li>
-                        <li class="mb-1"><a href="/CarbonFootprint/BuildingFootprintView" class="text-secondary text-decoration-none small">Building Footprint</a></li>
+                        <li class="mb-1"><a href="/CarbonMonitoring/BuildingFootprintView" class="text-secondary text-decoration-none small">Building Footprint</a></li>
                         <li class="mb-1"><a href="#" class="text-secondary text-decoration-none small">Track My Order</a></li>
                         <li class="mb-1"><a href="#" class="text-secondary text-decoration-none small">Contact Us</a></li>
                         <li class="mb-1"><a href="/Home/Privacy" class="text-secondary text-decoration-none small">Privacy Policy</a></li>
@@ -244,5 +286,113 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let roomCount = 1;
+
+        function addRoom() {
+            roomCount++;
+            const roomHTML = `
+                <div class="card mb-3 border-warning" id="room${roomCount}">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="mb-0">Room ${roomCount}</h6>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRoom(${roomCount})">
+                                <i class="bi bi-trash me-1"></i>Remove
+                            </button>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-md-3">
+                                <input type="number" class="form-control form-control-sm room-input" placeholder="Size (m²)" step="0.1" min="0" data-room="${roomCount}" data-type="size" />
+                            </div>
+                            <div class="col-md-3">
+                                <input type="number" class="form-control form-control-sm room-input" placeholder="CO₂ Level (ppm)" step="0.1" min="0" data-room="${roomCount}" data-type="co2" />
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select form-select-sm room-input" data-room="${roomCount}" data-type="zone">
+                                    <option value="">Zone</option>
+                                    <option value="1.0">Storage (1.0)</option>
+                                    <option value="1.3">Packing (1.3)</option>
+                                    <option value="1.5">High-Traffic (1.5)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select form-select-sm room-input" data-room="${roomCount}" data-type="floor">
+                                    <option value="">Floor</option>
+                                    <option value="1.2">Ground (1.2)</option>
+                                    <option value="1.0">Upper (1.0)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('additionalRooms').insertAdjacentHTML('beforeend', roomHTML);
+        }
+
+        function removeRoom(roomNum) {
+            const roomElement = document.getElementById(`room${roomNum}`);
+            if (roomElement) {
+                roomElement.remove();
+            }
+        }
+
+        function calculateFootprint() {
+            const resultsSection = document.getElementById('resultsSection');
+            const roomResults = document.getElementById('roomResults');
+            const totalResult = document.getElementById('totalResult');
+            
+            let totalBF = 0;
+            let resultsHTML = '';
+
+            // Calculate primary room
+            const roomSize = parseFloat(document.getElementById('roomSize').value) || 0;
+            const co2Level = parseFloat(document.getElementById('co2Level').value) || 0;
+            const zoneWeight = parseFloat(document.getElementById('zoneWeight').value) || 0;
+            const floorWeight = parseFloat(document.getElementById('floorWeight').value) || 0;
+
+            if (roomSize > 0 && co2Level > 0 && zoneWeight > 0 && floorWeight > 0) {
+                const roomBF = roomSize * co2Level * zoneWeight * floorWeight;
+                totalBF += roomBF;
+                resultsHTML += `<div class="mb-2">Room 1: <strong>${roomBF.toFixed(2)} kg CO₂</strong> (${roomSize}m² × ${co2Level}ppm × ${zoneWeight} × ${floorWeight})</div>`;
+            }
+
+            // Calculate additional rooms
+            document.querySelectorAll('[data-room]').forEach(input => {
+                const roomNum = input.getAttribute('data-room');
+                const type = input.getAttribute('data-type');
+                
+                // Skip if we already have all values for this room
+                const size = parseFloat(document.querySelector(`[data-room="${roomNum}"][data-type="size"]`).value) || 0;
+                const co2 = parseFloat(document.querySelector(`[data-room="${roomNum}"][data-type="co2"]`).value) || 0;
+                const zone = parseFloat(document.querySelector(`[data-room="${roomNum}"][data-type="zone"]`).value) || 0;
+                const floor = parseFloat(document.querySelector(`[data-room="${roomNum}"][data-type="floor"]`).value) || 0;
+
+                if (size > 0 && co2 > 0 && zone > 0 && floor > 0) {
+                    const roomBF = size * co2 * zone * floor;
+                    // Only add if we haven't already added this room
+                    if (!resultsHTML.includes(`Room ${roomNum}:`)) {
+                        totalBF += roomBF;
+                        resultsHTML += `<div class="mb-2">Room ${roomNum}: <strong>${roomBF.toFixed(2)} kg CO₂</strong> (${size}m² × ${co2}ppm × ${zone} × ${floor})</div>`;
+                    }
+                }
+            });
+
+            if (resultsHTML === '') {
+                alert('Please fill in all fields with valid values for at least one room.');
+                return;
+            }
+
+            roomResults.innerHTML = resultsHTML;
+            totalResult.textContent = `${totalBF.toFixed(2)} kg CO₂`;
+            resultsSection.style.display = 'block';
+        }
+
+        // Allow Enter key to calculate
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.target.classList.contains('room-input')) {
+                calculateFootprint();
+            }
+        });
+    </script>
 </body>
 </html>

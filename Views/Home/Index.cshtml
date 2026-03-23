@@ -109,7 +109,7 @@
                         </a>
                         <ul class="dropdown-menu">
                             <li><h6 class="dropdown-header text-uppercase" style="color: #0d6efd; font-size: 0.7rem;">Module 2</h6></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-grid me-2" style="color: #0d6efd;"></i>Product Catalogue</a></li>
+                            <li><a class="dropdown-item" href="/catalog/eco"><i class="bi bi-grid me-2" style="color: #0d6efd;"></i>Product Catalogue</a></li>
                             <li><a class="dropdown-item" href="#"><i class="bi bi-box-seam me-2" style="color: #0d6efd;"></i>Stock Management</a></li>
                             <li><a class="dropdown-item" href="#"><i class="bi bi-arrow-repeat me-2" style="color: #0d6efd;"></i>Return Processing Pipeline</a></li>
                             <li><a class="dropdown-item" href="#"><i class="bi bi-building-check me-2" style="color: #0d6efd;"></i>Trusted Supplier Registry</a></li>
@@ -254,7 +254,7 @@
                         </div>
                         <div class="card-body py-3">
                             <ul class="list-unstyled mb-0">
-                                <li class="mb-3"><a href="#" class="module-link-2 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Product Catalogue</a></li>
+                                <li class="mb-3"><a href="/catalog/eco" class="module-link-2 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Product Catalogue</a></li>
                                 <li class="mb-3"><a href="#" class="module-link-2 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Stock Management</a></li>
                                 <li class="mb-2"><a href="#" class="module-link-2 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Return Processing Pipeline</a></li>
                                 <li class="mb-3 ps-4">
@@ -287,12 +287,12 @@
                         </div>
                         <div class="card-body py-3">
                             <ul class="list-unstyled mb-0">
-                                <li class="mb-3"><a href="#" class="module-link-3 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Product Carbon Calculator</a></li>
                                 <li class="mb-3"><a href="#" class="module-link-3 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Shipment Carbon Tracker</a></li>
                                 <li class="mb-3"><a href="#" class="module-link-3 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Route Distance Determination</a></li>
                                 <li class="mb-3"><a href="#" class="module-link-3 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Warehouse Storage Emissions</a></li>
                                 <li class="mb-3"><a href="#" class="module-link-3 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Return Process Carbon Lifecycle</a></li>
-                                <li class="mb-0"><a href="#" class="module-link-3 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Batch Delivery Consolidation</a></li>
+                                <li class="mb-3"><a href="#" class="module-link-3 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Batch Delivery Consolidation</a></li>
+                                <li class="mb-0"><a href="/catalog/eco" class="module-link-3 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Eco Catalog</a></li>
                             </ul>
                         </div>
                         <div class="card-footer bg-white border-0 pb-3 px-3">
@@ -350,8 +350,11 @@
                                 </a>
                                 <a asp-controller="RewardsDashboard" asp-action="DisplayRewards"
                                 class="list-group-item list-group-item-action border-0 px-0 py-2">
-                                    <i class="bi bi-gift me-2" style="color: #2d7a4f;"></i>Eco Rewards
+                                    <i class="bi bi-gift me-2" style="color: #2d7a4f;"></i>P2-5 Eco Rewards
                                 </a>
+                                <a href="/catalog/eco" class="list-group-item list-group-item-action border-0 px-0 py-2">
+                                    <i class="bi bi-stars me-2" style="color: #2d7a4f;"></i>P2-5 Eco Catalog
+                                </a>                                
                             </div>
                         </div>
                     </div>
@@ -386,6 +389,13 @@
                                 <a href="/CarbonMonitoring/CarbonDashboardView" class="list-group-item list-group-item-action border-0 px-0 py-2">
                                     <i class="bi bi-graph-up-arrow me-2" style="color: #fd7e14;"></i>P2-5 CarbonDashboard
                                 </a>
+                                <a href="/CarbonFootprint/StaffFootprintView" class="list-group-item list-group-item-action border-0 px-0 py-2">
+                                    <i class="bi bi-graph-up-arrow me-2" style="color: #fd7e14;"></i>P2-5 Staff Footprint View
+                                </a>
+                                <a href="/CarbonFootprint/BuildingFootprintView" class="list-group-item list-group-item-action border-0 px-0 py-2">
+                                    <i class="bi bi-graph-up-arrow me-2" style="color: #fd7e14;"></i>P2-5 Building Footprint View
+                                </a>
+                                
                             </div>
                         </div>
                     </div>

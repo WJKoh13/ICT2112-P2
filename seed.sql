@@ -560,19 +560,24 @@ INSERT INTO BuildingFootprint (timeHourly, zone, block, floor, room, totalRoomCo
 ('2026-03-21 16:00:00+08', 'North', 'Block A', 'Level 1', 'A101', 13.7),
 ('2026-03-21 16:00:00+08', 'North', 'Block A', 'Level 2', 'A201', 16.5),
 ('2026-03-21 16:00:00+08', 'South', 'Block B', 'Level 1', 'B103', 12.2),
-('2026-03-21 16:00:00+08', 'South', 'Block B', 'Level 3', 'B301', 20.4);
+('2026-03-21 16:00:00+08', 'South', 'Block B', 'Level 3', 'B301', 20.4),
+('2026-03-21 16:00:00+08', 'South', 'Block B', 'Level 3', 'B302', 40.4);
 
 --EcoBadge--
 INSERT INTO EcoBadge (maxCarbonG, criteriaDescription, badgeName) VALUES
 ('120.0', 'Low carbon product footprint that meets premium sustainability targets.', 'Gold Eco'),
 ('180.0', 'Moderate carbon product footprint within acceptable operating limits.', 'Silver Eco'),
-('260.0', 'Higher carbon product footprint that still meets minimum green baseline.', 'Bronze Eco');
+('250.0', 'Higher carbon product footprint that still meets minimum green baseline.', 'Bronze Eco');
 
 --Product footprint--
 INSERT INTO ProductFootprint (productID, badgeId, productToxicPercentage, totalCo2, calculatedAt) VALUES
 (1, 2, 4.2, 165.4, '2026-03-20 08:00:00+08'),
 (2, 2, 4.9, 172.8, '2026-03-21 08:00:00+08'),
-(3, 1, 2.6, 118.3, '2026-03-22 08:00:00+08');
+(3, 1, 2.6, 118.3, '2026-03-22 08:00:00+08'),
+(4, 3, 6.8, 220.7, '2026-03-22 10:00:00+08'),
+(5, 3, 6.8, 220.7, '2026-03-22 10:00:00+08'),
+(7, null, 12.5, 315.0, '2026-03-22 11:00:00+08');
+
 
 --StaffAccessLog--
 INSERT INTO StaffAccessLog (staffId, eventTime, eventType) VALUES

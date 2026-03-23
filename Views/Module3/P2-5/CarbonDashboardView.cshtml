@@ -132,6 +132,9 @@
                     <li class="nav-item">
                         <a class="nav-link active" aria-current="page" href="/CarbonMonitoring/CarbonDashboardView">Carbon Dashboard</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/CarbonFootprint/BuildingFootprintView">Building Footprint</a>
+                    </li>
                 </ul>
                 <div class="d-flex gap-2">
                     <a href="#" class="btn btn-outline-light btn-sm">
@@ -273,6 +276,12 @@
                 <div class="card-body p-4">
                     <h2 class="h4 mb-1">Carbon Hotspot Chart</h2>
                     <p class="text-muted mb-4">Summary of total carbon footprint across product, building, and staff.</p>
+                    @if (Model?.HotspotAlerts.Count > 0)
+                    {
+                        <div id="hotspotThresholdAlert" class="alert alert-warning" role="alert">
+                            @string.Join(" ", Model.HotspotAlerts)
+                        </div>
+                    }
                     <div class="chart-canvas-wrap chart-canvas-wrap-hotspot">
                         <canvas id="hotspotChart"></canvas>
                     </div>
@@ -280,6 +289,26 @@
             </div>
         </div>
     </section>
+
+    <div class="modal fade" id="hotspotThresholdModal" tabindex="-1" aria-labelledby="hotspotThresholdModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-warning-subtle">
+                    <h5 class="modal-title" id="hotspotThresholdModalLabel">CO2 Threshold Reached</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">The following hotspot segments exceeded their CO2 threshold:</p>
+                    <ul id="hotspotThresholdList" class="mb-0">
+                        @foreach (var alert in Model?.HotspotAlerts ?? [])
+                        {
+                            <li>@alert</li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <footer class="bg-dark text-light pt-5 pb-3">
         <div class="container">
@@ -750,6 +779,13 @@
                 }
             }
         });
+
+        @if (Model?.HotspotAlerts.Count > 0)
+        {
+            <text>
+            new bootstrap.Modal(document.getElementById('hotspotThresholdModal')).show();
+            </text>
+        }
     </script>
 </body>
 </html>

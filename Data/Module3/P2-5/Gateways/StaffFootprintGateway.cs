@@ -2,6 +2,7 @@ using ProRental.Data.Module3.P2_5.Interfaces;
 using ProRental.Data.UnitOfWork;
 using ProRental.Domain.Entities;
 using ProRental.Domain.Module3.P2_5.Entities;
+using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 
 namespace ProRental.Data.Module3.P2_5.Gateways;
@@ -54,6 +55,45 @@ public sealed class StaffFootprintGateway : IStaffFootprintGateway
             .ToList();
     }
 
+    public Task<bool> StaffExistsAsync(int staffId)
+    {
+        return _dbContext.Staff.AnyAsync(staff => EF.Property<int>(staff, "Staffid") == staffId);
+    }
+
+    public Task<string?> GetDepartmentByStaffIdAsync(int staffId)
+    {
+        return _dbContext.Staff
+            .Where(staff => EF.Property<int>(staff, "Staffid") == staffId)
+            .Select(staff => EF.Property<string>(staff, "Department"))
+            .FirstOrDefaultAsync();
+    }
+
+    public Task<List<StaffLookupItem>> GetStaffLookupAsync()
+    {
+        var items = _dbContext.Staff
+            .AsEnumerable()
+            .Select(staff => new StaffLookupItem(
+                ReadMember<int>(staff, "Staffid", "_staffid"),
+                ReadMember<string>(staff, "Department", "_department")))
+            .OrderBy(item => item.StaffId)
+            .ToList();
+
+        return Task.FromResult(items);
+    }
+
+    public async Task<Stafffootprint> CreateStaffFootprintAsync(int staffId, DateTime time, double hoursWorked, double totalStaffCo2)
+    {
+        var footprint = new Stafffootprint();
+        WriteMember(footprint, "Staffid", "_staffid", staffId);
+        WriteMember(footprint, "Time", "_time", time);
+        WriteMember(footprint, "Hoursworked", "_hoursworked", hoursWorked);
+        WriteMember(footprint, "Totalstaffco2", "_totalstaffco2", totalStaffCo2);
+
+        _dbContext.Stafffootprints.Add(footprint);
+        await _dbContext.SaveChangesAsync();
+        return footprint;
+    }
+
     private static DateTime GetTime(Stafffootprint footprint)
     {
         return ReadMember<DateTime>(footprint, "Time", "_time");
@@ -86,5 +126,26 @@ public sealed class StaffFootprintGateway : IStaffFootprintGateway
         }
 
         throw new InvalidOperationException($"Unable to read '{propertyName}' from {type.Name}.");
+    }
+
+    private static void WriteMember<T>(object target, string propertyName, string fieldName, T value)
+    {
+        var type = target.GetType();
+
+        var property = type.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        if (property != null)
+        {
+            property.SetValue(target, value);
+            return;
+        }
+
+        var field = type.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+        if (field != null)
+        {
+            field.SetValue(target, value);
+            return;
+        }
+
+        throw new InvalidOperationException($"Unable to write '{propertyName}' on {type.Name}.");
     }
 }

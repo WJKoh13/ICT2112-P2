@@ -1,0 +1,325 @@
+@model ProRental.Domain.Module3.P2_5.Entities.EcoCatalogViewModel
+@{
+    ViewData["Title"] = "Feature 5 Eco Catalog";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Feature 5 Eco Catalog - Pro Rentals</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        body { margin-bottom: 0; }
+
+        .eco-page {
+            background: linear-gradient(180deg, #f4f8f6 0%, #ffffff 100%);
+            min-height: 100vh;
+        }
+
+        .eco-hero {
+            background: linear-gradient(135deg, #0f2d1e 0%, #2d7a4f 60%, #1a5c3a 100%);
+            min-height: 340px;
+            display: flex;
+            align-items: center;
+        }
+
+        .hero-panel {
+            background-color: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 1rem;
+            padding: 1rem 1.25rem;
+        }
+
+        .catalog-card, .metric-card {
+            border: 0;
+            border-radius: 1rem;
+            box-shadow: 0 1rem 2rem rgba(15, 45, 30, 0.08);
+        }
+
+        .catalog-table thead th {
+            background-color: #163726;
+            color: #fff;
+            border-bottom: 0;
+        }
+
+        .badge-tier-gold { background-color: #d4a017; color: #fff; }
+        .badge-tier-silver { background-color: #6c757d; color: #fff; }
+        .badge-tier-bronze { background-color: #b86b32; color: #fff; }
+        .badge-tier-standard { background-color: #35584a; color: #fff; }
+        .filter-card {
+            background: #fff;
+            border: 0;
+            border-radius: 1rem;
+            box-shadow: 0 0.75rem 1.5rem rgba(15, 45, 30, 0.06);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="bi bi-box-seam-fill me-2" style="color: #2d7a4f;"></i>Pro Rentals
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="/catalog/eco">Feature 5 Eco Catalog</a>
+                    </li>
+                </ul>
+                <div class="d-flex gap-2">
+                    <a href="#" class="btn btn-outline-light btn-sm"><i class="bi bi-box-arrow-in-right me-1"></i>Login</a>
+                    <a href="#" class="btn btn-primary btn-sm"><i class="bi bi-person-plus me-1"></i>Register</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="eco-page">
+        <section class="eco-hero">
+            <div class="container py-5">
+                <div class="row align-items-center gy-4">
+                    <div class="col-lg-8 text-white">
+                        <span class="badge px-3 py-2 mb-3 d-inline-block" style="background-color: rgba(255,255,255,0.15);">
+                            <i class="bi bi-leaf-fill me-1 text-warning"></i>Module 3 - Feature 5
+                        </span>
+                        <h1 class="display-4 fw-bold lh-sm mb-3">Eco Product Catalog</h1>
+                        <p class="lead mb-4" style="color: rgba(255,255,255,0.78);">
+                            Browse products from the database, compare carbon footprint, search by eco criteria, and manually filter by budget.
+                        </p>
+                        <div class="hero-panel text-white-50">
+                            <strong class="text-white">Status:</strong> @Model.DebugMessage
+                        </div>
+                    </div>
+                    <div class="col-lg-4 d-none d-lg-flex justify-content-center align-items-center">
+                        <div class="text-center" style="color: rgba(255,255,255,0.25);">
+                            <i class="bi bi-tree-fill d-block mb-3" style="font-size: 5rem;"></i>
+                            <i class="bi bi-search d-block mb-3" style="font-size: 2.5rem;"></i>
+                            <i class="bi bi-funnel-fill" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-5">
+            <div class="container">
+                <div class="row g-4 mb-4">
+                    <div class="col-md-4">
+                        <div class="card metric-card h-100">
+                            <div class="card-body">
+                                <p class="text-muted text-uppercase small fw-semibold mb-2">Eco Products</p>
+                                <h2 class="display-6 fw-bold mb-0">@Model.EcoProductCount</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card metric-card h-100">
+                            <div class="card-body">
+                                <p class="text-muted text-uppercase small fw-semibold mb-2">Lowest Carbon Score</p>
+                                <h2 class="display-6 fw-bold mb-0">@(Model.LowestCarbonScore?.ToString("0.0") ?? "-")</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card metric-card h-100">
+                            <div class="card-body">
+                                <p class="text-muted text-uppercase small fw-semibold mb-2">Top Eco Badge</p>
+                                <h2 class="h3 fw-bold mb-0">@Model.TopEcoBadge</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card filter-card mb-4">
+                    <div class="card-body p-4">
+                        <div class="mb-4">
+                            <h3 class="fw-bold mb-1">Catalog Filters</h3>
+                            <p class="text-muted mb-0">Carbon-based product search, manual budget filter, and eco tier sorting.</p>
+                        </div>
+
+                        <form method="get" action="/catalog/eco" class="row g-3">
+                            <div class="col-md-4">
+                                <label for="search" class="form-label fw-semibold">Search</label>
+                                <input id="search" name="search" class="form-control" value="@Model.Search" placeholder="Search by name, description, badge, tier" />
+                            </div>
+                            <div class="col-md-2">
+                                <label for="maxBudget" class="form-label fw-semibold">Max Budget</label>
+                                <input id="maxBudget" name="maxBudget" type="number" min="0" step="0.01" class="form-control" value="@Model.MaxBudget?.ToString("0.##")" placeholder="e.g. 100" />
+                            </div>
+                            <div class="col-md-3">
+                                <label for="tier" class="form-label fw-semibold">Eco Tier</label>
+                                <select id="tier" name="tier" class="form-select">
+                                    <option value="">All tiers</option>
+                                    <option value="Gold" selected="@(Model.Tier == "Gold")">Gold (<=120g)</option>
+                                    <option value="Silver" selected="@(Model.Tier == "Silver")">Silver (<=180g)</option>
+                                    <option value="Bronze" selected="@(Model.Tier == "Bronze")">Bronze (<=250g)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="sortBy" class="form-label fw-semibold">Sort By</label>
+                                <select id="sortBy" name="sortBy" class="form-select">
+                                    <option value="carbon_asc" selected="@(Model.SortBy == "carbon_asc")">Carbon: Low to High</option>
+                                    <option value="carbon_desc" selected="@(Model.SortBy == "carbon_desc")">Carbon: High to Low</option>
+                                    <option value="price_asc" selected="@(Model.SortBy == "price_asc")">Price: Low to High</option>
+                                    <option value="price_desc" selected="@(Model.SortBy == "price_desc")">Price: High to Low</option>
+                                    <option value="name_asc" selected="@(Model.SortBy == "name_asc")">Name: A to Z</option>
+                                    <option value="badge_asc" selected="@(Model.SortBy == "badge_asc")">Eco Tier</option>
+                                </select>
+                            </div>
+                            <div class="col-12 d-flex gap-2">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-search me-2"></i>Apply Filters
+                                </button>
+                                <a href="/catalog/eco" class="btn btn-outline-secondary">Reset</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card catalog-card">
+                    <div class="card-body p-4 p-lg-5">
+                        <div class="mb-4">
+                            <h3 class="fw-bold mb-1">Sustainable Product Listing</h3>
+                            <p class="text-muted mb-3">Module 2 style browse page with carbon-aware discovery.</p>
+                        </div>
+
+                        <div class="row g-3 mb-5">
+                            <div class="col-md-6 col-lg-3">
+                                <div class="border-start border-success ps-3">
+                                    <span class="badge badge-tier-gold mb-2 d-inline-block">
+                                        <i class="bi bi-star-fill me-1"></i>Gold Eco
+                                    </span>
+                                    <p class="small text-muted mb-0"><strong>≤ 120g CO₂</strong><br/>Low carbon product footprint that meets premium sustainability targets.</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-3">
+                                <div class="border-start border-info ps-3">
+                                    <span class="badge badge-tier-silver mb-2 d-inline-block">
+                                        <i class="bi bi-star me-1"></i>Silver Eco
+                                    </span>
+                                    <p class="small text-muted mb-0"><strong>≤ 180g CO₂</strong><br/>Moderate carbon footprint within acceptable operating limits.</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-3">
+                                <div class="border-start border-warning ps-3">
+                                    <span class="badge badge-tier-bronze mb-2 d-inline-block">
+                                        <i class="bi bi-star-half me-1"></i>Bronze Eco
+                                    </span>
+                                    <p class="small text-muted mb-0"><strong>≤ 250g CO₂</strong><br/>Higher carbon but meets minimum green baseline.</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-3">
+                                <div class="border-start border-secondary ps-3">
+                                    <span class="badge badge-tier-standard mb-2 d-inline-block">
+                                        <i class="bi bi-dash-circle me-1"></i>Standard
+                                    </span>
+                                    <p class="small text-muted mb-0"><strong>&gt; 250g CO₂</strong><br/>Does not meet eco criteria.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (Model.Products.Count == 0)
+                        {
+                            <div class="alert alert-warning border-0">
+                                No eco products found yet. Insert the Team 5 `EcoBadge` and `ProductFootprint` seed data, then refresh this page.
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle catalog-table">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Product</th>
+                                            <th>Description</th>
+                                            <th>Price</th>
+                                            <th>Carbon</th>
+                                            <th>DB Badge</th>
+                                            <th>Eco Tier</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in Model.Products)
+                                        {
+                                            var tier = item.CarbonScore switch
+                                            {
+                                                <= 120m => "Gold",
+                                                <= 180m => "Silver",
+                                                <= 250m => "Bronze",
+                                                _ => "Standard"
+                                            };
+                                            var tierClass = tier switch
+                                            {
+                                                "Gold" => "badge-tier-gold",
+                                                "Silver" => "badge-tier-silver",
+                                                "Bronze" => "badge-tier-bronze",
+                                                _ => "badge-tier-standard"
+                                            };
+
+                                            <tr>
+                                                <td class="fw-semibold">@item.Id</td>
+                                                <td class="fw-semibold">@item.Name</td>
+                                                <td>@item.Description</td>
+                                                <td>$@item.Price.ToString("0.00")</td>
+                                                <td>@item.CarbonScore.ToString("0.0") g</td>
+                                                <td>@item.EcoBadge</td>
+                                                <td><span class="badge @tierClass">@tier</span></td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+
+                        <div class="mt-4">
+                            <a href="/" class="btn btn-outline-success">
+                                <i class="bi bi-arrow-left me-2"></i>Back to Home
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </section>
+
+    <footer class="bg-dark text-light pt-5 pb-3">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <h5 class="fw-bold mb-3">
+                        <i class="bi bi-box-seam-fill me-2" style="color: #2d7a4f;"></i>Pro Rentals
+                    </h5>
+                    <p class="text-secondary small mb-0">
+                        Eco-product discovery with carbon-aware browse, search, sorting, and budget filtering.
+                    </p>
+                </div>
+                <div class="col-lg-4">
+                    <h6 class="text-uppercase text-secondary fw-semibold small mb-3">Quick Links</h6>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-1"><a href="/" class="text-secondary text-decoration-none small">Home</a></li>
+                        <li class="mb-1"><a href="/catalog/eco" class="text-secondary text-decoration-none small">Feature 5 Eco Catalog</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4">
+                    <h6 class="text-uppercase text-secondary fw-semibold small mb-3">Status</h6>
+                    <p class="text-secondary small mb-0">@Model.DebugMessage</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

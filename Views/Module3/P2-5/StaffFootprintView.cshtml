@@ -72,6 +72,42 @@
         .chart-shell-hotspot {
             min-height: 320px;
         }
+
+        .form-align-row .form-control,
+        .form-align-row .form-select {
+            min-height: 44px;
+        }
+
+        .calc-line {
+            background: #f8fcfa;
+            border: 1px solid #d9ece2;
+            border-radius: 0.75rem;
+            font-family: "Consolas", "Courier New", monospace;
+            font-size: 0.95rem;
+            margin-bottom: 0.75rem;
+            padding: 0.75rem 0.9rem;
+        }
+
+        .calc-step-label {
+            color: #1a936f;
+            font-weight: 700;
+            margin-right: 0.5rem;
+        }
+
+        .sf-total-card {
+            background: linear-gradient(135deg, #0f5f46 0%, #1a936f 100%);
+            border: 1px solid #0d6a4d;
+        }
+
+        .sf-total-card h6,
+        .sf-total-card h3,
+        .sf-total-card small {
+            color: #ffffff !important;
+        }
+
+        .sf-total-card small {
+            opacity: 0.92;
+        }
     </style>
 </head>
 <body>
@@ -126,122 +162,82 @@
 
             <div class="card chart-card mb-4">
                 <div class="card-body p-4">
-                    <h2 class="h4 mb-1">Formula: Staff Footprint Calculation (Role-Based)</h2>
+                    <h2 class="h4 mb-1">Formula: Staff Footprint Calculation</h2>
                     <p class="text-muted mb-4">
-                        <strong>SF = Σ(Nj × Wj)</strong><br/>
-                        <small>Where SF = Staff Footprint, Nj = number of staff in role j, Wj = weight (importance) of role j</small>
+                        <strong>SF = H x Er x Dw</strong><br />
+                        <small>Where H = Hours Worked (Check-Out minus Check-In), Er = Emission Rate (3.53 kg CO2/hour), Dw = Department Weight</small>
                     </p>
 
                     <form id="staffFootprintForm">
-                        <div class="row g-3 mb-4">
-                            <!-- Role Input Instructions -->
-                            <div class="col-lg-12">
-                                <h5 class="text-success mb-3">Staff Count by Role</h5>
-                                <p class="text-muted small mb-3">Add the number of staff for each role. Each role has a different importance weight based on their carbon impact.</p>
+                        <div class="row g-3 mb-4 form-align-row">
+                            <div class="col-12">
+                                <h5 class="text-success mb-3">Staff Information</h5>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="department" class="form-label">Department</label>
+                                    <select class="form-select" id="department" required>
+                                        <option value="">-- Select Department --</option>
+                                    </select>
+                                    <div id="departmentError" class="text-danger small mt-1" aria-live="polite"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="staffId" class="form-label">Staff ID</label>
+                                    <select class="form-select" id="staffId" required>
+                                        <option value="">-- Select Staff --</option>
+                                    </select>
+                                    <div id="staffIdError" class="text-danger small mt-1" aria-live="polite"></div>
+                                </div>
                             </div>
 
-                            <!-- Role Selection and Input Container -->
-                            <div class="col-lg-12">
-                                <div id="roleInputs" class="mb-3">
-                                    <!-- Default first role -->
-                                    <div class="role-entry card mb-3" data-role="1">
-                                        <div class="card-body p-3">
-                                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                                <h6 class="mb-0">Role 1</h6>
-                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRole(1)" style="display: none;">
-                                                    <i class="bi bi-trash me-1"></i>Remove
-                                                </button>
-                                            </div>
-                                            <div class="row g-2">
-                                                <div class="col-md-6">
-                                                    <label class="form-label small">Select Role</label>
-                                                    <select class="form-select role-input" data-role="1" data-type="role">
-                                                        <option value="">-- Select Role --</option>
-                                                        <option value="1.0" data-name="Picker/Packer">Picker/Packer (1.0)</option>
-                                                        <option value="1.2" data-name="Forklift Operator">Forklift Operator (1.2)</option>
-                                                        <option value="1.4" data-name="Supervisor">Supervisor (1.4)</option>
-                                                        <option value="1.6" data-name="Manager">Manager (1.6)</option>
-                                                        <option value="1.3" data-name="IT Staff">IT Staff (1.3)</option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label small">Number of Staff</label>
-                                                    <input type="number" class="form-control role-input" data-role="1" data-type="count" placeholder="e.g., 20" step="1" min="0" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                            <div class="col-12">
+                                <h5 class="text-success mb-3">Working Hours</h5>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="checkInTime" class="form-label">Check-In Time</label>
+                                    <input type="datetime-local" class="form-control" id="checkInTime" required />
+                                    <div id="checkInTimeError" class="text-danger small mt-1" aria-live="polite"></div>
                                 </div>
-
-                                <button type="button" id="addRoleBtn" class="btn btn-outline-success btn-sm" onclick="addRole()">
-                                    <i class="bi bi-plus-circle me-2"></i>Add Another Role
-                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="checkOutTime" class="form-label">Check-Out Time</label>
+                                    <input type="datetime-local" class="form-control" id="checkOutTime" required />
+                                    <div id="checkOutTimeError" class="text-danger small mt-1" aria-live="polite"></div>
+                                </div>
                             </div>
                         </div>
 
                         <div class="row g-2 mb-4">
                             <div class="col">
-                                <button type="button" id="calculateBtn" class="btn btn-success" onclick="calculateStaffFootprint()">
-                                    <i class="bi bi-calculator me-2"></i>Calculate Footprint
+                                <button type="submit" id="calculateBtn" class="btn btn-success">
+                                    <i class="bi bi-calculator me-2"></i>Calculate & Save Footprint
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Results Section -->
-                        <div id="resultsSection" style="display: none;" class="mt-4 pt-4 border-top">
-                            <h4 class="text-success mb-3">Calculation Results</h4>
-                            <div class="row">
-                                <div class="col-lg-6">
-                                    <div class="alert alert-light border border-success">
-                                        <h6 class="text-success mb-2">Staff Contributions by Role</h6>
-                                        <div id="roleResults"></div>
-                                    </div>
-                                </div>
-                                <div class="col-lg-6">
-                                    <div class="alert alert-success">
-                                        <h6 class="text-white mb-2">Total Staff Footprint (SF)</h6>
-                                        <h3 class="text-white mb-0" id="totalResult">0.00</h3>
-                                        <small class="text-white-50">Sum of all role contributions</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <div id="feedbackBanner" role="status" class="mb-3" style="display:none"></div>
                     </form>
 
-                    <!-- Example Reference -->
-                    <div class="mt-4 pt-3 border-top">
-                        <h6 class="text-secondary mb-2">Example Warehouse Roles & Weights</h6>
-                        <div class="table-responsive">
-                            <table class="table table-sm table-dark mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Role</th>
-                                        <th>Weight (Wj)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>Picker/Packer</td>
-                                        <td>1.0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Forklift Operator</td>
-                                        <td>1.2</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Supervisor</td>
-                                        <td>1.4</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Manager</td>
-                                        <td>1.6</td>
-                                    </tr>
-                                    <tr>
-                                        <td>IT Staff</td>
-                                        <td>1.3</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                    <div id="resultsSection" style="display: none;" class="mt-4 pt-4 border-top">
+                        <h4 class="text-success mb-3">Calculation Results</h4>
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <div class="alert alert-success sf-total-card">
+                                    <h6 class="text-white mb-2">Total Staff Footprint (SF)</h6>
+                                    <h3 class="text-white mb-0" id="totalResult">0.00 kg CO2</h3>
+                                    <small class="text-white-50">Calculated value for this staff submission</small>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="alert alert-light border border-success">
+                                    <h6 class="text-success mb-2">How This Was Calculated</h6>
+                                    <div id="calcResults"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -317,91 +313,275 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        let roleCount = 1;
+        const EMISSION_RATE_PER_HOUR = 3.53;
+        let staffOptions = [];
 
-        function addRole() {
-            roleCount++;
-            const roleHTML = `
-                <div class="role-entry card mb-3" data-role="${roleCount}">
-                    <div class="card-body p-3">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="mb-0">Role ${roleCount}</h6>
-                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRole(${roleCount})">
-                                <i class="bi bi-trash me-1"></i>Remove
-                            </button>
-                        </div>
-                        <div class="row g-2">
-                            <div class="col-md-6">
-                                <label class="form-label small">Select Role</label>
-                                <select class="form-select role-input" data-role="${roleCount}" data-type="role">
-                                    <option value="">-- Select Role --</option>
-                                    <option value="1.0" data-name="Picker/Packer">Picker/Packer (1.0)</option>
-                                    <option value="1.2" data-name="Forklift Operator">Forklift Operator (1.2)</option>
-                                    <option value="1.4" data-name="Supervisor">Supervisor (1.4)</option>
-                                    <option value="1.6" data-name="Manager">Manager (1.6)</option>
-                                    <option value="1.3" data-name="IT Staff">IT Staff (1.3)</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small">Number of Staff</label>
-                                <input type="number" class="form-control role-input" data-role="${roleCount}" data-type="count" placeholder="e.g., 20" step="1" min="0" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            document.getElementById('roleInputs').insertAdjacentHTML('beforeend', roleHTML);
+        const form = document.getElementById('staffFootprintForm');
+        const feedbackBanner = document.getElementById('feedbackBanner');
+        const resultsSection = document.getElementById('resultsSection');
+        const calcResults = document.getElementById('calcResults');
+        const totalResult = document.getElementById('totalResult');
+        const departmentSelect = document.getElementById('department');
+        const staffIdSelect = document.getElementById('staffId');
+
+        function clearFieldError(fieldName) {
+            const errorEl = document.getElementById(`${fieldName}Error`);
+            if (errorEl) errorEl.textContent = '';
         }
 
-        function removeRole(roleNum) {
-            const roleElement = document.querySelector(`.role-entry[data-role="${roleNum}"]`);
-            if (roleElement) {
-                roleElement.remove();
+        function setFieldError(fieldName, message) {
+            const errorEl = document.getElementById(`${fieldName}Error`);
+            if (errorEl) errorEl.textContent = message;
+        }
+
+        function setFeedback(message, type) {
+            if (!feedbackBanner) return;
+            feedbackBanner.style.display = 'block';
+            feedbackBanner.className = type === 'success' ? 'alert alert-success' : 'alert alert-danger';
+            feedbackBanner.textContent = message;
+        }
+
+        function resetFeedback() {
+            if (!feedbackBanner) return;
+            feedbackBanner.style.display = 'none';
+            feedbackBanner.textContent = '';
+        }
+
+        function sanitiseInput(value) {
+            return value.toString().trim();
+        }
+
+        function hideCalculationBreakdown() {
+            if (resultsSection) resultsSection.style.display = 'none';
+            if (calcResults) calcResults.innerHTML = '';
+            if (totalResult) totalResult.textContent = '0.00 kg CO2';
+        }
+
+        function formatDateTimeForApi(localDateTimeString) {
+            const date = new Date(localDateTimeString);
+            return date.toISOString();
+        }
+
+        function formatDateTimeForDisplay(localDateTimeString) {
+            const date = new Date(localDateTimeString);
+            return date.toLocaleString();
+        }
+
+        async function loadStaffOptions() {
+            try {
+                const response = await fetch('/api/staff-footprint/staff-options');
+                if (!response.ok) {
+                    throw new Error('Unable to load staff options');
+                }
+
+                staffOptions = await response.json();
+                const departments = [...new Map(
+                    staffOptions.map(option => [option.department, option.departmentWeight])
+                ).entries()].sort((a, b) => a[0].localeCompare(b[0]));
+
+                const departmentOptionsHtml = ['<option value="">-- Select Department --</option>'];
+                departments.forEach(([department, weight]) => {
+                    departmentOptionsHtml.push(
+                        `<option value="${department}" data-weight="${weight}">${department} (${Number(weight).toFixed(2)})</option>`
+                    );
+                });
+
+                departmentSelect.innerHTML = departmentOptionsHtml.join('');
+                populateStaffOptionsForDepartment('');
+            } catch {
+                setFeedback('Unable to load staff list. Please refresh and try again.', 'error');
             }
         }
 
-        function calculateStaffFootprint() {
-            const resultsSection = document.getElementById('resultsSection');
-            const roleResults = document.getElementById('roleResults');
-            const totalResult = document.getElementById('totalResult');
-            
-            let totalSF = 0;
-            let resultsHTML = '';
+        function populateStaffOptionsForDepartment(department) {
+            const filteredStaff = department
+                ? staffOptions.filter(option => option.department === department)
+                : [];
 
-            // Collect all role entries
-            document.querySelectorAll('.role-entry').forEach((entry, index) => {
-                const roleNum = entry.getAttribute('data-role');
-                const roleSelect = entry.querySelector(`[data-role="${roleNum}"][data-type="role"]`);
-                const countInput = entry.querySelector(`[data-role="${roleNum}"][data-type="count"]`);
-
-                const weight = parseFloat(roleSelect.value) || 0;
-                const count = parseInt(countInput.value) || 0;
-                const roleName = roleSelect.options[roleSelect.selectedIndex]?.dataset?.name || 'Unknown Role';
-
-                if (weight > 0 && count > 0) {
-                    const roleSF = count * weight;
-                    totalSF += roleSF;
-                    resultsHTML += `<div class="mb-2">${count} × ${roleName} (${weight}): <strong>${roleSF.toFixed(2)}</strong></div>`;
-                }
+            const optionsHtml = ['<option value="">-- Select Staff --</option>'];
+            filteredStaff.forEach(option => {
+                optionsHtml.push(`<option value="${option.staffId}">Staff ${option.staffId}</option>`);
             });
 
-            if (resultsHTML === '') {
-                alert('Please fill in at least one role with valid values.');
+            staffIdSelect.innerHTML = optionsHtml.join('');
+        }
+
+        function theValidate() {
+            let isValid = true;
+
+            const departmentRaw = sanitiseInput(departmentSelect.value);
+            const staffIdRaw = sanitiseInput(staffIdSelect.value);
+            const checkInRaw = sanitiseInput(document.getElementById('checkInTime').value);
+            const checkOutRaw = sanitiseInput(document.getElementById('checkOutTime').value);
+
+            clearFieldError('department');
+            clearFieldError('staffId');
+            clearFieldError('checkInTime');
+            clearFieldError('checkOutTime');
+
+            const selectedDepartmentOption = departmentSelect.options[departmentSelect.selectedIndex];
+            const staffId = parseInt(staffIdRaw, 10);
+            const department = departmentRaw;
+            const departmentWeight = parseFloat(selectedDepartmentOption?.dataset?.weight || '0');
+
+            if (!department) {
+                setFieldError('department', 'Please select a department');
+                isValid = false;
+            }
+
+            if (!staffIdRaw || isNaN(staffId) || staffId <= 0) {
+                setFieldError('staffId', 'Please select a staff member');
+                isValid = false;
+            }
+
+            if (!checkInRaw) {
+                setFieldError('checkInTime', 'Please select a check-in time');
+                isValid = false;
+            }
+
+            if (!checkOutRaw) {
+                setFieldError('checkOutTime', 'Please select a check-out time');
+                isValid = false;
+            }
+
+            if (checkInRaw && checkOutRaw) {
+                const checkInDate = new Date(checkInRaw);
+                const checkOutDate = new Date(checkOutRaw);
+
+                if (isNaN(checkInDate.getTime())) {
+                    setFieldError('checkInTime', 'Invalid check-in time');
+                    isValid = false;
+                }
+
+                if (isNaN(checkOutDate.getTime())) {
+                    setFieldError('checkOutTime', 'Invalid check-out time');
+                    isValid = false;
+                }
+
+                if (!isNaN(checkInDate.getTime()) && !isNaN(checkOutDate.getTime()) && checkOutDate <= checkInDate) {
+                    setFieldError('checkOutTime', 'Check-out time must be later than check-in time');
+                    isValid = false;
+                }
+            }
+
+            return {
+                isValid,
+                staffId,
+                department,
+                departmentWeight,
+                checkInTime: checkInRaw,
+                checkOutTime: checkOutRaw
+            };
+        }
+
+        function renderCalculationBreakdown(validation) {
+            const checkInDate = new Date(validation.checkInTime);
+            const checkOutDate = new Date(validation.checkOutTime);
+            const rawHoursWorked = (checkOutDate - checkInDate) / 3600000;
+            const hoursWorked = parseFloat(rawHoursWorked.toFixed(2));
+            const rawTotal = hoursWorked * EMISSION_RATE_PER_HOUR * validation.departmentWeight;
+            const roundedTotal = parseFloat(rawTotal.toFixed(2));
+
+            calcResults.innerHTML = `
+                <p class="mb-2"><strong>Staff:</strong> ID ${validation.staffId}</p>
+                <p class="mb-2"><strong>Department:</strong> ${validation.department} (Dw = ${validation.departmentWeight.toFixed(2)})</p>
+                <p class="mb-2"><strong>Check-In:</strong> ${formatDateTimeForDisplay(validation.checkInTime)}<br /><strong>Check-Out:</strong> ${formatDateTimeForDisplay(validation.checkOutTime)}</p>
+                <div class="calc-line"><span class="calc-step-label">Formula</span>SF = H x Er x Dw</div>
+                <div class="calc-line"><span class="calc-step-label">Step 1</span>H = (${formatDateTimeForDisplay(validation.checkOutTime)} - ${formatDateTimeForDisplay(validation.checkInTime)}) = ${hoursWorked.toFixed(2)} hours</div>
+                <div class="calc-line"><span class="calc-step-label">Step 2</span>SF = ${hoursWorked.toFixed(2)} x ${EMISSION_RATE_PER_HOUR.toFixed(2)} x ${validation.departmentWeight.toFixed(2)} = ${rawTotal.toFixed(4)}</div>
+                <div class="calc-line mb-0"><span class="calc-step-label">Final</span>Rounded to 2 d.p. = <strong>${roundedTotal.toFixed(2)} kg CO2</strong></div>
+            `;
+
+            totalResult.textContent = `${roundedTotal.toFixed(2)} kg CO2`;
+            resultsSection.style.display = 'block';
+
+            return {
+                hoursWorked,
+                totalStaffCo2: roundedTotal
+            };
+        }
+
+        form.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            resetFeedback();
+
+            const validation = theValidate();
+
+            if (!validation.isValid) {
+                hideCalculationBreakdown();
+                setFeedback('Please fix the errors below and resubmit.', 'error');
                 return;
             }
 
-            roleResults.innerHTML = resultsHTML;
-            totalResult.textContent = `${totalSF.toFixed(2)}`;
-            resultsSection.style.display = 'block';
-        }
+            const computed = renderCalculationBreakdown(validation);
 
-        // Allow Enter key to calculate
-        document.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && e.target.classList.contains('role-input')) {
-                calculateStaffFootprint();
+            const body = {
+                staffId: validation.staffId,
+                checkInTime: formatDateTimeForApi(validation.checkInTime),
+                checkOutTime: formatDateTimeForApi(validation.checkOutTime),
+                hoursWorked: computed.hoursWorked,
+                totalStaffCo2: computed.totalStaffCo2
+            };
+
+            const btn = document.getElementById('calculateBtn');
+            const initialBtnHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Saving...';
+
+            try {
+                const response = await fetch('/api/staff-footprint', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                if (!response.ok) {
+                    let err = 'Unable to save staff footprint';
+                    try {
+                        const data = await response.json();
+                        err = data.error || data.message || err;
+                    } catch {
+                        // Ignore JSON parse errors
+                    }
+                    throw new Error(err);
+                }
+
+                setFeedback(`Staff footprint saved - totalStaffCo2: ${computed.totalStaffCo2.toFixed(2)} kg CO2`, 'success');
+                document.querySelectorAll('.text-danger').forEach(el => el.textContent = '');
+            } catch (error) {
+                setFeedback(error.message || 'An unexpected error occurred.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = initialBtnHtml;
             }
         });
+
+        document.querySelectorAll('#staffId, #checkInTime, #checkOutTime').forEach(input => {
+            input.addEventListener('input', () => {
+                clearFieldError(input.id);
+                resetFeedback();
+                hideCalculationBreakdown();
+            });
+        });
+
+        departmentSelect.addEventListener('change', () => {
+            const selectedDepartment = departmentSelect.value;
+            populateStaffOptionsForDepartment(selectedDepartment);
+            clearFieldError('department');
+            clearFieldError('staffId');
+            resetFeedback();
+            hideCalculationBreakdown();
+        });
+
+        staffIdSelect.addEventListener('change', () => {
+            clearFieldError('staffId');
+            resetFeedback();
+            hideCalculationBreakdown();
+        });
+
+        loadStaffOptions();
     </script>
 </body>
-</html>
 </html>

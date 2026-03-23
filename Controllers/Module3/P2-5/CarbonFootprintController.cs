@@ -6,11 +6,13 @@ namespace ProRental.Controllers.Module3.P2_5;
 
 public class CarbonFootprintController : Controller
 {
-    private readonly IBuildingFootprintGateway _gateway;
+    private readonly IBuildingFootprintGateway _buildingGateway;
+    private readonly IStaffFootprintGateway _staffGateway;
 
-    public CarbonFootprintController(IBuildingFootprintGateway gateway)
+    public CarbonFootprintController(IBuildingFootprintGateway buildingGateway, IStaffFootprintGateway staffGateway)
     {
-        _gateway = gateway;
+        _buildingGateway = buildingGateway;
+        _staffGateway = staffGateway;
     }
 
     public IActionResult ProductFootprintView()
@@ -103,7 +105,7 @@ public class CarbonFootprintController : Controller
             };
 
             // Save to database
-            var created = await _gateway.CreateBuildingFootprintAsync(footprint);
+            var created = await _buildingGateway.CreateBuildingFootprintAsync(footprint);
 
             return CreatedAtAction(nameof(CalculateBuildingFootprint), created);
         }
@@ -111,6 +113,90 @@ public class CarbonFootprintController : Controller
         {
             return StatusCode(500, new { error = $"An error occurred: {ex.Message}" });
         }
+    }
+
+    /// <summary>
+    /// Calculate and create a staff footprint record.
+    /// Formula (seed-calibrated): totalStaffCo2 = hoursWorked × emissionRatePerHour
+    /// where emissionRatePerHour = 3.53 kg CO2/hour
+    /// </summary>
+    [HttpPost]
+    [Route("api/staff-footprint")]
+    [ProducesResponseType(typeof(Stafffootprint), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CalculateStaffFootprint([FromBody] StaffFootprintRequest request)
+    {
+        if (request.StaffId <= 0)
+            return BadRequest(new { error = "staffId must be a positive integer." });
+
+        if (request.CheckOutTime <= request.CheckInTime)
+            return BadRequest(new { error = "checkOutTime must be later than checkInTime." });
+
+        if (!await _staffGateway.StaffExistsAsync(request.StaffId))
+            return BadRequest(new { error = "staffId does not exist." });
+
+        var department = await _staffGateway.GetDepartmentByStaffIdAsync(request.StaffId);
+        if (string.IsNullOrWhiteSpace(department))
+            return BadRequest(new { error = "Unable to determine department for this staffId." });
+
+        var hoursWorked = (request.CheckOutTime - request.CheckInTime).TotalHours;
+        if (hoursWorked <= 0)
+            return BadRequest(new { error = "hoursWorked must be a positive number." });
+
+        // Calibrated from seed data:
+        // (14.2/4.0 + 12.8/3.5 + 16.9/5.0) / 3 = 3.529... ≈ 3.53
+        const double EmissionRatePerHour = 3.53;
+        var departmentWeight = GetDepartmentWeight(department);
+
+        var roundedHoursWorked = Math.Round(hoursWorked, 2);
+        var totalStaffCo2 = Math.Round(roundedHoursWorked * EmissionRatePerHour * departmentWeight, 2);
+
+        try
+        {
+            var created = await _staffGateway.CreateStaffFootprintAsync(
+                request.StaffId,
+                request.CheckOutTime,
+                roundedHoursWorked,
+                totalStaffCo2);
+
+            return CreatedAtAction(nameof(CalculateStaffFootprint), created);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = $"An error occurred: {ex.Message}" });
+        }
+    }
+
+    [HttpGet]
+    [Route("api/staff-footprint/staff-options")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetStaffOptions()
+    {
+        var staffItems = await _staffGateway.GetStaffLookupAsync();
+
+        var options = staffItems
+            .Select(item => new
+            {
+                staffId = item.StaffId,
+                department = item.Department,
+                departmentWeight = GetDepartmentWeight(item.Department)
+            })
+            .ToList();
+
+        return Ok(options);
+    }
+
+    private static double GetDepartmentWeight(string department)
+    {
+        return department.Trim().ToLowerInvariant() switch
+        {
+            "customer support" => 1.00,
+            "operations" => 1.15,
+            "finance" => 1.10,
+            "marketing" => 2.00,
+            "it" => 1.20,
+            _ => 1.00
+        };
     }
 }
 
@@ -125,4 +211,11 @@ public class BuildingFootprintRequest
     public string Block { get; set; } = string.Empty;
     public string Floor { get; set; } = string.Empty;
     public string Room { get; set; } = string.Empty;
+}
+
+public class StaffFootprintRequest
+{
+    public int StaffId { get; set; }
+    public DateTime CheckInTime { get; set; }
+    public DateTime CheckOutTime { get; set; }
 }

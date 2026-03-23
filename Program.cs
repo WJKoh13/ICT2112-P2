@@ -168,9 +168,13 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IBuildingFootprintGateway, BuildingFootprintGateway>();
 builder.Services.AddScoped<IProductFootprintGateway, ProductFootprintGateway>();
 builder.Services.AddScoped<IStaffFootprintGateway, StaffFootprintGateway>();
+builder.Services.AddScoped<ProRental.Interfaces.Data.IRewardGateway, ProRental.Data.RewardGateway>();
+builder.Services.AddScoped<ProRental.Interfaces.Data.IOrderCarbonDataGateway, ProRental.Data.OrderCarbonDataGateway>();
 
 // Domain
 builder.Services.AddScoped<ICarbonChartService, CarbonChartControl>();
+builder.Services.AddScoped<ProRental.Interfaces.Domain.IRewardsControl, ProRental.Domain.Controls.RewardsControl>();
+builder.Services.AddScoped<ProRental.Interfaces.Domain.IProductFootprintService, ProRental.Domain.Controls.ProductFootprintServiceStub>();
 
 // Presentation/Controllers
 

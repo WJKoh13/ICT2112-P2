@@ -1,39 +1,76 @@
-@* Views/Module3/RewardsDashboard/Index.cshtml *@
-@model List<ProRental.Domain.Entities.Ordercarbondatum>
-
+@using ProRental.Domain.Entities
 @{
     ViewData["Title"] = "Rewards Dashboard";
+    var carbonRecords = ViewBag.CarbonRecords as List<Ordercarbondatum> ?? new();
+    var rewards       = ViewBag.Rewards as List<Customerreward> ?? new();
 }
 
 <div class="container mt-4">
 
-    <h2 class="mb-1">🌿 Rewards Dashboard</h2>
-    <p class="text-muted mb-4">Review order carbon footprints and issue eco-rewards.</p>
+    <h2 class="mb-1">🌿 Customer Carbon &amp; Eco-Rewards Dashboard</h2>
+    <p class="text-muted mb-4">Track order carbon footprints and manage eco-reward vouchers.</p>
 
-    @* ── Feedback banners ─────────────────────────────────────────────────── *@
-    @if (TempData["RewardMessage"] is string rewardMsg)
+    @* ── Feedback banners ──────────────────────────────────────────────────── *@
+    @if (TempData["SuccessMessage"] is string success)
     {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            @rewardMsg
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <div class="alert alert-info alert-dismissible fade show">
+            @success <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
-    @if (TempData["SuccessMessage"] is string successMsg)
+    @if (TempData["ScoreMessage"] is string score)
     {
-        <div class="alert alert-info alert-dismissible fade show" role="alert">
-            @successMsg
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <div class="alert alert-primary alert-dismissible fade show">
+            @score <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
-    @if (TempData["Error"] is string errorMsg)
+    @if (TempData["RewardMessage"] is string reward)
     {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            @errorMsg
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <div class="alert alert-success alert-dismissible fade show">
+            @reward <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
 
-    @* ── Record new carbon data ───────────────────────────────────────────── *@
+    @* ── Summary stats ────────────────────────────────────────────────────── *@
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card text-center border-0 bg-light">
+                <div class="card-body">
+                    <div class="fs-2 fw-bold text-primary">@carbonRecords.Count</div>
+                    <div class="text-muted small">Orders Tracked</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-0 bg-light">
+                <div class="card-body">
+                    <div class="fs-2 fw-bold text-success">@rewards.Count</div>
+                    <div class="text-muted small">Rewards Issued</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-0 bg-light">
+                <div class="card-body">
+                    <div class="fs-2 fw-bold text-warning">
+                        @(carbonRecords.Any() ? carbonRecords.Average(c => c.Totalcarbon).ToString("F1") : "—")
+                    </div>
+                    <div class="text-muted small">Avg Carbon (g)</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-0 bg-light">
+                <div class="card-body">
+                    <div class="fs-2 fw-bold text-danger">
+                        @carbonRecords.Count(c => c.Impactlevel == "High" || c.Impactlevel == "Very High")
+                    </div>
+                    <div class="text-muted small">High Impact Orders</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* ── Record carbon data form ──────────────────────────────────────────── *@
     <div class="card mb-4">
         <div class="card-header fw-semibold">Record Carbon Data for Order</div>
         <div class="card-body">
@@ -46,23 +83,30 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Total Carbon (g CO₂e)</label>
-                        <input type="number" name="totalCarbon" class="form-control" step="0.01" required min="0" />
+                        <input type="number" name="totalCarbon" class="form-control"
+                               step="0.01" required min="0" />
                     </div>
                     <div class="col-md-2">
                         <button type="submit" class="btn btn-primary w-100">Record</button>
                     </div>
                 </div>
+                <p class="text-muted small mt-2 mb-0">
+                    Thresholds: &lt;50g = Low 🟢 &nbsp;|&nbsp;
+                    50–100g = Moderate 🟡 &nbsp;|&nbsp;
+                    100–200g = High 🔴 &nbsp;|&nbsp;
+                    ≥200g = Very High ⚫
+                </p>
             </form>
         </div>
     </div>
 
-    @* ── Order Carbon Data table ──────────────────────────────────────────── *@
-    <div class="card">
-        <div class="card-header fw-semibold">Order Carbon Data</div>
+    @* ── Orders carbon table ──────────────────────────────────────────────── *@
+    <div class="card mb-4">
+        <div class="card-header fw-semibold">Order Carbon Records</div>
         <div class="card-body p-0">
-            @if (Model == null || !Model.Any())
+            @if (!carbonRecords.Any())
             {
-                <p class="p-3 text-muted mb-0">No order carbon data recorded yet.</p>
+                <p class="p-3 text-muted mb-0">No carbon data recorded yet.</p>
             }
             else
             {
@@ -70,53 +114,87 @@
                     <thead class="table-light">
                         <tr>
                             <th>Order ID</th>
-                            <th>Total Carbon (g)</th>
-                            <th>Impact Level</th>
+                            <th>Product (g)</th>
+                            <th>Packaging (g)</th>
+                            <th>Staff (g)</th>
+                            <th>Building (g)</th>
+                            <th>Total (g)</th>
+                            <th>Impact</th>
                             <th>Calculated At</th>
-                            <th>Eco Score</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var item in Model)
+                        @foreach (var item in carbonRecords)
                         {
-                            var impactBadge = item.GetDisplayImpactLevel() switch
-                            {
-                                "Low"    => "success",
-                                "Medium" => "warning",
-                                _        => "danger"
-                            };
                             <tr>
                                 <td>@item.Orderid</td>
-                                <td>@item.Totalcarbon.ToString("F2")</td>
+                                <td>@item.Productcarbon.ToString("F2")</td>
+                                <td>@item.Packagingcarbon.ToString("F2")</td>
+                                <td>@item.Staffcarbon.ToString("F2")</td>
+                                <td>@item.Buildingcarbon.ToString("F2")</td>
+                                <td class="fw-semibold">@item.Totalcarbon.ToString("F2")</td>
                                 <td>
-                                    <span class="badge bg-@impactBadge">
-                                        @item.GetDisplayImpactLevel()
+                                    <span class="badge bg-@item.GetImpactBadgeColour()">
+                                        @item.Impactlevel
                                     </span>
                                 </td>
                                 <td>@item.Calculatedat.ToString("dd MMM yyyy HH:mm")</td>
                                 <td>
-                                    <a asp-action="CalculateEcoScore"
-                                       asp-controller="RewardsDashboard"
-                                       asp-route-orderId="@item.Orderid"
-                                       class="btn btn-sm btn-outline-secondary">
-                                        View Score
-                                    </a>
-                                </td>
-                                <td>
+                                    <form asp-action="CalculateEcoScore"
+                                          asp-controller="RewardsDashboard"
+                                          method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="orderId" value="@item.Orderid" />
+                                        <button type="submit" class="btn btn-sm btn-outline-primary me-1">
+                                            Eco Score
+                                        </button>
+                                    </form>
                                     <form asp-action="DetermineReward"
                                           asp-controller="RewardsDashboard"
-                                          method="post"
-                                          style="display:inline">
+                                          method="post" class="d-inline">
                                         @Html.AntiForgeryToken()
-                                        <input type="hidden" name="orderId"    value="@item.Orderid" />
-                                        @* customerId — replace with actual session/auth value *@
-                                        <input type="hidden" name="customerId" value="1" />
-                                        <button type="submit" class="btn btn-sm btn-success">
+                                        <input type="hidden" name="orderId" value="@item.Orderid" />
+                                        <button type="submit" class="btn btn-sm btn-outline-success">
                                             Issue Reward
                                         </button>
                                     </form>
                                 </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+
+    @* ── Rewards history ──────────────────────────────────────────────────── *@
+    <div class="card">
+        <div class="card-header fw-semibold">Rewards History</div>
+        <div class="card-body p-0">
+            @if (!rewards.Any())
+            {
+                <p class="p-3 text-muted mb-0">No rewards issued yet.</p>
+            }
+            else
+            {
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Reward ID</th>
+                            <th>Type</th>
+                            <th>Value</th>
+                            <th>Issued At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in rewards)
+                        {
+                            <tr>
+                                <td>@r.Rewardid</td>
+                                <td>@r.Rewardtype</td>
+                                <td class="fw-bold text-success">@r.GetFormattedValue()</td>
+                                <td>@r.Createdat.ToString("dd MMM yyyy HH:mm")</td>
                             </tr>
                         }
                     </tbody>

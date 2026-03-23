@@ -6,16 +6,16 @@ namespace ProRental.Domain.Entities;
 public partial class Transaction
 {
     private int _transactionid;
-    private int Transactionid { get => _transactionid; set => _transactionid = value; }
+    public int Transactionid { get => _transactionid; set => _transactionid = value; }
 
     private decimal _amount;
-    private decimal Amount { get => _amount; set => _amount = value; }
+    public decimal Amount { get => _amount; set => _amount = value; }
 
     private string? _providertransactionid;
-    private string? Providertransactionid { get => _providertransactionid; set => _providertransactionid = value; }
+    public string? Providertransactionid { get => _providertransactionid; set => _providertransactionid = value; }
 
     private DateTime _createdat;
-    private DateTime Createdat { get => _createdat; set => _createdat = value; }
+    public DateTime Createdat { get => _createdat; set => _createdat = value; }
 
     public virtual ICollection<Deposit> Deposits { get; private set; } = new List<Deposit>();
 

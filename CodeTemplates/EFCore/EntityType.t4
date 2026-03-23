@@ -104,7 +104,7 @@ public partial class <#= EntityType.Name #>
         var fieldName = "_" + char.ToLowerInvariant(property.Name[0]) + property.Name.Substring(1);
 #>
     private <#= typeName #> <#= fieldName #><#= needsInitializer ? " = null!" : "" #>;
-    private <#= typeName #> <#= property.Name #> { get => <#= fieldName #>; set => <#= fieldName #> = value; }
+    public <#= typeName #> <#= property.Name #> { get => <#= fieldName #>; set => <#= fieldName #> = value; }
 <#
         firstProperty = false;
     }

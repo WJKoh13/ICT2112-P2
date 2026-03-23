@@ -6,19 +6,19 @@ namespace ProRental.Domain.Entities;
 public partial class Returnrequest
 {
     private int _returnrequestid;
-    private int Returnrequestid { get => _returnrequestid; set => _returnrequestid = value; }
+    public int Returnrequestid { get => _returnrequestid; set => _returnrequestid = value; }
 
     private int _orderid;
-    private int Orderid { get => _orderid; set => _orderid = value; }
+    public int Orderid { get => _orderid; set => _orderid = value; }
 
     private int _customerid;
-    private int Customerid { get => _customerid; set => _customerid = value; }
+    public int Customerid { get => _customerid; set => _customerid = value; }
 
     private DateTime _requestdate;
-    private DateTime Requestdate { get => _requestdate; set => _requestdate = value; }
+    public DateTime Requestdate { get => _requestdate; set => _requestdate = value; }
 
     private DateTime? _completiondate;
-    private DateTime? Completiondate { get => _completiondate; set => _completiondate = value; }
+    public DateTime? Completiondate { get => _completiondate; set => _completiondate = value; }
 
     public virtual Customer Customer { get; private set; } = null!;
 

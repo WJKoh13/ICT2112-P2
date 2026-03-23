@@ -6,22 +6,22 @@ namespace ProRental.Domain.Entities;
 public partial class Supplier
 {
     private int _supplierid;
-    private int Supplierid { get => _supplierid; set => _supplierid = value; }
+    public int Supplierid { get => _supplierid; set => _supplierid = value; }
 
     private string? _name;
-    private string? Name { get => _name; set => _name = value; }
+    public string? Name { get => _name; set => _name = value; }
 
     private string? _details;
-    private string? Details { get => _details; set => _details = value; }
+    public string? Details { get => _details; set => _details = value; }
 
     private int? _creditperiod;
-    private int? Creditperiod { get => _creditperiod; set => _creditperiod = value; }
+    public int? Creditperiod { get => _creditperiod; set => _creditperiod = value; }
 
     private double? _avgturnaroundtime;
-    private double? Avgturnaroundtime { get => _avgturnaroundtime; set => _avgturnaroundtime = value; }
+    public double? Avgturnaroundtime { get => _avgturnaroundtime; set => _avgturnaroundtime = value; }
 
     private bool? _isverified;
-    private bool? Isverified { get => _isverified; set => _isverified = value; }
+    public bool? Isverified { get => _isverified; set => _isverified = value; }
 
     public virtual ICollection<Reliabilityrating> Reliabilityratings { get; private set; } = new List<Reliabilityrating>();
 

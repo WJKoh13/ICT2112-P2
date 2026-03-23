@@ -6,25 +6,25 @@ namespace ProRental.Domain.Entities;
 public partial class Loanlist
 {
     private int _loanlistid;
-    private int Loanlistid { get => _loanlistid; set => _loanlistid = value; }
+    public int Loanlistid { get => _loanlistid; set => _loanlistid = value; }
 
     private int _orderid;
-    private int Orderid { get => _orderid; set => _orderid = value; }
+    public int Orderid { get => _orderid; set => _orderid = value; }
 
     private int _customerid;
-    private int Customerid { get => _customerid; set => _customerid = value; }
+    public int Customerid { get => _customerid; set => _customerid = value; }
 
     private DateTime _loandate;
-    private DateTime Loandate { get => _loandate; set => _loandate = value; }
+    public DateTime Loandate { get => _loandate; set => _loandate = value; }
 
     private DateTime _duedate;
-    private DateTime Duedate { get => _duedate; set => _duedate = value; }
+    public DateTime Duedate { get => _duedate; set => _duedate = value; }
 
     private DateTime? _returndate;
-    private DateTime? Returndate { get => _returndate; set => _returndate = value; }
+    public DateTime? Returndate { get => _returndate; set => _returndate = value; }
 
     private string? _remarks;
-    private string? Remarks { get => _remarks; set => _remarks = value; }
+    public string? Remarks { get => _remarks; set => _remarks = value; }
 
     public virtual Customer Customer { get; private set; } = null!;
 

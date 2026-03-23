@@ -6,22 +6,22 @@ namespace ProRental.Domain.Entities;
 public partial class Checkout
 {
     private int _checkoutid;
-    private int Checkoutid { get => _checkoutid; set => _checkoutid = value; }
+    public int Checkoutid { get => _checkoutid; set => _checkoutid = value; }
 
     private int _customerid;
-    private int Customerid { get => _customerid; set => _customerid = value; }
+    public int Customerid { get => _customerid; set => _customerid = value; }
 
     private int _cartid;
-    private int Cartid { get => _cartid; set => _cartid = value; }
+    public int Cartid { get => _cartid; set => _cartid = value; }
 
     private int? _optionId;
-    private int? OptionId { get => _optionId; set => _optionId = value; }
+    public int? OptionId { get => _optionId; set => _optionId = value; }
 
     private bool? _notifyoptin;
-    private bool? Notifyoptin { get => _notifyoptin; set => _notifyoptin = value; }
+    public bool? Notifyoptin { get => _notifyoptin; set => _notifyoptin = value; }
 
     private DateTime _createdat;
-    private DateTime Createdat { get => _createdat; set => _createdat = value; }
+    public DateTime Createdat { get => _createdat; set => _createdat = value; }
 
     public virtual Cart Cart { get; private set; } = null!;
 

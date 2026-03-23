@@ -1,0 +1,128 @@
+@* Views/Module3/RewardsDashboard/Index.cshtml *@
+@model List<ProRental.Domain.Entities.Ordercarbondatum>
+
+@{
+    ViewData["Title"] = "Rewards Dashboard";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-1">🌿 Rewards Dashboard</h2>
+    <p class="text-muted mb-4">Review order carbon footprints and issue eco-rewards.</p>
+
+    @* ── Feedback banners ─────────────────────────────────────────────────── *@
+    @if (TempData["RewardMessage"] is string rewardMsg)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @rewardMsg
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["SuccessMessage"] is string successMsg)
+    {
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            @successMsg
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] is string errorMsg)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @errorMsg
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @* ── Record new carbon data ───────────────────────────────────────────── *@
+    <div class="card mb-4">
+        <div class="card-header fw-semibold">Record Carbon Data for Order</div>
+        <div class="card-body">
+            <form asp-action="RecordCarbonData" asp-controller="RewardsDashboard" method="post">
+                @Html.AntiForgeryToken()
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label">Order ID</label>
+                        <input type="number" name="orderId" class="form-control" required min="1" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Total Carbon (g CO₂e)</label>
+                        <input type="number" name="totalCarbon" class="form-control" step="0.01" required min="0" />
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Record</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @* ── Order Carbon Data table ──────────────────────────────────────────── *@
+    <div class="card">
+        <div class="card-header fw-semibold">Order Carbon Data</div>
+        <div class="card-body p-0">
+            @if (Model == null || !Model.Any())
+            {
+                <p class="p-3 text-muted mb-0">No order carbon data recorded yet.</p>
+            }
+            else
+            {
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Total Carbon (g)</th>
+                            <th>Impact Level</th>
+                            <th>Calculated At</th>
+                            <th>Eco Score</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            var impactBadge = item.GetDisplayImpactLevel() switch
+                            {
+                                "Low"    => "success",
+                                "Medium" => "warning",
+                                _        => "danger"
+                            };
+                            <tr>
+                                <td>@item.Orderid</td>
+                                <td>@item.Totalcarbon.ToString("F2")</td>
+                                <td>
+                                    <span class="badge bg-@impactBadge">
+                                        @item.GetDisplayImpactLevel()
+                                    </span>
+                                </td>
+                                <td>@item.Calculatedat.ToString("dd MMM yyyy HH:mm")</td>
+                                <td>
+                                    <a asp-action="CalculateEcoScore"
+                                       asp-controller="RewardsDashboard"
+                                       asp-route-orderId="@item.Orderid"
+                                       class="btn btn-sm btn-outline-secondary">
+                                        View Score
+                                    </a>
+                                </td>
+                                <td>
+                                    <form asp-action="DetermineReward"
+                                          asp-controller="RewardsDashboard"
+                                          method="post"
+                                          style="display:inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="orderId"    value="@item.Orderid" />
+                                        @* customerId — replace with actual session/auth value *@
+                                        <input type="hidden" name="customerId" value="1" />
+                                        <button type="submit" class="btn btn-sm btn-success">
+                                            Issue Reward
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+
+</div>

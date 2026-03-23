@@ -6,28 +6,28 @@ namespace ProRental.Domain.Entities;
 public partial class Analytic
 {
     private int _analyticsid;
-    private int Analyticsid { get => _analyticsid; set => _analyticsid = value; }
+    public int Analyticsid { get => _analyticsid; set => _analyticsid = value; }
 
     private DateTime? _startdate;
-    private DateTime? Startdate { get => _startdate; set => _startdate = value; }
+    public DateTime? Startdate { get => _startdate; set => _startdate = value; }
 
     private DateTime? _enddate;
-    private DateTime? Enddate { get => _enddate; set => _enddate = value; }
+    public DateTime? Enddate { get => _enddate; set => _enddate = value; }
 
     private int? _loanamt;
-    private int? Loanamt { get => _loanamt; set => _loanamt = value; }
+    public int? Loanamt { get => _loanamt; set => _loanamt = value; }
 
     private int? _returnamt;
-    private int? Returnamt { get => _returnamt; set => _returnamt = value; }
+    public int? Returnamt { get => _returnamt; set => _returnamt = value; }
 
     private int? _refprimaryid;
-    private int? Refprimaryid { get => _refprimaryid; set => _refprimaryid = value; }
+    public int? Refprimaryid { get => _refprimaryid; set => _refprimaryid = value; }
 
     private string? _refprimaryname;
-    private string? Refprimaryname { get => _refprimaryname; set => _refprimaryname = value; }
+    public string? Refprimaryname { get => _refprimaryname; set => _refprimaryname = value; }
 
     private decimal? _refvalue;
-    private decimal? Refvalue { get => _refvalue; set => _refvalue = value; }
+    public decimal? Refvalue { get => _refvalue; set => _refvalue = value; }
 
     public virtual ICollection<Reportexport> Reportexports { get; private set; } = new List<Reportexport>();
 

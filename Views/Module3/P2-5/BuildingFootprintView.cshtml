@@ -72,6 +72,21 @@
         .chart-shell-hotspot {
             min-height: 320px;
         }
+
+        .form-align-row .col-lg-6 {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .form-align-row .form-control,
+        .form-align-row .form-select {
+            min-height: 44px;
+        }
+
+        .form-align-row .mb-3 {
+            margin-bottom: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -133,55 +148,74 @@
                     </p>
 
                     <form id="buildingFootprintForm" onsubmit="handleCalculateFootprint(event)">
-                        <div class="row g-3 mb-4">
-                            <!-- Room Inputs -->
-                            <div class="col-lg-6">
+                        <div class="row g-3 mb-4 form-align-row">
+                            <div class="col-12">
                                 <h5 class="text-success mb-3">Room Inputs</h5>
-                                
-                                <div class="mb-3">
-                                    <label for="roomSize" class="form-label">Room Size (Sr) - m²</label>
-                                    <input type="number" class="form-control room-input" id="roomSize" placeholder="e.g., 50" step="0.1" min="0" required />
-                                    <small class="text-muted">Bigger rooms → larger contribution</small>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="co2Level" class="form-label">CO₂ Level (Cr) - ppm</label>
-                                    <input type="number" class="form-control room-input" id="co2Level" placeholder="e.g., 400" step="0.1" min="0" required />
-                                    <small class="text-muted">Higher CO₂ → more activity → high contribution</small>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="block" class="form-label">Block</label>
-                                    <input type="text" class="form-control room-input" id="block" placeholder="e.g., A" required />
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="room" class="form-label">Room</label>
-                                    <input type="text" class="form-control room-input" id="room" placeholder="e.g., 101" required />
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="roomSize" class="form-label">Room Size (Sr) - m²</label>
+                                            <input type="text" class="form-control room-input" id="roomSize" placeholder="e.g., 50" required />
+                                            <div id="roomSizeError" class="text-danger small mt-1" aria-live="polite"></div>
+                                            <small class="text-muted">Bigger rooms → larger contribution</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="co2Level" class="form-label">CO₂ Level (Cr) - ppm</label>
+                                            <input type="text" class="form-control room-input" id="co2Level" placeholder="e.g., 400" required />
+                                            <div id="co2LevelError" class="text-danger small mt-1" aria-live="polite"></div>
+                                            <small class="text-muted">Higher CO₂ → more activity → high contribution</small>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- Weight Inputs -->
-                            <div class="col-lg-6">
-                                <h5 class="text-success mb-3">Zone & Floor Weights</h5>
-                                
-                                <div class="mb-3">
-                                    <label for="zone" class="form-label">Zone</label>
-                                    <select class="form-select room-input" id="zone" required>
-                                        <option value="">-- Select Zone --</option>
-                                        <option value="North">North (1.00)</option>
-                                        <option value="South">South (1.25)</option>
-                                    </select>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="floor" class="form-label">Floor</label>
-                                    <select class="form-select room-input" id="floor" required>
-                                        <option value="">-- Select Floor --</option>
-                                        <option value="Level 1">Level 1 (1.00)</option>
-                                        <option value="Level 2">Level 2 (1.20)</option>
-                                        <option value="Level 3">Level 3 (1.45)</option>
-                                    </select>
+                            <div class="col-12">
+                                <h5 class="text-success mb-3">Location Inputs</h5>
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="zone" class="form-label">Zone</label>
+                                            <select class="form-select room-input" id="zone" required>
+                                                <option value="">-- Select Zone --</option>
+                                                <option value="North">North (1.00)</option>
+                                                <option value="South">South (1.25)</option>
+                                                <option value="East">East (1.10)</option>
+                                                <option value="West">West (1.15)</option>
+                                                <option value="Central">Central (1.35)</option>
+                                            </select>
+                                            <div id="zoneError" class="text-danger small mt-1" aria-live="polite"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="floor" class="form-label">Floor</label>
+                                            <select class="form-select room-input" id="floor" required>
+                                                <option value="">-- Select Floor --</option>
+                                                <option value="Level 1">Level 1 (1.00)</option>
+                                                <option value="Level 2">Level 2 (1.20)</option>
+                                                <option value="Level 3">Level 3 (1.45)</option>
+                                                <option value="Level 4">Level 4 (1.60)</option>
+                                                <option value="Level 5">Level 5 (1.75)</option>
+                                            </select>
+                                            <div id="floorError" class="text-danger small mt-1" aria-live="polite"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="block" class="form-label">Block</label>
+                                            <input type="text" class="form-control room-input" id="block" placeholder="e.g., A" required />
+                                            <div id="blockError" class="text-danger small mt-1" aria-live="polite"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="room" class="form-label">Room</label>
+                                            <input type="number" class="form-control room-input" id="room" placeholder="e.g., 101" min="1" step="1" inputmode="numeric" required />
+                                            <div id="roomError" class="text-danger small mt-1" aria-live="polite"></div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -193,6 +227,8 @@
                                 </button>
                             </div>
                         </div>
+
+                        <div id="feedbackBanner" role="status" class="mb-3" style="display:none"></div>
                     </form>
 
                     <!-- Results Section -->
@@ -287,120 +323,180 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function handleCalculateFootprint(event) {
-            event.preventDefault();
+        const zoneWeights = {
+            'North': 1.00,
+            'South': 1.25,
+            'East': 1.10,
+            'West': 1.15,
+            'Central': 1.35
+        };
 
-            // Get form values
-            const roomSize = parseFloat(document.getElementById('roomSize').value);
-            const co2Level = parseFloat(document.getElementById('co2Level').value);
-            const zone = document.getElementById('zone').value;
-            const floor = document.getElementById('floor').value;
-            const block = document.getElementById('block').value;
-            const room = document.getElementById('room').value;
+        const floorWeights = {
+            'Level 1': 1.00,
+            'Level 2': 1.20,
+            'Level 3': 1.45,
+            'Level 4': 1.60,
+            'Level 5': 1.75
+        };
 
-            // Basic validation
-            if (!roomSize || roomSize <= 0) {
-                alert('Room Size must be a positive number');
-                return;
-            }
-            if (!co2Level || co2Level <= 0) {
-                alert('CO₂ Level must be a positive number');
-                return;
-            }
-            if (!zone) {
-                alert('Please select a Zone');
-                return;
-            }
-            if (!floor) {
-                alert('Please select a Floor');
-                return;
-            }
-            if (!block) {
-                alert('Block cannot be empty');
-                return;
-            }
-            if (!room) {
-                alert('Room cannot be empty');
-                return;
+        const form = document.getElementById('buildingFootprintForm');
+        const feedbackBanner = document.getElementById('feedbackBanner');
+
+        function clearFieldError(fieldName) {
+            const errorEl = document.getElementById(`${fieldName}Error`);
+            if (errorEl) errorEl.textContent = '';
+        }
+
+        function setFieldError(fieldName, message) {
+            const errorEl = document.getElementById(`${fieldName}Error`);
+            if (errorEl) errorEl.textContent = message;
+        }
+
+        function setFeedback(message, type) {
+            if (!feedbackBanner) return;
+            feedbackBanner.style.display = 'block';
+            feedbackBanner.className = type === 'success' ? 'alert alert-success' : 'alert alert-danger';
+            feedbackBanner.textContent = message;
+        }
+
+        function resetFeedback() {
+            if (!feedbackBanner) return;
+            feedbackBanner.style.display = 'none';
+            feedbackBanner.textContent = '';
+        }
+
+        function sanitiseInput(value) {
+            return value.toString().trim();
+        }
+
+        function theValidate() {
+            let isValid = true;
+
+            let roomSizeRaw = sanitiseInput(document.getElementById('roomSize').value);
+            let co2LevelRaw = sanitiseInput(document.getElementById('co2Level').value);
+            let blockRaw = sanitiseInput(document.getElementById('block').value).toUpperCase();
+            let roomRaw = sanitiseInput(document.getElementById('room').value).replace(/\s+/g, '');
+            let zoneValue = document.getElementById('zone').value;
+            let floorValue = document.getElementById('floor').value;
+
+            clearFieldError('roomSize');
+            clearFieldError('co2Level');
+            clearFieldError('block');
+            clearFieldError('room');
+            clearFieldError('zone');
+            clearFieldError('floor');
+
+            const roomSize = parseFloat(roomSizeRaw);
+            if (isNaN(roomSize) || roomSize <= 0) {
+                setFieldError('roomSize', 'Room size must be a positive number');
+                isValid = false;
             }
 
-            // Prepare request
-            const request = {
+            const co2Level = parseFloat(co2LevelRaw);
+            if (isNaN(co2Level) || co2Level <= 0) {
+                setFieldError('co2Level', 'CO₂ level must be a positive number');
+                isValid = false;
+            }
+
+            if (!/^[A-Z]$/.test(blockRaw)) {
+                setFieldError('block', 'Block must be a single letter (A–Z)');
+                isValid = false;
+            }
+
+            if (!/^\d+$/.test(roomRaw) || parseInt(roomRaw, 10) <= 0) {
+                setFieldError('room', 'Room must contain numbers only');
+                isValid = false;
+            }
+
+            if (!zoneWeights.hasOwnProperty(zoneValue)) {
+                setFieldError('zone', 'Please select a zone');
+                isValid = false;
+            }
+
+            if (!floorWeights.hasOwnProperty(floorValue)) {
+                setFieldError('floor', 'Please select a floor');
+                isValid = false;
+            }
+
+            return {
+                isValid,
                 roomSize: roomSize,
                 co2Level: co2Level,
-                zone: zone,
-                floor: floor,
-                block: block,
-                room: room
+                block: blockRaw,
+                room: roomRaw,
+                zone: zoneValue,
+                floor: floorValue
+            };
+        }
+
+        form.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            resetFeedback();
+
+            const validation = theValidate();
+
+            if (!validation.isValid) {
+                setFeedback('Please fix the errors below and resubmit.', 'error');
+                return;
+            }
+
+            const totalRoomCo2 = parseFloat((validation.roomSize * validation.co2Level * zoneWeights[validation.zone] * floorWeights[validation.floor] * 0.000729).toFixed(2));
+
+            const body = {
+                roomSize: validation.roomSize,
+                co2Level: validation.co2Level,
+                zone: validation.zone,
+                block: validation.block,
+                floor: validation.floor,
+                room: validation.room,
+                totalRoomCo2: totalRoomCo2
             };
 
-            // Show loading state
             const btn = document.getElementById('calculateBtn');
-            const originalText = btn.innerHTML;
+            const initialBtnHtml = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Saving...';
 
-            // POST to API
-            fetch('/api/building-footprint', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify(request)
-            })
-            .then(response => {
+            try {
+                const response = await fetch('/api/building-footprint', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+
                 if (!response.ok) {
-                    return response.json().then(data => {
-                        throw new Error(data.error || 'An error occurred');
-                    });
+                    let err = 'Unable to save footprint';
+                    try {
+                        const data = await response.json();
+                        err = data.error || data.message || err;
+                    } catch {
+                        // ignore JSON parse errors
+                    }
+                    throw new Error(err);
                 }
-                return response.json();
-            })
-            .then(data => {
-                // Calculate displayed value
-                const zoneWeights = { 'North': 1.00, 'South': 1.25 };
-                const floorWeights = { 'Level 1': 1.00, 'Level 2': 1.20, 'Level 3': 1.45 };
-                const calculated = (roomSize * co2Level * zoneWeights[zone] * floorWeights[floor] * 0.000729).toFixed(2);
 
-                // Display results
-                const resultsSection = document.getElementById('resultsSection');
-                const roomResults = document.getElementById('roomResults');
-                const totalResult = document.getElementById('totalResult');
+                setFeedback(`Footprint saved — totalRoomCo2: ${totalRoomCo2.toFixed(2)} kg CO₂`, 'success');
+                form.reset();
+                document.getElementById('resultsSection').style.display = 'none';
+                document.querySelectorAll('.text-danger').forEach(el => el.textContent = '');
 
-                roomResults.innerHTML = `
-                    <div class="mb-2">
-                        <strong>Room Details:</strong><br/>
-                        Zone: ${zone} | Floor: ${floor} | Block: ${block} | Room: ${room}
-                    </div>
-                    <div class="mb-2">
-                        <strong>Calculation:</strong><br/>
-                        Sr(${roomSize}m²) × Cr(${co2Level}ppm) × Wz(${zoneWeights[zone]}) × Wf(${floorWeights[floor]}) × k(0.000729)
-                    </div>
-                `;
-                totalResult.textContent = `${calculated} kg CO₂`;
-                resultsSection.innerHTML += `<div class="alert alert-success mt-3"><i class="bi bi-check-circle me-2"></i><strong>✓ Saved to database!</strong> Record ID stored in buildingfootprint table</div>`;
-                resultsSection.style.display = 'block';
-
-                // Reset button
+            } catch (error) {
+                setFeedback(error.message || 'An unexpected error occurred.', 'error');
+            } finally {
                 btn.disabled = false;
-                btn.innerHTML = originalText;
-
-                // Scroll to results
-                resultsSection.scrollIntoView({ behavior: 'smooth' });
-            })
-            .catch(error => {
-                alert('Error: ' + error.message);
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-            });
-        }
-
-        // Allow Enter key to submit
-        document.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && e.target.classList.contains('room-input')) {
-                document.getElementById('buildingFootprintForm').dispatchEvent(new Event('submit'));
+                btn.innerHTML = initialBtnHtml;
             }
+        });
+
+        // Clear errors whilst user types
+        document.querySelectorAll('#roomSize, #co2Level, #block, #room, #zone, #floor').forEach(input => {
+            input.addEventListener('input', () => {
+                const fieldName = input.id;
+                clearFieldError(fieldName);
+                resetFeedback();
+            });
         });
     </script>
 </body>

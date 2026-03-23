@@ -50,13 +50,31 @@ public class CarbonFootprintController : Controller
         if (request.Co2Level <= 0)
             return BadRequest(new { error = "co2Level must be a positive number." });
 
+        var zoneWeights = new Dictionary<string, double>
+        {
+            { "North", 1.00 },
+            { "South", 1.25 },
+            { "East", 1.10 },
+            { "West", 1.15 },
+            { "Central", 1.35 }
+        };
+
+        var floorWeights = new Dictionary<string, double>
+        {
+            { "Level 1", 1.00 },
+            { "Level 2", 1.20 },
+            { "Level 3", 1.45 },
+            { "Level 4", 1.60 },
+            { "Level 5", 1.75 }
+        };
+
         // Validate zone
-        if (string.IsNullOrWhiteSpace(request.Zone) || !new[] { "North", "South" }.Contains(request.Zone))
-            return BadRequest(new { error = "zone must be either 'North' or 'South'." });
+        if (string.IsNullOrWhiteSpace(request.Zone) || !zoneWeights.ContainsKey(request.Zone))
+            return BadRequest(new { error = "zone must be one of: North, South, East, West, Central." });
 
         // Validate floor
-        if (string.IsNullOrWhiteSpace(request.Floor) || !new[] { "Level 1", "Level 2", "Level 3" }.Contains(request.Floor))
-            return BadRequest(new { error = "floor must be one of 'Level 1', 'Level 2', or 'Level 3'." });
+        if (string.IsNullOrWhiteSpace(request.Floor) || !floorWeights.ContainsKey(request.Floor))
+            return BadRequest(new { error = "floor must be one of: Level 1, Level 2, Level 3, Level 4, Level 5." });
 
         // Validate block and room are not empty
         if (string.IsNullOrWhiteSpace(request.Block))
@@ -67,21 +85,6 @@ public class CarbonFootprintController : Controller
 
         try
         {
-            // Zone weights
-            var zoneWeights = new Dictionary<string, double>
-            {
-                { "North", 1.00 },
-                { "South", 1.25 }
-            };
-
-            // Floor weights
-            var floorWeights = new Dictionary<string, double>
-            {
-                { "Level 1", 1.00 },
-                { "Level 2", 1.20 },
-                { "Level 3", 1.45 }
-            };
-
             const double CalibrationConstant = 0.000729;
 
             // Calculate: Sr × Cr × Wz × Wf × k

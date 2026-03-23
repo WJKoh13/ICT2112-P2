@@ -193,6 +193,7 @@ public class CarbonFootprintController : Controller
             "customer support" => 1.00,
             "operations" => 1.15,
             "finance" => 1.10,
+            "marketing" => 2.00,
             "it" => 1.20,
             _ => 1.00
         };

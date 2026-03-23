@@ -170,7 +170,19 @@
 
                     <form id="staffFootprintForm">
                         <div class="row g-3 mb-4 form-align-row">
-                            <div class="col-md-4">
+                            <div class="col-12">
+                                <h5 class="text-success mb-3">Staff Information</h5>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="department" class="form-label">Department</label>
+                                    <select class="form-select" id="department" required>
+                                        <option value="">-- Select Department --</option>
+                                    </select>
+                                    <div id="departmentError" class="text-danger small mt-1" aria-live="polite"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="staffId" class="form-label">Staff ID</label>
                                     <select class="form-select" id="staffId" required>
@@ -179,14 +191,18 @@
                                     <div id="staffIdError" class="text-danger small mt-1" aria-live="polite"></div>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+
+                            <div class="col-12">
+                                <h5 class="text-success mb-3">Working Hours</h5>
+                            </div>
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="checkInTime" class="form-label">Check-In Time</label>
                                     <input type="datetime-local" class="form-control" id="checkInTime" required />
                                     <div id="checkInTimeError" class="text-danger small mt-1" aria-live="polite"></div>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="checkOutTime" class="form-label">Check-Out Time</label>
                                     <input type="datetime-local" class="form-control" id="checkOutTime" required />
@@ -305,6 +321,7 @@
         const resultsSection = document.getElementById('resultsSection');
         const calcResults = document.getElementById('calcResults');
         const totalResult = document.getElementById('totalResult');
+        const departmentSelect = document.getElementById('department');
         const staffIdSelect = document.getElementById('staffId');
 
         function clearFieldError(fieldName) {
@@ -358,35 +375,59 @@
                 }
 
                 staffOptions = await response.json();
+                const departments = [...new Map(
+                    staffOptions.map(option => [option.department, option.departmentWeight])
+                ).entries()].sort((a, b) => a[0].localeCompare(b[0]));
 
-                const optionsHtml = ['<option value="">-- Select Staff --</option>'];
-                staffOptions.forEach(option => {
-                    optionsHtml.push(
-                        `<option value="${option.staffId}" data-department="${option.department}" data-weight="${option.departmentWeight}">Staff ${option.staffId} - ${option.department}</option>`
+                const departmentOptionsHtml = ['<option value="">-- Select Department --</option>'];
+                departments.forEach(([department, weight]) => {
+                    departmentOptionsHtml.push(
+                        `<option value="${department}" data-weight="${weight}">${department} (${Number(weight).toFixed(2)})</option>`
                     );
                 });
 
-                staffIdSelect.innerHTML = optionsHtml.join('');
+                departmentSelect.innerHTML = departmentOptionsHtml.join('');
+                populateStaffOptionsForDepartment('');
             } catch {
                 setFeedback('Unable to load staff list. Please refresh and try again.', 'error');
             }
         }
 
+        function populateStaffOptionsForDepartment(department) {
+            const filteredStaff = department
+                ? staffOptions.filter(option => option.department === department)
+                : [];
+
+            const optionsHtml = ['<option value="">-- Select Staff --</option>'];
+            filteredStaff.forEach(option => {
+                optionsHtml.push(`<option value="${option.staffId}">Staff ${option.staffId}</option>`);
+            });
+
+            staffIdSelect.innerHTML = optionsHtml.join('');
+        }
+
         function theValidate() {
             let isValid = true;
 
+            const departmentRaw = sanitiseInput(departmentSelect.value);
             const staffIdRaw = sanitiseInput(staffIdSelect.value);
             const checkInRaw = sanitiseInput(document.getElementById('checkInTime').value);
             const checkOutRaw = sanitiseInput(document.getElementById('checkOutTime').value);
 
+            clearFieldError('department');
             clearFieldError('staffId');
             clearFieldError('checkInTime');
             clearFieldError('checkOutTime');
 
-            const selectedOption = staffIdSelect.options[staffIdSelect.selectedIndex];
+            const selectedDepartmentOption = departmentSelect.options[departmentSelect.selectedIndex];
             const staffId = parseInt(staffIdRaw, 10);
-            const department = selectedOption?.dataset?.department || '';
-            const departmentWeight = parseFloat(selectedOption?.dataset?.weight || '0');
+            const department = departmentRaw;
+            const departmentWeight = parseFloat(selectedDepartmentOption?.dataset?.weight || '0');
+
+            if (!department) {
+                setFieldError('department', 'Please select a department');
+                isValid = false;
+            }
 
             if (!staffIdRaw || isNaN(staffId) || staffId <= 0) {
                 setFieldError('staffId', 'Please select a staff member');
@@ -523,6 +564,15 @@
                 resetFeedback();
                 hideCalculationBreakdown();
             });
+        });
+
+        departmentSelect.addEventListener('change', () => {
+            const selectedDepartment = departmentSelect.value;
+            populateStaffOptionsForDepartment(selectedDepartment);
+            clearFieldError('department');
+            clearFieldError('staffId');
+            resetFeedback();
+            hideCalculationBreakdown();
         });
 
         staffIdSelect.addEventListener('change', () => {

@@ -7,4 +7,5 @@ public interface IProductFootprintGateway
     List<ChartData> GetHourlyChartData();
     List<ChartData> GetProductGraphData();
     List<ChartData> GetHotspotData(int top = 5);
+    ProductFootprintCalculationResult SaveCalculatedFootprint(int productId, double toxicPercentage, double totalCo2);
 }

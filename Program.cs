@@ -5,8 +5,11 @@ using Npgsql;
 using ProRental.Data.Module3.P2_5.Gateways;
 using ProRental.Data.Module3.P2_5.Interfaces;
 using ProRental.Domain.Enums;
+using ProRental.Domain.Module2.P2_3.Controls;
+using ProRental.Domain.Module2.P2_3.Mappers;
 using ProRental.Domain.Module3.P2_5.Controls;
 using ProRental.Domain.Entities;
+using ProRental.Interfaces.Module2.P2_3;
 using ProRental.Interfaces.Module3.P2_5;
 
 // uncomment when ready to code
@@ -130,12 +133,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     }));
 
 //Services builder(add your mappers/gateways, controllers, control and interface classes here)
-//Team P2-1
-// Data source
-
-// Domain
-
-// Presentation/Controllers
+//Team P2-1`r`n// Data source`r`n`r`n// Domain`r`n`r`n// Presentation/Controllers
 
 
 //Team P2-2
@@ -149,6 +147,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Data source
 
 // Domain
+builder.Services.AddScoped<IProductCatalogMapper, ProductCatalogMapper>();
+builder.Services.AddScoped<IProductCatalogService, ProductCatalogControl>();
 
 // Presentation/Controllers
 
@@ -164,11 +164,13 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 //Team P2-5
 // Data source
 builder.Services.AddScoped<IBuildingFootprintGateway, BuildingFootprintGateway>();
+builder.Services.AddScoped<IProductCatalogGateway, ProductCatalogGateway>();
 builder.Services.AddScoped<IProductFootprintGateway, ProductFootprintGateway>();
 builder.Services.AddScoped<IStaffFootprintGateway, StaffFootprintGateway>();
 
 // Domain
 builder.Services.AddScoped<ICarbonChartService, CarbonChartControl>();
+builder.Services.AddScoped<IProductFootprintCalculatorService, ProductFootprintCalculatorControl>();
 
 // Presentation/Controllers
 
@@ -203,3 +205,7 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
+
+
+
+

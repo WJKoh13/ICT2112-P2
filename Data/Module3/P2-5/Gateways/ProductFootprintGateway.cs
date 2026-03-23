@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using ProRental.Data.Module3.P2_5.Interfaces;
 using ProRental.Data.UnitOfWork;
 using ProRental.Domain.Entities;
@@ -52,6 +53,35 @@ public sealed class ProductFootprintGateway : IProductFootprintGateway
             .ThenBy(hotspot => hotspot.Label)
             .Take(top)
             .ToList();
+    }
+
+    public ProductFootprintCalculationResult SaveCalculatedFootprint(int productId, double toxicPercentage, double totalCo2)
+    {
+        // productfootprint.badgeid is required by the current schema,
+        // so persist with the first available badge without exposing badge logic in the feature flow.
+        var badgeId = _dbContext.Ecobadges
+            .Select(badge => EF.Property<int>(badge, "Badgeid"))
+            .OrderBy(id => id)
+            .FirstOrDefault();
+        if (badgeId == 0)
+        {
+            throw new InvalidOperationException("Unable to save product footprint because no EcoBadge records exist.");
+        }
+
+        var productFootprint = new Productfootprint();
+        _dbContext.Productfootprints.Add(productFootprint);
+
+        var entry = _dbContext.Entry(productFootprint);
+        entry.Property("Productid").CurrentValue = productId;
+        entry.Property("Badgeid").CurrentValue = badgeId;
+        entry.Property("Producttoxicpercentage").CurrentValue = toxicPercentage;
+        entry.Property("Totalco2").CurrentValue = totalCo2;
+        entry.Property("Calculatedat").CurrentValue = DateTime.UtcNow;
+
+        _dbContext.SaveChanges();
+
+        var calculatedAt = entry.Property<DateTime>("Calculatedat").CurrentValue;
+        return new ProductFootprintCalculationResult(totalCo2, calculatedAt);
     }
 
     private static DateTime GetCalculatedAt(Productfootprint footprint)

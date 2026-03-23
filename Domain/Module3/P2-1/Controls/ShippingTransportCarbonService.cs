@@ -1,10 +1,15 @@
 using ProRental.Domain.Entities;
 using ProRental.Domain.Enums;
-using ProRental.Interfaces.Domain;
+using ProRental.Interfaces.Module3.P2_1;
 using ProRental.Models.Module3.P2_1;
 
 namespace ProRental.Domain.Controls;
 
+/// <summary>
+/// Temporary Feature 2 adapter used by Feature 1. It returns deterministic quotes so
+/// checkout can function before the real PricingRule-driven, per-leg carbon engine is complete.
+/// by: ernest
+/// </summary>
 public sealed class ShippingTransportCarbonService : ITransportCarbonService
 {
     public Task<TransportQuote> QuoteAsync(
@@ -21,6 +26,8 @@ public sealed class ShippingTransportCarbonService : ITransportCarbonService
         var distanceKm = Math.Max(route.GetTotalDistanceKm() ?? 1d, 1d);
         var loadFactor = Math.Max(context.WeightKg, 1d) * Math.Max(context.Quantity, 1);
 
+        // These values are a prototype stand-in. The final implementation is expected
+        // to derive cost, transport mix, and carbon from Feature 2's owned formulas.
         var quote = preferenceType switch
         {
             PreferenceType.FAST => CreateQuote(
@@ -57,6 +64,8 @@ public sealed class ShippingTransportCarbonService : ITransportCarbonService
         string displayName,
         string transportModeLabel)
     {
+        // The formulas below intentionally stay simple and deterministic; they are not
+        // the final cross-feature pricing and carbon rules described in the design docs.
         var cost = transportMode switch
         {
             TransportMode.PLANE => 18m + (decimal)distanceKm * 0.80m + (decimal)loadFactor * 1.20m,

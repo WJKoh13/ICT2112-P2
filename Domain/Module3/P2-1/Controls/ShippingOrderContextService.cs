@@ -1,10 +1,16 @@
 using Microsoft.EntityFrameworkCore;
 using ProRental.Data.UnitOfWork;
-using ProRental.Interfaces.Domain;
+using ProRental.Interfaces.Module3.P2_1;
 using ProRental.Models.Module3.P2_1;
 
 namespace ProRental.Domain.Controls;
 
+/// <summary>
+/// Temporary Module 1 adapter used by Feature 1 while the final checkout-side
+/// integration contract is still being built. It exposes only the order inputs
+/// needed to construct a shipping option set.
+/// by: ernest
+/// </summary>
 public sealed class ShippingOrderContextService : IOrderService
 {
     private readonly AppDbContext _context;
@@ -34,11 +40,15 @@ public sealed class ShippingOrderContextService : IOrderService
             throw new InvalidOperationException($"Order '{orderId}' does not have a delivery address.");
         }
 
+        var orderContext = order.GetOrderContext();
+
         return new OrderShippingContext(
-            order.GetOrderId(),
-            order.GetCustomerId(),
-            order.GetCheckoutId(),
+            orderContext.OrderId,
+            orderContext.CustomerId,
+            orderContext.CheckoutId,
             destinationAddress,
+            // Placeholder values: the final cross-module contract is expected to source
+            // weight and quantity from Module 1 / Module 2 instead of hardcoding them here.
             WeightKg: 1d,
             Quantity: 1);
     }

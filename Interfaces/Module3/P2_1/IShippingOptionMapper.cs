@@ -2,7 +2,11 @@ using ProRental.Domain.Entities;
 
 namespace ProRental.Interfaces.Module3.P2_1;
 
-public interface IShippingOptionRepository
+/// <summary>
+/// Persistence contract for Feature 1 shipping-option storage and checkout selection updates.
+/// by: ernest
+/// </summary>
+public interface IShippingOptionMapper
 {
     Task<Order?> FindOrderWithCheckoutAsync(int orderId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<ShippingOption>> FindByOrderIdAsync(int orderId, CancellationToken cancellationToken = default);

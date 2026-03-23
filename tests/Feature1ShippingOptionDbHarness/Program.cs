@@ -1,5 +1,8 @@
 using Npgsql;
 
+// Lightweight database helper for the Feature 1 Playwright flow.
+// It resets seeded state and probes the persisted checkout selection without
+// pulling the browser test into app-internal test hooks.
 const string fallbackConnectionString = "Host=localhost;Port=5432;Database=pro_rental;Username=postgres;Password=password";
 
 if (args.Length != 2 || !int.TryParse(args[1], out var orderId) || orderId <= 0)
@@ -34,6 +37,7 @@ static int UnknownCommand(string commandName)
 
 static async Task<int> GetSelectedOptionAsync(NpgsqlConnection connection, int orderId)
 {
+    // The browser test verifies that the selected shipping option is persisted to checkout.option_id.
     await using var command = connection.CreateCommand();
     command.CommandText =
         """
@@ -51,6 +55,8 @@ static async Task<int> GetSelectedOptionAsync(NpgsqlConnection connection, int o
 
 static async Task<int> ResetOrderAsync(NpgsqlConnection connection, int orderId)
 {
+    // Reset both the selected checkout option and any generated Feature 1 shipping rows
+    // so each browser run starts from the same seeded order state.
     await using var transaction = await connection.BeginTransactionAsync();
 
     var checkoutId = await ResetSelectedOptionAsync(connection, transaction, orderId);
@@ -159,5 +165,5 @@ static async Task DeleteRoutesAsync(
 
 static void PrintUsage()
 {
-    Console.Error.WriteLine("Usage: dotnet run --project tests/ShippingOptionDbHarness -- <get-selected-option|reset-order> <orderId>");
+    Console.Error.WriteLine("Usage: dotnet run --project tests/Feature1ShippingOptionDbHarness -- <get-selected-option|reset-order> <orderId>");
 }

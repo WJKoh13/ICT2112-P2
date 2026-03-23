@@ -2,15 +2,16 @@ const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const { test, expect } = require('@playwright/test');
 
+// End-to-end browser coverage for the customer-facing Feature 1 checkout flow.
 const orderId = '12';
 const dbHarnessDllPath = path.resolve(
   __dirname,
   '..',
-  'ShippingOptionDbHarness',
+  'Feature1ShippingOptionDbHarness',
   'bin',
   'Debug',
   'net9.0',
-  'ShippingOptionDbHarness.dll'
+  'Feature1ShippingOptionDbHarness.dll'
 );
 
 function runDbProbe(commandName, selectedOrderId) {
@@ -42,6 +43,7 @@ test.afterEach(() => {
 });
 
 test('customer can compare and select shipping options for seeded order 12', async ({ page }) => {
+  // The test starts from a known seed state where checkout.option_id is empty.
   expect(runDbProbe('get-selected-option', orderId)).toBe('NULL');
 
   await page.goto('/');
@@ -56,6 +58,7 @@ test('customer can compare and select shipping options for seeded order 12', asy
 
   await page.getByRole('link', { name: 'Compare options' }).click();
 
+  // Compare view should expose the same three generated options before selection.
   await expect(page.getByRole('heading', { name: 'Compare shipping options' })).toBeVisible();
   await expect(page.getByRole('row', { name: /FAST Fastest/i })).toBeVisible();
   await expect(page.getByRole('row', { name: /CHEAP Cheapest/i })).toBeVisible();
@@ -69,5 +72,6 @@ test('customer can compare and select shipping options for seeded order 12', asy
   const details = await page.locator('dd').allTextContents();
   const selectedOptionId = details[1].trim();
 
+  // Confirm that the UI selection also changed the persisted checkout row.
   expect(runDbProbe('get-selected-option', orderId)).toBe(selectedOptionId);
 });

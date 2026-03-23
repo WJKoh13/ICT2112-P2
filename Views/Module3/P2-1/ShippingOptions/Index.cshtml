@@ -1,4 +1,7 @@
 @model IReadOnlyList<ProRental.Models.Module3.P2_1.ShippingOptionSummary>
+@* Feature 1 landing page: shows the generated FAST/CHEAP/GREEN options and lets the
+   customer continue into the compare flow or confirm a single choice. *@
+@* by: ernest *@
 @{
     ViewData["Title"] = "Shipping Options";
     var orderId = Model.FirstOrDefault()?.OrderId ?? 0;

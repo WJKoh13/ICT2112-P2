@@ -1,11 +1,15 @@
 using ProRental.Domain.Entities;
 using ProRental.Domain.Enums;
-using ProRental.Interfaces.Data;
-using ProRental.Interfaces.Domain;
+using ProRental.Interfaces.Module3.P2_1;
 using ProRental.Models.Module3.P2_1;
 
 namespace ProRental.Domain.Controls;
 
+/// <summary>
+/// Feature 1 application service. It orchestrates option generation, delegates route
+/// and quote construction to dependent services, and persists the customer's choice.
+/// by: ernest
+/// </summary>
 public sealed class ShippingOptionManager : IShippingOptionService
 {
     private static readonly PreferenceType[] PreferenceOrder =
@@ -15,18 +19,18 @@ public sealed class ShippingOptionManager : IShippingOptionService
         PreferenceType.GREEN
     ];
 
-    private readonly IShippingOptionRepository _shippingOptionRepository;
+    private readonly IShippingOptionMapper _shippingOptionMapper;
     private readonly IOrderService _orderService;
     private readonly IRoutingService _routingService;
     private readonly ITransportCarbonService _transportCarbonService;
 
     public ShippingOptionManager(
-        IShippingOptionRepository shippingOptionRepository,
+        IShippingOptionMapper shippingOptionMapper,
         IOrderService orderService,
         IRoutingService routingService,
         ITransportCarbonService transportCarbonService)
     {
-        _shippingOptionRepository = shippingOptionRepository;
+        _shippingOptionMapper = shippingOptionMapper;
         _orderService = orderService;
         _routingService = routingService;
         _transportCarbonService = transportCarbonService;
@@ -36,7 +40,8 @@ public sealed class ShippingOptionManager : IShippingOptionService
         int orderId,
         CancellationToken cancellationToken = default)
     {
-        var existingOptions = await _shippingOptionRepository.FindByOrderIdAsync(orderId, cancellationToken);
+        // Reuse persisted options when present so checkout sees stable values across reloads.
+        var existingOptions = await _shippingOptionMapper.FindByOrderIdAsync(orderId, cancellationToken);
         if (existingOptions.Count > 0)
         {
             return existingOptions.Select(ToSummary).ToArray();
@@ -54,6 +59,8 @@ public sealed class ShippingOptionManager : IShippingOptionService
     {
         ArgumentNullException.ThrowIfNull(context);
 
+        // Feature 1 owns the three customer-facing preference buckets even though route
+        // construction and carbon pricing are delegated to other module contracts.
         var options = new List<ShippingOption>();
 
         foreach (var preferenceType in PreferenceOrder)
@@ -74,27 +81,22 @@ public sealed class ShippingOptionManager : IShippingOptionService
                 cancellationToken);
 
             var option = new ShippingOption();
-            option.SetOrderId(context.OrderId);
-            option.SetDisplayName(string.IsNullOrWhiteSpace(quote.DisplayName)
-                ? preferenceType.ToString()
-                : quote.DisplayName);
-            option.SetCost(quote.Cost);
-            option.SetCarbonFootprintKg(quote.CarbonFootprintKg);
-            option.SetDeliveryDays(quote.DeliveryDays);
-            option.UpdatePreferenceType(preferenceType);
-            option.UpdateTransportMode(quote.TransportMode);
-
             var routeId = route.GetRouteId();
-            if (routeId > 0)
-            {
-                option.SetRouteId(routeId);
-            }
+            option.ConfigureGeneratedOption(
+                context.OrderId,
+                routeId > 0 ? routeId : null,
+                preferenceType,
+                string.IsNullOrWhiteSpace(quote.DisplayName) ? preferenceType.ToString() : quote.DisplayName,
+                quote.Cost,
+                quote.CarbonFootprintKg,
+                quote.DeliveryDays,
+                quote.TransportMode);
 
             options.Add(option);
         }
 
-        await _shippingOptionRepository.AddRangeAsync(options, cancellationToken);
-        await _shippingOptionRepository.SaveChangesAsync(cancellationToken);
+        await _shippingOptionMapper.AddRangeAsync(options, cancellationToken);
+        await _shippingOptionMapper.SaveChangesAsync(cancellationToken);
 
         return options.Select(ToSummary).ToArray();
     }
@@ -115,58 +117,35 @@ public sealed class ShippingOptionManager : IShippingOptionService
             throw new ArgumentOutOfRangeException(nameof(request.OptionId));
         }
 
-        var selectedOption = await _shippingOptionRepository.FindByIdAsync(request.OptionId, cancellationToken)
+        var selectedOption = await _shippingOptionMapper.FindByIdAsync(request.OptionId, cancellationToken)
             ?? throw new InvalidOperationException($"Shipping option '{request.OptionId}' was not found.");
 
-        var optionOrderId = selectedOption.GetOrderId()
-            ?? throw new InvalidOperationException($"Shipping option '{request.OptionId}' is missing its order reference.");
-
-        if (optionOrderId != request.OrderId)
+        if (!selectedOption.BelongsToOrder(request.OrderId))
         {
             throw new InvalidOperationException(
                 $"Shipping option '{request.OptionId}' does not belong to order '{request.OrderId}'.");
         }
 
-        var order = await _shippingOptionRepository.FindOrderWithCheckoutAsync(request.OrderId, cancellationToken)
+        var order = await _shippingOptionMapper.FindOrderWithCheckoutAsync(request.OrderId, cancellationToken)
             ?? throw new InvalidOperationException($"Order '{request.OrderId}' was not found.");
 
-        var checkoutId = order.GetCheckoutId();
+        var checkoutId = order.GetOrderContext().CheckoutId;
         if (checkoutId <= 0)
         {
             throw new InvalidOperationException($"Order '{request.OrderId}' does not have a checkout record.");
         }
 
-        await _shippingOptionRepository.SetCheckoutSelectedOptionAsync(checkoutId, selectedOption.GetOptionId(), cancellationToken);
-        await _shippingOptionRepository.SaveChangesAsync(cancellationToken);
+        // The stored checkout selection remains the source of truth for Module 1 integration.
+        var selection = selectedOption.GetSelectionResult();
 
-        var preferenceType = selectedOption.GetPreferenceType()
-            ?? throw new InvalidOperationException($"Shipping option '{request.OptionId}' is missing its preference type.");
+        await _shippingOptionMapper.SetCheckoutSelectedOptionAsync(checkoutId, selection.OptionId, cancellationToken);
+        await _shippingOptionMapper.SaveChangesAsync(cancellationToken);
 
-        return new ShippingSelectionResult(
-            request.OrderId,
-            selectedOption.GetOptionId(),
-            preferenceType,
-            selectedOption.GetCost() ?? 0m,
-            selectedOption.GetCarbonFootprintKg() ?? 0d,
-            selectedOption.GetDeliveryDays() ?? 0,
-            selectedOption.GetTransportMode()?.ToString() ?? string.Empty);
+        return selection with { OrderId = request.OrderId };
     }
 
     private static ShippingOptionSummary ToSummary(ShippingOption option)
     {
-        var preferenceType = option.GetPreferenceType()
-            ?? throw new InvalidOperationException($"Shipping option '{option.GetOptionId()}' is missing its preference type.");
-
-        return new ShippingOptionSummary(
-            option.GetOptionId(),
-            option.GetOrderId() ?? 0,
-            preferenceType,
-            option.GetDisplayName() ?? string.Empty,
-            option.GetCost() ?? 0m,
-            option.GetCarbonFootprintKg() ?? 0d,
-            option.GetDeliveryDays() ?? 0,
-            option.GetRouteId(),
-            option.GetTransportMode(),
-            option.GetTransportMode()?.ToString() ?? string.Empty);
+        return option.GetSummary();
     }
 }

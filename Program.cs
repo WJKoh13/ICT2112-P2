@@ -11,9 +11,10 @@ using ProRental.Testing;
 // using ProRental.Data;
 // using ProRental.Domain.Controls;
 // using ProRental.Domain.Entities;
-// using ProRental.Interfaces.Domain;
-// using ProRental.Interfaces.Data;
+// using ProRental.Interfaces.Module3.P2_1;
 // using ProRental.Controllers;
+
+//p2-1 feat 1 test
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +23,7 @@ if (args.Length > 0 && string.Equals(args[0], "--phase-tests", StringComparison.
     Environment.ExitCode = await PhaseTestRunner.RunAsync(args.Skip(1).ToArray());
     return;
 }
+//end p2-1 feat 1 test
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();

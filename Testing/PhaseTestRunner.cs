@@ -11,8 +11,7 @@ using ProRental.Data.Module3.P2_1;
 using ProRental.Domain.Controls;
 using ProRental.Domain.Entities;
 using ProRental.Domain.Enums;
-using ProRental.Interfaces.Data;
-using ProRental.Interfaces.Domain;
+using ProRental.Interfaces.Module3.P2_1;
 using ProRental.Models.Module3.P2_1;
 using System.Reflection;
 
@@ -85,13 +84,14 @@ internal static class PhaseTestRunner
 
 internal sealed record PhaseTest(string Name, Action Action);
 
+// Phase 0 locks down the grouped entity accessors and EF mappings that Feature 1 relies on.
 internal static class Phase0Tests
 {
     public static IReadOnlyList<PhaseTest> All { get; } =
     [
-        new("ShippingOption accessors round-trip values", ShippingOptionAccessorsRoundTrip),
-        new("Checkout selection accessors round-trip values", CheckoutSelectionAccessorsRoundTrip),
-        new("Order accessors round-trip values", OrderAccessorsRoundTrip),
+        new("ShippingOption grouped methods round-trip values", ShippingOptionAccessorsRoundTrip),
+        new("Checkout grouped methods round-trip values", CheckoutSelectionAccessorsRoundTrip),
+        new("Order grouped methods round-trip values", OrderAccessorsRoundTrip),
         new("DeliveryRoute accessors round-trip values", DeliveryRouteAccessorsRoundTrip),
         new("Feature1 enum mappings use snake_case column names", Feature1EnumMappingsUseSnakeCase)
     ];
@@ -99,24 +99,20 @@ internal static class Phase0Tests
     private static void ShippingOptionAccessorsRoundTrip()
     {
         var option = new ShippingOption();
+        option.ConfigureGeneratedOption(11, 22, PreferenceType.GREEN, "Green Express", 42.50m, 12.75, 4, TransportMode.TRAIN);
 
-        option.SetDisplayName("Green Express");
-        option.SetCost(42.50m);
-        option.SetCarbonFootprintKg(12.75);
-        option.SetDeliveryDays(4);
-        option.SetOrderId(11);
-        option.SetRouteId(22);
-        option.UpdatePreferenceType(PreferenceType.GREEN);
-        option.UpdateTransportMode(TransportMode.TRAIN);
+        var summary = option.GetSummary();
+        var selection = option.GetSelectionResult();
 
-        TestAssertions.AssertEqual("Green Express", option.GetDisplayName());
-        TestAssertions.AssertEqual(42.50m, option.GetCost());
-        TestAssertions.AssertEqual(12.75, option.GetCarbonFootprintKg());
-        TestAssertions.AssertEqual(4, option.GetDeliveryDays());
-        TestAssertions.AssertEqual(11, option.GetOrderId());
-        TestAssertions.AssertEqual(22, option.GetRouteId());
-        TestAssertions.AssertEqual(PreferenceType.GREEN, option.GetPreferenceType());
-        TestAssertions.AssertEqual(TransportMode.TRAIN, option.GetTransportMode());
+        TestAssertions.AssertEqual("Green Express", summary.DisplayName);
+        TestAssertions.AssertEqual(42.50m, summary.Cost);
+        TestAssertions.AssertEqual(12.75, summary.CarbonFootprintKg);
+        TestAssertions.AssertEqual(4, summary.DeliveryDays);
+        TestAssertions.AssertEqual(11, summary.OrderId);
+        TestAssertions.AssertEqual(22, summary.RouteId);
+        TestAssertions.AssertEqual(PreferenceType.GREEN, summary.PreferenceType);
+        TestAssertions.AssertEqual(TransportMode.TRAIN, summary.TransportMode);
+        TestAssertions.AssertEqual(summary.OptionId, selection.OptionId);
     }
 
     private static void CheckoutSelectionAccessorsRoundTrip()
@@ -124,19 +120,20 @@ internal static class Phase0Tests
         var checkout = new Checkout();
         var createdAt = new DateTime(2026, 03, 22, 10, 30, 00, DateTimeKind.Utc);
 
-        checkout.SetCustomerId(2);
-        checkout.SetCartId(5);
-        checkout.SetCreatedAt(createdAt);
+        checkout.Initialize(2, 5, createdAt);
         checkout.SelectShippingOption(9);
 
-        TestAssertions.AssertEqual(2, checkout.GetCustomerId());
-        TestAssertions.AssertEqual(5, checkout.GetCartId());
-        TestAssertions.AssertEqual(createdAt, checkout.GetCreatedAt());
-        TestAssertions.AssertEqual(9, checkout.GetSelectedOptionId());
+        var context = checkout.GetCheckoutContext();
+        var selection = checkout.GetSelectionState();
+
+        TestAssertions.AssertEqual(2, context.CustomerId);
+        TestAssertions.AssertEqual(5, context.CartId);
+        TestAssertions.AssertEqual(createdAt, context.CreatedAt);
+        TestAssertions.AssertEqual(9, selection.SelectedOptionId);
 
         checkout.ClearSelectedShippingOption();
 
-        TestAssertions.AssertNull(checkout.GetSelectedOptionId());
+        TestAssertions.AssertNull(checkout.GetSelectionState().SelectedOptionId);
     }
 
     private static void OrderAccessorsRoundTrip()
@@ -144,17 +141,16 @@ internal static class Phase0Tests
         var order = new Order();
         var orderDate = new DateTime(2026, 03, 22, 12, 00, 00, DateTimeKind.Utc);
 
-        order.SetCustomerId(3);
-        order.SetCheckoutId(7);
-        order.SetTransactionId(8);
-        order.SetOrderDate(orderDate);
-        order.SetTotalAmount(199.99m);
+        order.InitializeForCheckout(3, 7, orderDate, 199.99m, 8);
 
-        TestAssertions.AssertEqual(3, order.GetCustomerId());
-        TestAssertions.AssertEqual(7, order.GetCheckoutId());
-        TestAssertions.AssertEqual(8, order.GetTransactionId());
-        TestAssertions.AssertEqual(orderDate, order.GetOrderDate());
-        TestAssertions.AssertEqual(199.99m, order.GetTotalAmount());
+        var context = order.GetOrderContext();
+        var snapshot = order.GetOrderSnapshot();
+
+        TestAssertions.AssertEqual(3, context.CustomerId);
+        TestAssertions.AssertEqual(7, context.CheckoutId);
+        TestAssertions.AssertEqual(8, snapshot.TransactionId);
+        TestAssertions.AssertEqual(orderDate, snapshot.OrderDate);
+        TestAssertions.AssertEqual(199.99m, snapshot.TotalAmount);
     }
 
     private static void DeliveryRouteAccessorsRoundTrip()
@@ -185,11 +181,8 @@ internal static class Phase0Tests
         using var context = new AppDbContext(options);
         var shippingOption = context.Model.FindEntityType(typeof(ShippingOption))
             ?? throw new InvalidOperationException("ShippingOption entity metadata was not found.");
-        var customerChoice = context.Model.FindEntityType(typeof(CustomerChoice))
-            ?? throw new InvalidOperationException("CustomerChoice entity metadata was not found.");
 
         var shippingTable = StoreObjectIdentifier.Table("shipping_option", null);
-        var customerChoiceTable = StoreObjectIdentifier.Table("customer_choice", null);
 
         TestAssertions.AssertEqual(
             "preference_type",
@@ -197,13 +190,11 @@ internal static class Phase0Tests
         TestAssertions.AssertEqual(
             "transport_mode",
             shippingOption.FindProperty("TransportMode")?.GetColumnName(shippingTable));
-        TestAssertions.AssertEqual(
-            "preference_type",
-            customerChoice.FindProperty("PreferenceType")?.GetColumnName(customerChoiceTable));
     }
 
 }
 
+// Phase 1 verifies that the public contracts exposed by Feature 1 match the intended service boundaries.
 internal static class Phase1Tests
 {
     public static IReadOnlyList<PhaseTest> All { get; } =
@@ -267,19 +258,19 @@ internal static class Phase1Tests
 
     private static void RepositoryAndDependencyContractsArePresent()
     {
-        var repository = typeof(IShippingOptionRepository);
+        var mapper = typeof(IShippingOptionMapper);
         var orderService = typeof(IOrderService);
         var routingService = typeof(IRoutingService);
         var transportCarbonService = typeof(ITransportCarbonService);
 
-        AssertMethod(repository, "FindOrderWithCheckoutAsync", typeof(Task<Order?>), typeof(int), typeof(CancellationToken));
-        AssertMethod(repository, "FindByOrderIdAsync", typeof(Task<IReadOnlyList<ShippingOption>>), typeof(int), typeof(CancellationToken));
-        AssertMethod(repository, "FindByIdAsync", typeof(Task<ShippingOption?>), typeof(int), typeof(CancellationToken));
-        AssertMethod(repository, "AddAsync", typeof(Task), typeof(ShippingOption), typeof(CancellationToken));
-        AssertMethod(repository, "AddRangeAsync", typeof(Task), typeof(IEnumerable<ShippingOption>), typeof(CancellationToken));
-        AssertMethod(repository, "UpdateAsync", typeof(Task), typeof(ShippingOption), typeof(CancellationToken));
-        AssertMethod(repository, "SetCheckoutSelectedOptionAsync", typeof(Task), typeof(int), typeof(int), typeof(CancellationToken));
-        AssertMethod(repository, "SaveChangesAsync", typeof(Task), typeof(CancellationToken));
+        AssertMethod(mapper, "FindOrderWithCheckoutAsync", typeof(Task<Order?>), typeof(int), typeof(CancellationToken));
+        AssertMethod(mapper, "FindByOrderIdAsync", typeof(Task<IReadOnlyList<ShippingOption>>), typeof(int), typeof(CancellationToken));
+        AssertMethod(mapper, "FindByIdAsync", typeof(Task<ShippingOption?>), typeof(int), typeof(CancellationToken));
+        AssertMethod(mapper, "AddAsync", typeof(Task), typeof(ShippingOption), typeof(CancellationToken));
+        AssertMethod(mapper, "AddRangeAsync", typeof(Task), typeof(IEnumerable<ShippingOption>), typeof(CancellationToken));
+        AssertMethod(mapper, "UpdateAsync", typeof(Task), typeof(ShippingOption), typeof(CancellationToken));
+        AssertMethod(mapper, "SetCheckoutSelectedOptionAsync", typeof(Task), typeof(int), typeof(int), typeof(CancellationToken));
+        AssertMethod(mapper, "SaveChangesAsync", typeof(Task), typeof(CancellationToken));
 
         AssertMethod(orderService, "GetShippingContextAsync", typeof(Task<OrderShippingContext?>), typeof(int), typeof(CancellationToken));
         AssertMethod(routingService, "CreateRouteAsync", typeof(Task<DeliveryRoute>), typeof(RoutingRequest), typeof(CancellationToken));
@@ -295,6 +286,7 @@ internal static class Phase1Tests
     }
 }
 
+// Phase 2 covers the ranking subsystem in isolation so strategy behavior stays deterministic.
 internal static class Phase2Tests
 {
     public static IReadOnlyList<PhaseTest> All { get; } =
@@ -371,6 +363,7 @@ internal static class Phase2Tests
     ];
 }
 
+// Phase 3 verifies the EF-backed mapper against a real PostgreSQL test fixture.
 internal static class Phase3Tests
 {
     public static IReadOnlyList<PhaseTest> All { get; } =
@@ -386,13 +379,14 @@ internal static class Phase3Tests
         using var transaction = context.Database.BeginTransaction();
 
         var snapshot = CreateOrderFixture(context);
-        var repository = new ShippingOptionRepository(context);
+        var repository = new ShippingOptionMapper(context);
 
         var order = repository.FindOrderWithCheckoutAsync(snapshot.OrderId).GetAwaiter().GetResult()
             ?? throw new InvalidOperationException("Expected repository to return an order.");
 
-        TestAssertions.AssertEqual(snapshot.OrderId, order.GetOrderId());
-        TestAssertions.AssertEqual(snapshot.CheckoutId, order.GetCheckoutId());
+        var orderContext = order.GetOrderContext();
+        TestAssertions.AssertEqual(snapshot.OrderId, orderContext.OrderId);
+        TestAssertions.AssertEqual(snapshot.CheckoutId, orderContext.CheckoutId);
         TestAssertions.AssertTrue(order.Checkout is not null, "Expected order checkout navigation to be loaded.");
 
         transaction.Rollback();
@@ -404,33 +398,28 @@ internal static class Phase3Tests
         using var transaction = context.Database.BeginTransaction();
 
         var snapshot = CreateOrderFixture(context);
-        var repository = new ShippingOptionRepository(context);
+        var repository = new ShippingOptionMapper(context);
         var route = CreateRoute(context);
 
         var option = new ShippingOption();
-        option.SetDisplayName("Phase 3 Test Option");
-        option.SetCost(31.25m);
-        option.SetCarbonFootprintKg(7.5);
-        option.SetDeliveryDays(4);
-        option.SetOrderId(snapshot.OrderId);
-        option.SetRouteId(route.GetRouteId());
-        option.UpdatePreferenceType(PreferenceType.GREEN);
-        option.UpdateTransportMode(TransportMode.TRAIN);
+        option.ConfigureGeneratedOption(snapshot.OrderId, route.GetRouteId(), PreferenceType.GREEN, "Phase 3 Test Option", 31.25m, 7.5, 4, TransportMode.TRAIN);
 
         repository.AddAsync(option).GetAwaiter().GetResult();
         repository.SaveChangesAsync().GetAwaiter().GetResult();
 
-        TestAssertions.AssertTrue(option.GetOptionId() > 0, "Expected inserted shipping option to receive an identity value.");
+        var insertedSummary = option.GetSummary();
+        TestAssertions.AssertTrue(insertedSummary.OptionId > 0, "Expected inserted shipping option to receive an identity value.");
 
         context.ChangeTracker.Clear();
 
-        var reloaded = repository.FindByIdAsync(option.GetOptionId()).GetAwaiter().GetResult()
+        var reloaded = repository.FindByIdAsync(insertedSummary.OptionId).GetAwaiter().GetResult()
             ?? throw new InvalidOperationException("Expected inserted shipping option to be queryable by id.");
         var orderOptions = repository.FindByOrderIdAsync(snapshot.OrderId).GetAwaiter().GetResult();
+        var reloadedSummary = reloaded.GetSummary();
 
-        TestAssertions.AssertEqual("Phase 3 Test Option", reloaded.GetDisplayName());
-        TestAssertions.AssertEqual(PreferenceType.GREEN, reloaded.GetPreferenceType());
-        TestAssertions.AssertTrue(orderOptions.Any(item => item.GetOptionId() == option.GetOptionId()), "Expected inserted option to be returned by order lookup.");
+        TestAssertions.AssertEqual("Phase 3 Test Option", reloadedSummary.DisplayName);
+        TestAssertions.AssertEqual(PreferenceType.GREEN, reloadedSummary.PreferenceType);
+        TestAssertions.AssertTrue(orderOptions.Any(item => item.GetSummary().OptionId == insertedSummary.OptionId), "Expected inserted option to be returned by order lookup.");
 
         transaction.Rollback();
     }
@@ -441,13 +430,13 @@ internal static class Phase3Tests
         using var transaction = context.Database.BeginTransaction();
 
         var snapshot = CreateOrderFixture(context);
-        var repository = new ShippingOptionRepository(context);
+        var repository = new ShippingOptionMapper(context);
         var route = CreateRoute(context);
         var option = CreateShippingOption(snapshot.OrderId, route.GetRouteId(), PreferenceType.CHEAP, TransportMode.TRUCK, "Selected Option");
 
         repository.AddAsync(option).GetAwaiter().GetResult();
         repository.SaveChangesAsync().GetAwaiter().GetResult();
-        repository.SetCheckoutSelectedOptionAsync(snapshot.CheckoutId, option.GetOptionId()).GetAwaiter().GetResult();
+        repository.SetCheckoutSelectedOptionAsync(snapshot.CheckoutId, option.GetSummary().OptionId).GetAwaiter().GetResult();
         repository.SaveChangesAsync().GetAwaiter().GetResult();
 
         context.ChangeTracker.Clear();
@@ -455,7 +444,7 @@ internal static class Phase3Tests
         var checkout = context.Checkouts
             .First(entity => EF.Property<int>(entity, "Checkoutid") == snapshot.CheckoutId);
 
-        TestAssertions.AssertEqual(option.GetOptionId(), checkout.GetSelectedOptionId());
+        TestAssertions.AssertEqual(option.GetSummary().OptionId, checkout.GetSelectionState().SelectedOptionId);
 
         transaction.Rollback();
     }
@@ -527,21 +516,20 @@ internal static class Phase3Tests
         context.SaveChanges();
 
         var checkout = new Checkout();
-        checkout.SetCustomerId(customer.GetCustomerId());
-        checkout.SetCartId(cart.GetCartId());
-        checkout.SetCreatedAt(DateTime.UtcNow);
+        checkout.Initialize(customer.GetCustomerId(), cart.GetCartId(), DateTime.UtcNow);
         context.Checkouts.Add(checkout);
         context.SaveChanges();
 
         var order = new Order();
-        order.SetCustomerId(customer.GetCustomerId());
-        order.SetCheckoutId(checkout.GetCheckoutId());
-        order.SetOrderDate(DateTime.UtcNow);
-        order.SetTotalAmount(120.00m);
+        order.InitializeForCheckout(
+            customer.GetCustomerId(),
+            checkout.GetSelectionState().CheckoutId,
+            DateTime.UtcNow,
+            120.00m);
         context.Orders.Add(order);
         context.SaveChanges();
 
-        return (order.GetOrderId(), customer.GetCustomerId(), checkout.GetCheckoutId());
+        return (order.GetOrderContext().OrderId, customer.GetCustomerId(), checkout.GetSelectionState().CheckoutId);
     }
 
     private static DeliveryRoute CreateRoute(AppDbContext context)
@@ -566,19 +554,13 @@ internal static class Phase3Tests
         string displayName)
     {
         var option = new ShippingOption();
-        option.SetDisplayName(displayName);
-        option.SetCost(19.99m);
-        option.SetCarbonFootprintKg(5.5);
-        option.SetDeliveryDays(3);
-        option.SetOrderId(orderId);
-        option.SetRouteId(routeId);
-        option.UpdatePreferenceType(preferenceType);
-        option.UpdateTransportMode(transportMode);
+        option.ConfigureGeneratedOption(orderId, routeId, preferenceType, displayName, 19.99m, 5.5, 3, transportMode);
         return option;
     }
 
 }
 
+// Phase 4 exercises ShippingOptionManager with in-memory test doubles to validate orchestration rules.
 internal static class Phase4Tests
 {
     public static IReadOnlyList<PhaseTest> All { get; } =
@@ -591,7 +573,7 @@ internal static class Phase4Tests
 
     private static void ShippingOptionManagerBuildsAndPersistsOptions()
     {
-        var repository = new InMemoryShippingOptionRepository();
+        var repository = new InMemoryShippingOptionMapper();
         var orderService = new StubOrderService(new OrderShippingContext(10, 20, 30, "Singapore", 5.5, 2));
         var routingService = new StubRoutingService();
         var quoteService = new StubTransportCarbonService();
@@ -610,7 +592,7 @@ internal static class Phase4Tests
 
     private static void ShippingOptionManagerReusesExistingOptions()
     {
-        var repository = new InMemoryShippingOptionRepository();
+        var repository = new InMemoryShippingOptionMapper();
         repository.Seed(CreatePersistedOption(1, 10, PreferenceType.FAST, "Persisted Fast", 22m, 8.0, 2, TransportMode.PLANE));
 
         var orderService = new StubOrderService(new OrderShippingContext(10, 20, 30, "Singapore", 5.5, 2));
@@ -629,7 +611,7 @@ internal static class Phase4Tests
 
     private static void ShippingOptionManagerAppliesSelectionThroughRepository()
     {
-        var repository = new InMemoryShippingOptionRepository();
+        var repository = new InMemoryShippingOptionMapper();
         repository.Order = CreateOrder(10, 30, 20);
         repository.Seed(CreatePersistedOption(5, 10, PreferenceType.GREEN, "Greenest", 18m, 4.2, 4, TransportMode.TRAIN));
 
@@ -649,7 +631,7 @@ internal static class Phase4Tests
 
     private static void ShippingOptionManagerRejectsMismatchedSelection()
     {
-        var repository = new InMemoryShippingOptionRepository();
+        var repository = new InMemoryShippingOptionMapper();
         repository.Order = CreateOrder(10, 30, 20);
         repository.Seed(CreatePersistedOption(7, 99, PreferenceType.CHEAP, "Wrong Order Option", 12m, 3.5, 5, TransportMode.TRUCK));
 
@@ -681,13 +663,7 @@ internal static class Phase4Tests
         TransportMode transportMode)
     {
         var option = new ShippingOption();
-        option.SetOrderId(orderId);
-        option.SetDisplayName(displayName);
-        option.SetCost(cost);
-        option.SetCarbonFootprintKg(carbonFootprintKg);
-        option.SetDeliveryDays(deliveryDays);
-        option.UpdatePreferenceType(preferenceType);
-        option.UpdateTransportMode(transportMode);
+        option.ConfigureGeneratedOption(orderId, null, preferenceType, displayName, cost, carbonFootprintKg, deliveryDays, transportMode);
         SetPrivateField(option, "_optionId", optionId);
         return option;
     }
@@ -695,10 +671,7 @@ internal static class Phase4Tests
     private static Order CreateOrder(int orderId, int checkoutId, int customerId)
     {
         var order = new Order();
-        order.SetCheckoutId(checkoutId);
-        order.SetCustomerId(customerId);
-        order.SetOrderDate(DateTime.UtcNow);
-        order.SetTotalAmount(100m);
+        order.InitializeForCheckout(customerId, checkoutId, DateTime.UtcNow, 100m);
         SetPrivateField(order, "_orderid", orderId);
         return order;
     }
@@ -710,7 +683,8 @@ internal static class Phase4Tests
         field.SetValue(target, value);
     }
 
-    private sealed class InMemoryShippingOptionRepository : IShippingOptionRepository
+    // In-memory repository double used to verify manager behavior without EF or PostgreSQL.
+    private sealed class InMemoryShippingOptionMapper : IShippingOptionMapper
     {
         public List<ShippingOption> StoredOptions { get; } = [];
         public Order? Order { get; set; }
@@ -720,23 +694,23 @@ internal static class Phase4Tests
 
         public Task<Order?> FindOrderWithCheckoutAsync(int orderId, CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(Order is not null && Order.GetOrderId() == orderId ? Order : null);
+            return Task.FromResult(Order is not null && Order.GetOrderContext().OrderId == orderId ? Order : null);
         }
 
         public Task<IReadOnlyList<ShippingOption>> FindByOrderIdAsync(int orderId, CancellationToken cancellationToken = default)
         {
-            IReadOnlyList<ShippingOption> options = StoredOptions.Where(option => option.GetOrderId() == orderId).ToArray();
+            IReadOnlyList<ShippingOption> options = StoredOptions.Where(option => option.BelongsToOrder(orderId)).ToArray();
             return Task.FromResult(options);
         }
 
         public Task<ShippingOption?> FindByIdAsync(int optionId, CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(StoredOptions.FirstOrDefault(option => option.GetOptionId() == optionId));
+            return Task.FromResult(StoredOptions.FirstOrDefault(option => option.GetSummary().OptionId == optionId));
         }
 
         public Task AddAsync(ShippingOption option, CancellationToken cancellationToken = default)
         {
-            if (option.GetOptionId() == 0)
+            if (option.GetSummary().OptionId == 0)
             {
                 SetPrivateField(option, "_optionId", _nextOptionId++);
             }
@@ -775,10 +749,11 @@ internal static class Phase4Tests
         public void Seed(ShippingOption option)
         {
             StoredOptions.Add(option);
-            _nextOptionId = Math.Max(_nextOptionId, option.GetOptionId() + 1);
+            _nextOptionId = Math.Max(_nextOptionId, option.GetSummary().OptionId + 1);
         }
     }
 
+    // Stub Module 1 adapter that returns a fixed order context for manager tests.
     private sealed class StubOrderService : IOrderService
     {
         public StubOrderService(OrderShippingContext context)
@@ -796,6 +771,7 @@ internal static class Phase4Tests
         }
     }
 
+    // Stub Feature 3 adapter that returns predictable routes for each preference.
     private sealed class StubRoutingService : IRoutingService
     {
         public List<RoutingRequest> Requests { get; } = [];
@@ -812,6 +788,7 @@ internal static class Phase4Tests
         }
     }
 
+    // Stub Feature 2 adapter that returns deterministic quotes for manager tests.
     private sealed class StubTransportCarbonService : ITransportCarbonService
     {
         public List<(PreferenceType PreferenceType, int OrderId)> Requests { get; } = [];
@@ -836,6 +813,7 @@ internal static class Phase4Tests
     }
 }
 
+// Phase 5 keeps the MVC boundary thin by testing controller coordination separately from the domain layer.
 internal static class Phase5Tests
 {
     public static IReadOnlyList<PhaseTest> All { get; } =
@@ -919,6 +897,7 @@ internal static class Phase5Tests
     private static ShippingSelectionResult CreateSelectionResult() =>
         new(42, 7, PreferenceType.GREEN, 18m, 4.4, 4, "TRAIN");
 
+    // Controller-facing service double that captures input parameters and returns fixed view models.
     private sealed class ControllerShippingOptionService : IShippingOptionService
     {
         private readonly IReadOnlyList<ShippingOptionSummary> _options;
@@ -953,6 +932,7 @@ internal static class Phase5Tests
         }
     }
 
+    // Ranking double used to verify that CompareOptions delegates each ranking request exactly once.
     private sealed class ControllerRankingService : IRankingService
     {
         public int SpeedCalls { get; private set; }
@@ -979,6 +959,7 @@ internal static class Phase5Tests
     }
 }
 
+// Phase 6 checks container wiring and the temporary home-page entry point into Feature 1.
 internal static class Phase6Tests
 {
     public static IReadOnlyList<PhaseTest> All { get; } =
@@ -998,7 +979,7 @@ internal static class Phase6Tests
         using var scope = provider.CreateScope();
         var scopedProvider = scope.ServiceProvider;
 
-        TestAssertions.AssertTrue(scopedProvider.GetService<IShippingOptionRepository>() is ShippingOptionRepository, "Expected shipping option repository registration.");
+        TestAssertions.AssertTrue(scopedProvider.GetService<IShippingOptionMapper>() is ShippingOptionMapper, "Expected shipping option mapper registration.");
         TestAssertions.AssertTrue(scopedProvider.GetService<IOrderService>() is ShippingOrderContextService, "Expected order context service registration.");
         TestAssertions.AssertTrue(scopedProvider.GetService<IRoutingService>() is ShippingRoutingService, "Expected routing service registration.");
         TestAssertions.AssertTrue(scopedProvider.GetService<ITransportCarbonService>() is ShippingTransportCarbonService, "Expected transport carbon service registration.");
@@ -1020,6 +1001,7 @@ internal static class Phase6Tests
     }
 }
 
+// Phase 7 runs the full Feature 1 flow against a real database fixture.
 internal static class Phase7Tests
 {
     public static IReadOnlyList<PhaseTest> All { get; } =
@@ -1037,7 +1019,7 @@ internal static class Phase7Tests
         var manager = CreateManager(context);
 
         var options = manager.GetShippingOptionsForOrderAsync(snapshot.OrderId).GetAwaiter().GetResult();
-        var persistedOptions = new ShippingOptionRepository(context).FindByOrderIdAsync(snapshot.OrderId).GetAwaiter().GetResult();
+        var persistedOptions = new ShippingOptionMapper(context).FindByOrderIdAsync(snapshot.OrderId).GetAwaiter().GetResult();
 
         TestAssertions.AssertEqual(3, options.Count);
         TestAssertions.AssertSequence(new[] { PreferenceType.FAST, PreferenceType.CHEAP, PreferenceType.GREEN }, options.Select(option => option.PreferenceType));
@@ -1065,7 +1047,7 @@ internal static class Phase7Tests
         var checkout = context.Checkouts
             .First(entity => EF.Property<int>(entity, "Checkoutid") == snapshot.CheckoutId);
 
-        TestAssertions.AssertEqual(selectedOption.OptionId, checkout.GetSelectedOptionId());
+        TestAssertions.AssertEqual(selectedOption.OptionId, checkout.GetSelectionState().SelectedOptionId);
         TestAssertions.AssertEqual(PreferenceType.GREEN, result.PreferenceType);
         TestAssertions.AssertEqual(selectedOption.OptionId, result.OptionId);
 
@@ -1075,7 +1057,7 @@ internal static class Phase7Tests
     private static ShippingOptionManager CreateManager(AppDbContext context)
     {
         return new ShippingOptionManager(
-            new ShippingOptionRepository(context),
+            new ShippingOptionMapper(context),
             new ShippingOrderContextService(context),
             new ShippingRoutingService(context),
             new ShippingTransportCarbonService());

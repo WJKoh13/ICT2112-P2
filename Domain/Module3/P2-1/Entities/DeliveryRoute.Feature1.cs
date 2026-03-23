@@ -1,5 +1,10 @@
 namespace ProRental.Domain.Entities;
 
+/// <summary>
+/// Feature 1 accessors for the shared DeliveryRoute entity. These helpers let checkout
+/// consume route identity and distance state without opening the full EF model publicly.
+/// by: ernest
+/// </summary>
 public partial class DeliveryRoute
 {
     public int GetRouteId() => _routeId;

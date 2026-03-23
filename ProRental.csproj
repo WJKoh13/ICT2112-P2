@@ -9,9 +9,9 @@
 
   <ItemGroup>
     <Compile Remove="ProRental.PhaseTests\**\*.cs" />
-    <Compile Remove="tests\ShippingOptionDbHarness\**\*.cs" />
+    <Compile Remove="tests\Feature1ShippingOptionDbHarness\**\*.cs" />
     <None Remove="ProRental.PhaseTests\**\*" />
-    <None Remove="tests\ShippingOptionDbHarness\**\*" />
+    <None Remove="tests\Feature1ShippingOptionDbHarness\**\*" />
   </ItemGroup>
 
   <ItemGroup>

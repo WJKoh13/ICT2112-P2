@@ -1,15 +1,20 @@
 using Microsoft.EntityFrameworkCore;
 using ProRental.Data.UnitOfWork;
 using ProRental.Domain.Entities;
-using ProRental.Interfaces.Data;
+using ProRental.Interfaces.Module3.P2_1;
 
 namespace ProRental.Data.Module3.P2_1;
 
-public sealed class ShippingOptionRepository : IShippingOptionRepository
+/// <summary>
+/// Feature 1 persistence gateway for shipping-option reads and writes. It wraps the
+/// specific queries needed by checkout generation and customer selection.
+/// by: ernest
+/// </summary>
+public sealed class ShippingOptionMapper : IShippingOptionMapper
 {
     private readonly AppDbContext _context;
 
-    public ShippingOptionRepository(AppDbContext context)
+    public ShippingOptionMapper(AppDbContext context)
     {
         _context = context;
     }
@@ -24,6 +29,7 @@ public sealed class ShippingOptionRepository : IShippingOptionRepository
 
     public async Task<IReadOnlyList<ShippingOption>> FindByOrderIdAsync(int orderId, CancellationToken cancellationToken = default)
     {
+        // Options are returned in insertion order so checkout presents a stable FAST/CHEAP/GREEN set.
         var options = await _context.ShippingOptions
             .Include(option => option.Route)
             .AsNoTracking()
@@ -59,6 +65,8 @@ public sealed class ShippingOptionRepository : IShippingOptionRepository
 
     public async Task SetCheckoutSelectedOptionAsync(int checkoutId, int optionId, CancellationToken cancellationToken = default)
     {
+        // Selection is written to checkout because Module 1 treats checkout state as the
+        // persisted integration point for the customer-confirmed shipping choice.
         var checkout = await _context.Checkouts
             .FirstOrDefaultAsync(item => EF.Property<int>(item, "Checkoutid") == checkoutId, cancellationToken)
             ?? throw new InvalidOperationException($"Checkout '{checkoutId}' was not found.");
@@ -73,10 +81,9 @@ public sealed class ShippingOptionRepository : IShippingOptionRepository
             .FirstOrDefaultAsync(item => EF.Property<int>(item, "Checkoutid") == checkoutId, cancellationToken)
             ?? throw new InvalidOperationException($"Order for checkout '{checkoutId}' was not found.");
 
-        var shippingOptionOrderId = shippingOption.GetOrderId();
-        var orderId = order.GetOrderId();
+        var orderId = order.GetOrderContext().OrderId;
 
-        if (!shippingOptionOrderId.HasValue || shippingOptionOrderId.Value != orderId)
+        if (!shippingOption.BelongsToOrder(orderId))
         {
             throw new InvalidOperationException(
                 $"Shipping option '{optionId}' does not belong to order '{orderId}'.");

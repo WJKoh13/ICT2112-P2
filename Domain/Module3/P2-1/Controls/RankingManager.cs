@@ -1,9 +1,14 @@
 using ProRental.Domain.Enums;
-using ProRental.Interfaces.Domain;
+using ProRental.Interfaces.Module3.P2_1;
 using ProRental.Models.Module3.P2_1;
 
 namespace ProRental.Domain.Controls;
 
+/// <summary>
+/// Feature 1 ranking coordinator. It resolves the registered strategy for each
+/// preference dimension and keeps the controller independent of concrete algorithms.
+/// by: ernest
+/// </summary>
 public sealed class RankingManager : IRankingService
 {
     private readonly IReadOnlyDictionary<PreferenceType, IRankingStrategy> _strategies;

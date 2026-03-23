@@ -116,12 +116,6 @@ public partial class AppDbContext
                   .HasColumnName("status").HasColumnType("inventory_status");
         });
 
-        modelBuilder.Entity<LegCarbon>(entity =>
-        {
-            entity.Property("TransportMode").HasField("_transportMode").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("transport_mode").HasColumnType("transport_mode");
-        });
-
         modelBuilder.Entity<Lineitem>(entity =>
         {
             entity.Property("reason").HasField("_reason").UsePropertyAccessMode(PropertyAccessMode.Field)

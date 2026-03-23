@@ -61,13 +61,4 @@ public partial class Transport
         _isAvailable = isAvailable;
     }
 
-    public int ReadTransportId() => getTransportId();
-
-    public string ReadTransportationType() => getTransportationType();
-
-    public float ReadMaxLoadKg() => getMaxLoadKG();
-
-    public float ReadVehicleSizeM2() => getVehicleSizem2();
-
-    public bool ReadIsAvailable() => getIsAvailable();
 }

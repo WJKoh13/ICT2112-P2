@@ -48,13 +48,4 @@ public partial class PricingRule
         _carbonSurcharge = carbonSurcharge;
     }
 
-    public int ReadRuleId() => getRuleId();
-
-    public TransportMode? ReadTransportMode() => getTransportMode();
-
-    public decimal? ReadBaseRatePerKm() => getBaseRatePerKm();
-
-    public bool ReadIsActive() => getIsActive();
-
-    public decimal? ReadCarbonSurcharge() => getCarbonSurcharge();
 }

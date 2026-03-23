@@ -50,6 +50,6 @@ public sealed class ShippingOrderContextService : IOrderService
             // Placeholder values: the final cross-module contract is expected to source
             // weight and quantity from Module 1 / Module 2 instead of hardcoding them here.
             WeightKg: 1d,
-            Quantity: 1);
+            Quantity: 1); //hardcoded as 1 for both
     }
 }

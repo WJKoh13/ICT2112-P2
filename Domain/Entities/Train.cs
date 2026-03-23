@@ -42,11 +42,4 @@ public partial class Train
         _trainNumber = trainNumber;
     }
 
-    public int ReadTransportId() => getTransportId();
-
-    public int ReadTrainId() => getTrainID();
-
-    public string ReadTrainType() => getTrainType();
-
-    public string ReadTrainNumber() => getTrainNumber();
 }

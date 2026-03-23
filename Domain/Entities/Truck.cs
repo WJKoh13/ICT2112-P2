@@ -42,11 +42,4 @@ public partial class Truck
         _licensePlate = licensePlate;
     }
 
-    public int ReadTransportId() => getTransportId();
-
-    public int ReadTruckId() => getTruckID();
-
-    public string ReadTruckType() => getTruckType();
-
-    public string ReadLicensePlate() => getLicensePlate();
 }

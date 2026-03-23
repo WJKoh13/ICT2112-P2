@@ -42,11 +42,4 @@ public partial class Plane
         _planeCallsign = planeCallsign;
     }
 
-    public int ReadTransportId() => getTransportId();
-
-    public int ReadPlaneId() => getPlaneID();
-
-    public string ReadPlaneType() => getPlaneType();
-
-    public string ReadPlaneCallsign() => getPlaneCallsign();
 }

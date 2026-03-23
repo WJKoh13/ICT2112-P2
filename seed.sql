@@ -154,6 +154,12 @@ VALUES ('TRUCK', 1.5, TRUE, 0.50),
        ('PLANE', 3.0, TRUE, 1.50),
        ('TRAIN', 1.0, TRUE, 0.05);
 
+-- Insert carbon result records
+INSERT INTO carbon_result (total_carbon_kg, created_at, validation_passed)
+VALUES (250.50, NOW(), TRUE),
+       (180.75, NOW(), TRUE),
+       (420.30, NOW(), FALSE);
+
 -- Insert product returns
 INSERT INTO product_return (return_status, total_carbon, date_in, date_on)
 VALUES ('PENDING', 45.25, CURRENT_DATE, CURRENT_DATE),

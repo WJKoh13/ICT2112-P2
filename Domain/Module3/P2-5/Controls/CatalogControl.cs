@@ -14,7 +14,7 @@ namespace ProRental.Domain.Module3.P2_5.Controls
             _catalogGateway = catalogGateway;
         }
 
-        // 🔥 FEATURE 5: Eco Product Discovery
+        // FEATURE 5: Eco Product Discovery
         public List<Catalog> GetEcoProducts()
         {
             var products = _catalogGateway.GetAll();

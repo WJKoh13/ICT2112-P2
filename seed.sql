@@ -154,6 +154,12 @@ VALUES ('TRUCK', 1.5, TRUE, 0.50),
        ('PLANE', 3.0, TRUE, 1.50),
        ('TRAIN', 1.0, TRUE, 0.05);
 
+-- Insert carbon result records
+INSERT INTO carbon_result (total_carbon_kg, created_at, validation_passed)
+VALUES (250.50, NOW(), TRUE),
+       (180.75, NOW(), TRUE),
+       (420.30, NOW(), FALSE);
+
 -- Insert product returns
 INSERT INTO product_return (return_status, total_carbon, date_in, date_on)
 VALUES ('PENDING', 45.25, CURRENT_DATE, CURRENT_DATE),
@@ -567,7 +573,8 @@ INSERT INTO BuildingFootprint (timeHourly, zone, block, floor, room, totalRoomCo
 INSERT INTO EcoBadge (maxCarbonG, criteriaDescription, badgeName) VALUES
 ('120.0', 'Low carbon product footprint that meets premium sustainability targets.', 'Gold Eco'),
 ('180.0', 'Moderate carbon product footprint within acceptable operating limits.', 'Silver Eco'),
-('250.0', 'Higher carbon product footprint that still meets minimum green baseline.', 'Bronze Eco');
+('250.0', 'Higher carbon product footprint that still meets minimum green baseline.', 'Bronze Eco'),
+('999.0', 'Standard product footprint for general use.', 'Standard');
 
 --Product footprint--
 INSERT INTO ProductFootprint (productID, badgeId, productToxicPercentage, totalCo2, calculatedAt) VALUES
@@ -575,7 +582,9 @@ INSERT INTO ProductFootprint (productID, badgeId, productToxicPercentage, totalC
 (2, 2, 4.9, 172.8, '2026-03-21 08:00:00+08'),
 (3, 1, 2.6, 118.3, '2026-03-22 08:00:00+08'),
 (4, 3, 6.8, 220.7, '2026-03-22 10:00:00+08'),
-(5, 3, 6.8, 220.7, '2026-03-22 10:00:00+08');
+(5, 3, 6.8, 220.7, '2026-03-22 10:00:00+08'),
+(7, 4, 12.5, 315.0, '2026-03-22 11:00:00+08');
+
 
 --StaffAccessLog--
 INSERT INTO StaffAccessLog (staffId, eventTime, eventType) VALUES

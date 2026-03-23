@@ -15,7 +15,7 @@ namespace ProRental.Controllers.Module3.P2_5
             _control = new CatalogControl(catalogGateway);
         }
 
-        // 🔥 Feature 5: Eco products
+        //Feature 5: Eco products
         [HttpGet("eco")]
         public IActionResult GetEcoProducts()
         {

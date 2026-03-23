@@ -87,6 +87,37 @@
         .form-align-row .mb-3 {
             margin-bottom: 1rem;
         }
+
+        .calc-line {
+            background: #f8fcfa;
+            border: 1px solid #d9ece2;
+            border-radius: 0.75rem;
+            font-family: "Consolas", "Courier New", monospace;
+            font-size: 0.95rem;
+            margin-bottom: 0.75rem;
+            padding: 0.75rem 0.9rem;
+        }
+
+        .calc-step-label {
+            color: #1a936f;
+            font-weight: 700;
+            margin-right: 0.5rem;
+        }
+
+        .bf-total-card {
+            background: linear-gradient(135deg, #0f5f46 0%, #1a936f 100%);
+            border: 1px solid #0d6a4d;
+        }
+
+        .bf-total-card h6,
+        .bf-total-card h3,
+        .bf-total-card small {
+            color: #ffffff !important;
+        }
+
+        .bf-total-card small {
+            opacity: 0.92;
+        }
     </style>
 </head>
 <body>
@@ -147,7 +178,7 @@
                         <small>Where Sr = Room Size, Cr = CO₂ Level, Wz = Zone Weight, Wf = Floor Weight</small>
                     </p>
 
-                    <form id="buildingFootprintForm" onsubmit="handleCalculateFootprint(event)">
+                    <form id="buildingFootprintForm">
                         <div class="row g-3 mb-4 form-align-row">
                             <div class="col-12">
                                 <h5 class="text-success mb-3">Room Inputs</h5>
@@ -235,17 +266,17 @@
                     <div id="resultsSection" style="display: none;" class="mt-4 pt-4 border-top">
                         <h4 class="text-success mb-3">Calculation Results</h4>
                         <div class="row">
-                            <div class="col-lg-6">
-                                <div class="alert alert-light border border-success">
-                                    <h6 class="text-success mb-2">Individual Room Contributions</h6>
-                                    <div id="roomResults"></div>
+                            <div class="col-12 mb-3">
+                                <div class="alert alert-success bf-total-card">
+                                    <h6 class="text-white mb-2">Total Building Footprint (BF)</h6>
+                                    <h3 class="text-white mb-0" id="totalResult">0.00 kg CO2</h3>
+                                    <small class="text-white-50">Calculated value for this room submission</small>
                                 </div>
                             </div>
-                            <div class="col-lg-6">
-                                <div class="alert alert-success">
-                                    <h6 class="text-white mb-2">Total Building Footprint (BF)</h6>
-                                    <h3 class="text-white mb-0" id="totalResult">0.00 kg CO₂</h3>
-                                    <small class="text-white-50">Sum of all room contributions</small>
+                            <div class="col-12">
+                                <div class="alert alert-light border border-success">
+                                    <h6 class="text-success mb-2">How This Was Calculated</h6>
+                                    <div id="roomResults"></div>
                                 </div>
                             </div>
                         </div>
@@ -341,6 +372,10 @@
 
         const form = document.getElementById('buildingFootprintForm');
         const feedbackBanner = document.getElementById('feedbackBanner');
+        const resultsSection = document.getElementById('resultsSection');
+        const roomResults = document.getElementById('roomResults');
+        const totalResult = document.getElementById('totalResult');
+        const CALIBRATION_CONSTANT = 0.000729;
 
         function clearFieldError(fieldName) {
             const errorEl = document.getElementById(`${fieldName}Error`);
@@ -367,6 +402,34 @@
 
         function sanitiseInput(value) {
             return value.toString().trim();
+        }
+
+        function hideCalculationBreakdown() {
+            if (resultsSection) resultsSection.style.display = 'none';
+            if (roomResults) roomResults.innerHTML = '';
+            if (totalResult) totalResult.textContent = '0.00 kg CO2';
+        }
+
+        function renderCalculationBreakdown(validation) {
+            const zoneWeight = zoneWeights[validation.zone];
+            const floorWeight = floorWeights[validation.floor];
+            const weightedProduct = validation.roomSize * validation.co2Level * zoneWeight * floorWeight;
+            const rawCo2 = weightedProduct * CALIBRATION_CONSTANT;
+            const roundedCo2 = parseFloat(rawCo2.toFixed(2));
+
+            roomResults.innerHTML = `
+                <p class="mb-2"><strong>Location:</strong> Block ${validation.block}, Room ${validation.room} (${validation.zone}, ${validation.floor})</p>
+                <div class="calc-line"><span class="calc-step-label">Formula</span>BF = Sr x Cr x Wz x Wf x k</div>
+                <div class="calc-line"><span class="calc-step-label">Substitute</span>= ${validation.roomSize} x ${validation.co2Level} x ${zoneWeight.toFixed(2)} x ${floorWeight.toFixed(2)} x ${CALIBRATION_CONSTANT}</div>
+                <div class="calc-line"><span class="calc-step-label">Step 1</span>${validation.roomSize} x ${validation.co2Level} x ${zoneWeight.toFixed(2)} x ${floorWeight.toFixed(2)} = ${weightedProduct.toFixed(4)}</div>
+                <div class="calc-line"><span class="calc-step-label">Step 2</span>${weightedProduct.toFixed(4)} x ${CALIBRATION_CONSTANT} = ${rawCo2.toFixed(6)}</div>
+                <div class="calc-line mb-0"><span class="calc-step-label">Final</span>Rounded to 2 d.p. = <strong>${roundedCo2.toFixed(2)} kg CO2</strong></div>
+            `;
+
+            totalResult.textContent = `${roundedCo2.toFixed(2)} kg CO2`;
+            resultsSection.style.display = 'block';
+
+            return roundedCo2;
         }
 
         function theValidate() {
@@ -436,11 +499,12 @@
             const validation = theValidate();
 
             if (!validation.isValid) {
+                hideCalculationBreakdown();
                 setFeedback('Please fix the errors below and resubmit.', 'error');
                 return;
             }
 
-            const totalRoomCo2 = parseFloat((validation.roomSize * validation.co2Level * zoneWeights[validation.zone] * floorWeights[validation.floor] * 0.000729).toFixed(2));
+            const totalRoomCo2 = renderCalculationBreakdown(validation);
 
             const body = {
                 roomSize: validation.roomSize,
@@ -478,8 +542,6 @@
                 }
 
                 setFeedback(`Footprint saved — totalRoomCo2: ${totalRoomCo2.toFixed(2)} kg CO₂`, 'success');
-                form.reset();
-                document.getElementById('resultsSection').style.display = 'none';
                 document.querySelectorAll('.text-danger').forEach(el => el.textContent = '');
 
             } catch (error) {
@@ -496,8 +558,11 @@
                 const fieldName = input.id;
                 clearFieldError(fieldName);
                 resetFeedback();
+                hideCalculationBreakdown();
             });
         });
     </script>
 </body>
 </html>
+
+

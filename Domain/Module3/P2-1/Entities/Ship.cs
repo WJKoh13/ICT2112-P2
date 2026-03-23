@@ -1,9 +1,7 @@
 namespace ProRental.Domain.Entities;
 
-public partial class Ship
+public partial class Ship : Transport
 {
-    public int ReadTransportId() => getTransportId();
-
     public int ReadShipId() => getShipID();
 
     public string ReadVesselType() => getVesselType();

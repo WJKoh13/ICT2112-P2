@@ -1,9 +1,7 @@
 namespace ProRental.Domain.Entities;
 
-public partial class Train
+public partial class Train : Transport
 {
-    public int ReadTransportId() => getTransportId();
-
     public int ReadTrainId() => getTrainID();
 
     public string ReadTrainType() => getTrainType();

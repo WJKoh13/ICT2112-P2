@@ -17,35 +17,4 @@ public partial class PricingRule
 
     private decimal? _carbonSurcharge;
     private decimal? CarbonSurcharge { get => _carbonSurcharge; set => _carbonSurcharge = value; }
-
-    private int getRuleId() => _ruleId;
-
-    private TransportMode? getTransportMode() => _transportMode;
-
-    private void setTransportMode(TransportMode? transportMode)
-    {
-        _transportMode = transportMode;
-    }
-
-    private decimal? getBaseRatePerKm() => _baseRatePerKm;
-
-    private void setBaseRatePerKm(decimal? baseRatePerKm)
-    {
-        _baseRatePerKm = baseRatePerKm;
-    }
-
-    private bool getIsActive() => _isActive ?? false;
-
-    private void setIsActive(bool isActive)
-    {
-        _isActive = isActive;
-    }
-
-    private decimal? getCarbonSurcharge() => _carbonSurcharge;
-
-    private void setCarbonSurcharge(decimal? carbonSurcharge)
-    {
-        _carbonSurcharge = carbonSurcharge;
-    }
-
 }

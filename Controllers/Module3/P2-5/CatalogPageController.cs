@@ -9,10 +9,12 @@ namespace ProRental.Controllers.Module3.P2_5
     public class CatalogPageController : Controller
     {
         private readonly CatalogControl _control;
+        private readonly EcoBadgeControl _ecoBadgeControl;
 
         public CatalogPageController(ICatalogGateway catalogGateway)
         {
             _control = new CatalogControl(catalogGateway);
+            _ecoBadgeControl = new EcoBadgeControl();
         }
 
         [HttpGet("eco")]
@@ -27,35 +29,40 @@ namespace ProRental.Controllers.Module3.P2_5
                     var keyword = search.Trim();
                     products = products
                         .Where(product =>
-                            product.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
-                            product.Description.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
-                            product.EcoBadge.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
-                            GetEcoTier(product.CarbonScore).Contains(keyword, StringComparison.OrdinalIgnoreCase))
+                            product.GetName().Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                            product.GetDescription().Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                            product.GetEcoBadge().Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                            _ecoBadgeControl.GetBadge(_ecoBadgeControl.AssignTier(product.GetCarbonScore())).Name.Contains(keyword, StringComparison.OrdinalIgnoreCase))
                         .ToList();
                 }
 
                 if (maxBudget.HasValue)
                 {
                     products = products
-                        .Where(product => product.Price <= maxBudget.Value)
+                        .Where(product => product.GetPrice() <= maxBudget.Value)
                         .ToList();
                 }
 
                 if (!string.IsNullOrWhiteSpace(tier))
                 {
+                    if (!Enum.TryParse<EcoTier>(tier.Trim(), true, out var selectedTier))
+                    {
+                        selectedTier = EcoTier.Standard;
+                    }
+
                     products = products
-                        .Where(product => string.Equals(GetEcoTier(product.CarbonScore), tier.Trim(), StringComparison.OrdinalIgnoreCase))
+                        .Where(product => _ecoBadgeControl.AssignTier(product.GetCarbonScore()) == selectedTier)
                         .ToList();
                 }
 
                 products = (sortBy ?? "carbon_asc").ToLowerInvariant() switch
                 {
-                    "carbon_desc" => products.OrderByDescending(product => product.CarbonScore).ThenBy(product => product.Name).ToList(),
-                    "price_asc" => products.OrderBy(product => product.Price).ThenBy(product => product.Name).ToList(),
-                    "price_desc" => products.OrderByDescending(product => product.Price).ThenBy(product => product.Name).ToList(),
-                    "name_asc" => products.OrderBy(product => product.Name).ToList(),
-                    "badge_asc" => products.OrderBy(product => GetEcoTier(product.CarbonScore)).ThenBy(product => product.CarbonScore).ToList(),
-                    _ => products.OrderBy(product => product.CarbonScore).ThenBy(product => product.Name).ToList()
+                    "carbon_desc" => products.OrderByDescending(product => product.GetCarbonScore()).ThenBy(product => product.GetName()).ToList(),
+                    "price_asc" => products.OrderBy(product => product.GetPrice()).ThenBy(product => product.GetName()).ToList(),
+                    "price_desc" => products.OrderByDescending(product => product.GetPrice()).ThenBy(product => product.GetName()).ToList(),
+                    "name_asc" => products.OrderBy(product => product.GetName()).ToList(),
+                    "badge_asc" => products.OrderBy(product => _ecoBadgeControl.AssignTier(product.GetCarbonScore())).ThenBy(product => product.GetCarbonScore()).ToList(),
+                    _ => products.OrderBy(product => product.GetCarbonScore()).ThenBy(product => product.GetName()).ToList()
                 };
 
                 var viewModel = new EcoCatalogViewModel
@@ -83,17 +90,6 @@ namespace ProRental.Controllers.Module3.P2_5
 
                 return View("~/Views/Module3/P2-5/EcoCatalog.cshtml", viewModel);
             }
-        }
-
-        private static string GetEcoTier(decimal carbonScore)
-        {
-            return carbonScore switch
-            {
-                <= 120m => "Gold",
-                <= 180m => "Silver",
-                <= 250m => "Bronze",
-                _ => "Standard"
-            };
         }
     }
 }

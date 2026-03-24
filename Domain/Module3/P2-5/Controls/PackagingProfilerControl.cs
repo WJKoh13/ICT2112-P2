@@ -44,7 +44,7 @@ public class PackagingProfilerControl : IPackagingProfilerControl
         return _profileGateway.FindByOrderId(orderId);
     }
 
-    public Entities.Packagingconfiguration CreatePackagingConfiguration(Packagingprofile profile)
+    public Packagingconfiguration CreatePackagingConfiguration(Packagingprofile profile)
     {
         if (profile == null) throw new ArgumentNullException(nameof(profile));
 

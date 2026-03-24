@@ -1,6 +1,4 @@
-using ProRental.Domain.Entities;
-
-namespace ProRental.Domain.Module3.P2_5;
+namespace ProRental.Domain.Entities;
 
 public partial class Packagingconfiguration
 {

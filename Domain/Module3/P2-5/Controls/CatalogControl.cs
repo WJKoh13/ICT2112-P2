@@ -20,8 +20,8 @@ namespace ProRental.Domain.Module3.P2_5.Controls
             var products = _catalogGateway.GetAll();
 
             return products
-                .Where(p => !string.IsNullOrEmpty(p.EcoBadge))
-                .OrderBy(p => p.CarbonScore)
+                .Where(product => product.HasEcoBadge())
+                .OrderBy(product => product.GetCarbonScore())
                 .ToList();
         }
 

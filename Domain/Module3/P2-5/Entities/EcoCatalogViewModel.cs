@@ -11,6 +11,6 @@ public sealed class EcoCatalogViewModel
     public string DebugMessage { get; init; } = string.Empty;
     public List<Catalog> Products { get; init; } = [];
     public int EcoProductCount => Products.Count;
-    public decimal? LowestCarbonScore => Products.Count > 0 ? Products.Min(x => x.CarbonScore) : null;
-    public string TopEcoBadge => Products.Count > 0 ? Products.First().EcoBadge : "-";
+    public decimal? LowestCarbonScore => Products.Count > 0 ? Products.Min(product => product.GetCarbonScore()) : null;
+    public string TopEcoBadge => Products.Count > 0 ? Products.First().GetEcoBadge() : "-";
 }

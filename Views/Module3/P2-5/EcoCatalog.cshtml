@@ -252,7 +252,7 @@
                                     <tbody>
                                         @foreach (var item in Model.Products)
                                         {
-                                            var tier = item.CarbonScore switch
+                                            var tier = item.GetCarbonScore() switch
                                             {
                                                 <= 120m => "Gold",
                                                 <= 180m => "Silver",
@@ -268,12 +268,12 @@
                                             };
 
                                             <tr>
-                                                <td class="fw-semibold">@item.Id</td>
-                                                <td class="fw-semibold">@item.Name</td>
-                                                <td>@item.Description</td>
-                                                <td>$@item.Price.ToString("0.00")</td>
-                                                <td>@item.CarbonScore.ToString("0.0") g</td>
-                                                <td>@item.EcoBadge</td>
+                                                <td class="fw-semibold">@item.GetId()</td>
+                                                <td class="fw-semibold">@item.GetName()</td>
+                                                <td>@item.GetDescription()</td>
+                                                <td>$@item.GetPrice().ToString("0.00")</td>
+                                                <td>@item.GetCarbonScore().ToString("0.0") g</td>
+                                                <td>@item.GetEcoBadge()</td>
                                                 <td><span class="badge @tierClass">@tier</span></td>
                                             </tr>
                                         }

@@ -27,35 +27,35 @@ namespace ProRental.Controllers.Module3.P2_5
                     var keyword = search.Trim();
                     products = products
                         .Where(product =>
-                            product.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
-                            product.Description.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
-                            product.EcoBadge.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
-                            GetEcoTier(product.CarbonScore).Contains(keyword, StringComparison.OrdinalIgnoreCase))
+                            product.GetName().Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                            product.GetDescription().Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                            product.GetEcoBadge().Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                            GetEcoTier(product.GetCarbonScore()).Contains(keyword, StringComparison.OrdinalIgnoreCase))
                         .ToList();
                 }
 
                 if (maxBudget.HasValue)
                 {
                     products = products
-                        .Where(product => product.Price <= maxBudget.Value)
+                        .Where(product => product.GetPrice() <= maxBudget.Value)
                         .ToList();
                 }
 
                 if (!string.IsNullOrWhiteSpace(tier))
                 {
                     products = products
-                        .Where(product => string.Equals(GetEcoTier(product.CarbonScore), tier.Trim(), StringComparison.OrdinalIgnoreCase))
+                        .Where(product => string.Equals(GetEcoTier(product.GetCarbonScore()), tier.Trim(), StringComparison.OrdinalIgnoreCase))
                         .ToList();
                 }
 
                 products = (sortBy ?? "carbon_asc").ToLowerInvariant() switch
                 {
-                    "carbon_desc" => products.OrderByDescending(product => product.CarbonScore).ThenBy(product => product.Name).ToList(),
-                    "price_asc" => products.OrderBy(product => product.Price).ThenBy(product => product.Name).ToList(),
-                    "price_desc" => products.OrderByDescending(product => product.Price).ThenBy(product => product.Name).ToList(),
-                    "name_asc" => products.OrderBy(product => product.Name).ToList(),
-                    "badge_asc" => products.OrderBy(product => GetEcoTier(product.CarbonScore)).ThenBy(product => product.CarbonScore).ToList(),
-                    _ => products.OrderBy(product => product.CarbonScore).ThenBy(product => product.Name).ToList()
+                    "carbon_desc" => products.OrderByDescending(product => product.GetCarbonScore()).ThenBy(product => product.GetName()).ToList(),
+                    "price_asc" => products.OrderBy(product => product.GetPrice()).ThenBy(product => product.GetName()).ToList(),
+                    "price_desc" => products.OrderByDescending(product => product.GetPrice()).ThenBy(product => product.GetName()).ToList(),
+                    "name_asc" => products.OrderBy(product => product.GetName()).ToList(),
+                    "badge_asc" => products.OrderBy(product => GetEcoTier(product.GetCarbonScore())).ThenBy(product => product.GetCarbonScore()).ToList(),
+                    _ => products.OrderBy(product => product.GetCarbonScore()).ThenBy(product => product.GetName()).ToList()
                 };
 
                 var viewModel = new EcoCatalogViewModel

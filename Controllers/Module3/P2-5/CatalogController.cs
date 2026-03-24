@@ -19,7 +19,9 @@ namespace ProRental.Controllers.Module3.P2_5
         [HttpGet("eco")]
         public IActionResult GetEcoProducts()
         {
-            var result = _control.GetEcoProducts();
+            var result = _control.GetEcoProducts()
+                .Select(MapCatalog)
+                .ToList();
             return Ok(result);
         }
 
@@ -27,7 +29,9 @@ namespace ProRental.Controllers.Module3.P2_5
         [HttpGet("badge/{badge}")]
         public IActionResult GetByBadge(string badge)
         {
-            var result = _control.GetByBadge(badge);
+            var result = _control.GetByBadge(badge)
+                .Select(MapCatalog)
+                .ToList();
             return Ok(result);
         }
 
@@ -35,8 +39,23 @@ namespace ProRental.Controllers.Module3.P2_5
         [HttpGet("sorted")]
         public IActionResult GetSorted()
         {
-            var result = _control.GetSortedByCarbon();
+            var result = _control.GetSortedByCarbon()
+                .Select(MapCatalog)
+                .ToList();
             return Ok(result);
+        }
+
+        private static object MapCatalog(ProRental.Domain.Entities.Catalog catalog)
+        {
+            return new
+            {
+                Id = catalog.GetId(),
+                Name = catalog.GetName(),
+                Description = catalog.GetDescription(),
+                Price = catalog.GetPrice(),
+                EcoBadge = catalog.GetEcoBadge(),
+                CarbonScore = catalog.GetCarbonScore()
+            };
         }
     }
 }

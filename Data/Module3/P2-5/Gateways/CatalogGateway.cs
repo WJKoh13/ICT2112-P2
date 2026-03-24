@@ -17,17 +17,17 @@ namespace ProRental.Data.Module3.P2_5.Gateways
         public List<Catalog> GetAll()
         {
             return BuildCatalogItems()
-                .OrderBy(item => item.CarbonScore)
-                .ThenBy(item => item.Name)
+                .OrderBy(item => item.GetCarbonScore())
+                .ThenBy(item => item.GetName())
                 .ToList();
         }
 
         public List<Catalog> GetByEcoBadge(string badge)
         {
             return BuildCatalogItems()
-                .Where(item => string.Equals(item.EcoBadge, badge, StringComparison.OrdinalIgnoreCase))
-                .OrderBy(item => item.CarbonScore)
-                .ThenBy(item => item.Name)
+                .Where(item => item.HasMatchingEcoBadge(badge))
+                .OrderBy(item => item.GetCarbonScore())
+                .ThenBy(item => item.GetName())
                 .ToList();
         }
 
@@ -69,15 +69,13 @@ namespace ProRental.Data.Module3.P2_5.Gateways
                     ? ReadMember<string>(badge, "Badgename", "_badgename")
                     : "Standard";
 
-                yield return new Catalog
-                {
-                    Id = productId,
-                    Name = ReadMember<string>(detail, "Name", "_name"),
-                    Description = ReadNullableMember<string>(detail, "Description", "_description") ?? string.Empty,
-                    Price = ReadMember<decimal>(detail, "Price", "_price"),
-                    EcoBadge = ecoBadge,
-                    CarbonScore = carbonScore
-                };
+                yield return new Catalog(
+                    productId,
+                    ReadMember<string>(detail, "Name", "_name"),
+                    ReadNullableMember<string>(detail, "Description", "_description") ?? string.Empty,
+                    ReadMember<decimal>(detail, "Price", "_price"),
+                    ecoBadge,
+                    carbonScore);
             }
         }
 

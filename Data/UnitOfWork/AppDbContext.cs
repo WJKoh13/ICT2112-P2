@@ -13,8 +13,6 @@ public partial class AppDbContext : DbContext
     {
     }
 
-    public virtual DbSet<Airport> Airports { get; set; }
-
     public virtual DbSet<Alert> Alerts { get; set; }
 
     public virtual DbSet<Analytic> Analytics { get; set; }
@@ -131,8 +129,6 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<ShippingOption> ShippingOptions { get; set; }
 
-    public virtual DbSet<ShippingPort> ShippingPorts { get; set; }
-
     public virtual DbSet<Staff> Staff { get; set; }
 
     public virtual DbSet<Staffaccesslog> Staffaccesslogs { get; set; }
@@ -160,8 +156,6 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<Vettingrecord> Vettingrecords { get; set; }
-
-    public virtual DbSet<Warehouse> Warehouses { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -216,15 +210,8 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<Airport>(entity =>
         {
-            entity.HasKey("HubId").HasName("airport_pkey");
-
             entity.ToTable("airport");
 
-            entity.Property("HubId")
-                .HasField("_hubId")
-                .UsePropertyAccessMode(PropertyAccessMode.Field)
-                .ValueGeneratedNever()
-                .HasColumnName("hub_id");
             entity.Property("AircraftSize")
                 .HasField("_aircraftSize")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("aircraft_size");
@@ -241,10 +228,6 @@ public partial class AppDbContext : DbContext
             entity.Property("Terminal")
                 .HasField("_terminal")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("terminal");
-
-            entity.HasOne(d => d.Hub).WithOne(p => p.Airport)
-                .HasForeignKey<Airport>("HubId")
-                .HasConstraintName("fk_airport_hub");
         });
 
         modelBuilder.Entity<Alert>(entity =>
@@ -2428,15 +2411,8 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<ShippingPort>(entity =>
         {
-            entity.HasKey("HubId").HasName("shipping_port_pkey");
-
             entity.ToTable("shipping_port");
 
-            entity.Property("HubId")
-                .HasField("_hubId")
-                .UsePropertyAccessMode(PropertyAccessMode.Field)
-                .ValueGeneratedNever()
-                .HasColumnName("hub_id");
             entity.Property("PortCode")
                 .HasField("_portCode")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
@@ -2455,10 +2431,6 @@ public partial class AppDbContext : DbContext
             entity.Property("VesselSize")
                 .HasField("_vesselSize")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("vessel_size");
-
-            entity.HasOne(d => d.Hub).WithOne(p => p.ShippingPort)
-                .HasForeignKey<ShippingPort>("HubId")
-                .HasConstraintName("fk_shipping_port_hub");
         });
 
         modelBuilder.Entity<Staff>(entity =>
@@ -2738,6 +2710,8 @@ public partial class AppDbContext : DbContext
 
             entity.ToTable("transportation_hub");
 
+            entity.UseTptMappingStrategy();
+
             entity.Property("HubId")
                 .HasField("_hubId")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
@@ -2880,15 +2854,8 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<Warehouse>(entity =>
         {
-            entity.HasKey("HubId").HasName("warehouse_pkey");
-
             entity.ToTable("warehouse");
 
-            entity.Property("HubId")
-                .HasField("_hubId")
-                .UsePropertyAccessMode(PropertyAccessMode.Field)
-                .ValueGeneratedNever()
-                .HasColumnName("hub_id");
             entity.Property("ClimateControlEmissionRate")
                 .HasField("_climateControlEmissionRate")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("climate_control_emission_rate");
@@ -2909,10 +2876,6 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(100)
                 .HasColumnName("warehouse_code");
-
-            entity.HasOne(d => d.Hub).WithOne(p => p.Warehouse)
-                .HasForeignKey<Warehouse>("HubId")
-                .HasConstraintName("fk_warehouse_hub");
         });
 
         OnModelCreatingPartial(modelBuilder);

@@ -3,7 +3,6 @@ namespace ProRental.Domain.Entities;
 public partial class Warehouse
 {
     // --- Public getters for private scaffolded fields ---
-    public int GetHubId() => _hubId;
     public string GetWarehouseCode() => _warehouseCode;
     public int? GetMaxProductCapacity() => _maxProductCapacity;
     public double? GetTotalWarehouseVolume() => _totalWarehouseVolume;

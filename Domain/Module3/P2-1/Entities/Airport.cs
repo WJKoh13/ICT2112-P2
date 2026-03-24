@@ -3,7 +3,6 @@ namespace ProRental.Domain.Entities;
 public partial class Airport
 {
     // --- Public getters for private scaffolded fields ---
-    public int GetHubId() => _hubId;
     public string GetAirportCode() => _airportCode;
     public string GetAirportName() => _airportName;
     public int? GetTerminal() => _terminal;

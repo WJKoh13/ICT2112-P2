@@ -27,18 +27,12 @@ public class TransportationHubMapper : AbstractTransportationHubMapper
     public override TransportationHub? FindById(int hubId)
     {
         return _context.TransportationHubs
-            .Include(h => h.Warehouse)
-            .Include(h => h.Airport)
-            .Include(h => h.ShippingPort)
             .FirstOrDefault(h => EF.Property<int>(h, "HubId") == hubId);
     }
 
     public override List<TransportationHub> FindByType(HubType hubType)
     {
         return _context.TransportationHubs
-            .Include(h => h.Warehouse)
-            .Include(h => h.Airport)
-            .Include(h => h.ShippingPort)
             .Where(h => EF.Property<HubType?>(h, "HubType") == hubType)
             .ToList();
     }
@@ -46,9 +40,6 @@ public class TransportationHubMapper : AbstractTransportationHubMapper
     public override List<TransportationHub> FindAll()
     {
         return _context.TransportationHubs
-            .Include(h => h.Warehouse)
-            .Include(h => h.Airport)
-            .Include(h => h.ShippingPort)
             .ToList();
     }
 

@@ -16,30 +16,31 @@ public class WarehouseMapper : AbstractTransportationHubMapper
     public override TransportationHub? FindById(int hubId)
     {
         return _context.TransportationHubs
-            .Include(h => h.Warehouse)
+            .OfType<Warehouse>()
             .FirstOrDefault(h => EF.Property<int>(h, "HubId") == hubId);
     }
 
     public Warehouse? FindByWarehouseCode(string warehouseCode)
     {
-        return _context.Warehouses
-            .Include(w => w.Hub)
+        return _context.TransportationHubs
+            .OfType<Warehouse>()
             .FirstOrDefault(w => EF.Property<string>(w, "WarehouseCode") == warehouseCode);
     }
 
     public override List<TransportationHub> FindByType(HubType hubType)
     {
         return _context.TransportationHubs
-            .Include(h => h.Warehouse)
+            .OfType<Warehouse>()
             .Where(h => EF.Property<HubType?>(h, "HubType") == hubType)
+            .Cast<TransportationHub>()
             .ToList();
     }
 
     public override List<TransportationHub> FindAll()
     {
         return _context.TransportationHubs
-            .Include(h => h.Warehouse)
-            .Where(h => h.Warehouse != null)
+            .OfType<Warehouse>()
+            .Cast<TransportationHub>()
             .ToList();
     }
 
@@ -63,25 +64,26 @@ public class WarehouseMapper : AbstractTransportationHubMapper
 
     protected override void InsertSubtypeRow(TransportationHub hub, int hubId)
     {
-        if (hub.Warehouse == null) return;
-        _context.Warehouses.Add(hub.Warehouse);
+        if (hub is not Warehouse warehouse) return;
+        _context.TransportationHubs.Add(warehouse);
         _context.SaveChanges();
     }
 
     protected override void UpdateSubtypeRow(TransportationHub hub)
     {
-        if (hub.Warehouse == null) return;
-        _context.Warehouses.Update(hub.Warehouse);
+        if (hub is not Warehouse warehouse) return;
+        _context.TransportationHubs.Update(warehouse);
         _context.SaveChanges();
     }
 
     protected override void DeleteSubtypeRow(int hubId)
     {
-        var warehouse = _context.Warehouses
+        var warehouse = _context.TransportationHubs
+            .OfType<Warehouse>()
             .FirstOrDefault(w => EF.Property<int>(w, "HubId") == hubId);
         if (warehouse != null)
         {
-            _context.Warehouses.Remove(warehouse);
+            _context.TransportationHubs.Remove(warehouse);
             _context.SaveChanges();
         }
     }
@@ -89,7 +91,7 @@ public class WarehouseMapper : AbstractTransportationHubMapper
     protected override TransportationHub? LoadSubtypeRow(int hubId)
     {
         return _context.TransportationHubs
-            .Include(h => h.Warehouse)
+            .OfType<Warehouse>()
             .FirstOrDefault(h => EF.Property<int>(h, "HubId") == hubId);
     }
 }

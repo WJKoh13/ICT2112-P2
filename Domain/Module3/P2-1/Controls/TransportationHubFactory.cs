@@ -27,20 +27,17 @@ public class TransportationHubFactory
 
     public Warehouse? CreateWarehouse(int hubId)
     {
-        var hub = _hubMapper.FindById(hubId);
-        return hub?.Warehouse;
+        return _hubMapper.FindById(hubId) as Warehouse;
     }
 
     public Airport? CreateAirport(int hubId)
     {
-        var hub = _hubMapper.FindById(hubId);
-        return hub?.Airport;
+        return _hubMapper.FindById(hubId) as Airport;
     }
 
     public ShippingPort? CreateShippingPort(int hubId)
     {
-        var hub = _hubMapper.FindById(hubId);
-        return hub?.ShippingPort;
+        return _hubMapper.FindById(hubId) as ShippingPort;
     }
 
     /// <summary>

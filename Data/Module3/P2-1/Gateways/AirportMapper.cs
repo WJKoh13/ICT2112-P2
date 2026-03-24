@@ -16,21 +16,21 @@ public class AirportMapper : AbstractTransportationHubMapper
     public override TransportationHub? FindById(int hubId)
     {
         return _context.TransportationHubs
-            .Include(h => h.Airport)
+            .OfType<Airport>()
             .FirstOrDefault(h => EF.Property<int>(h, "HubId") == hubId);
     }
 
     public Airport? FindByAirportCode(string airportCode)
     {
-        return _context.Airports
-            .Include(a => a.Hub)
+        return _context.TransportationHubs
+            .OfType<Airport>()
             .FirstOrDefault(a => EF.Property<string>(a, "AirportCode") == airportCode);
     }
 
     public List<Airport> FindByAirportName(string airportName)
     {
-        return _context.Airports
-            .Include(a => a.Hub)
+        return _context.TransportationHubs
+            .OfType<Airport>()
             .Where(a => EF.Property<string>(a, "AirportName") == airportName)
             .ToList();
     }
@@ -38,16 +38,17 @@ public class AirportMapper : AbstractTransportationHubMapper
     public override List<TransportationHub> FindByType(HubType hubType)
     {
         return _context.TransportationHubs
-            .Include(h => h.Airport)
+            .OfType<Airport>()
             .Where(h => EF.Property<HubType?>(h, "HubType") == hubType)
+            .Cast<TransportationHub>()
             .ToList();
     }
 
     public override List<TransportationHub> FindAll()
     {
         return _context.TransportationHubs
-            .Include(h => h.Airport)
-            .Where(h => h.Airport != null)
+            .OfType<Airport>()
+            .Cast<TransportationHub>()
             .ToList();
     }
 
@@ -71,25 +72,26 @@ public class AirportMapper : AbstractTransportationHubMapper
 
     protected override void InsertSubtypeRow(TransportationHub hub, int hubId)
     {
-        if (hub.Airport == null) return;
-        _context.Airports.Add(hub.Airport);
+        if (hub is not Airport airport) return;
+        _context.TransportationHubs.Add(airport);
         _context.SaveChanges();
     }
 
     protected override void UpdateSubtypeRow(TransportationHub hub)
     {
-        if (hub.Airport == null) return;
-        _context.Airports.Update(hub.Airport);
+        if (hub is not Airport airport) return;
+        _context.TransportationHubs.Update(airport);
         _context.SaveChanges();
     }
 
     protected override void DeleteSubtypeRow(int hubId)
     {
-        var airport = _context.Airports
+        var airport = _context.TransportationHubs
+            .OfType<Airport>()
             .FirstOrDefault(a => EF.Property<int>(a, "HubId") == hubId);
         if (airport != null)
         {
-            _context.Airports.Remove(airport);
+            _context.TransportationHubs.Remove(airport);
             _context.SaveChanges();
         }
     }
@@ -97,7 +99,7 @@ public class AirportMapper : AbstractTransportationHubMapper
     protected override TransportationHub? LoadSubtypeRow(int hubId)
     {
         return _context.TransportationHubs
-            .Include(h => h.Airport)
+            .OfType<Airport>()
             .FirstOrDefault(h => EF.Property<int>(h, "HubId") == hubId);
     }
 }

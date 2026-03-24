@@ -2,6 +2,7 @@ using ProRental.Data.Interfaces;
 using ProRental.Domain.Entities;
 using ProRental.Domain.Enums;
 using ProRental.Interfaces;
+using ProRental.Interfaces.Module3.P2_1;
 
 namespace ProRental.Domain.Control;
 
@@ -231,7 +232,7 @@ public class TransportationHubManager : IHubCarbonService, IHubInfoService
             }
         }
 
-        return nearest?.Warehouse?.GetWarehouseCode();
+        return (nearest as Warehouse)?.GetWarehouseCode();
     }
 
     /// <summary>

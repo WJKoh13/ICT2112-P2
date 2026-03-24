@@ -3,7 +3,6 @@ namespace ProRental.Domain.Entities;
 public partial class ShippingPort
 {
     // --- Public getters for private scaffolded fields ---
-    public int GetHubId() => _hubId;
     public string GetPortCode() => _portCode;
     public string GetPortName() => _portName;
     public string? GetPortType() => _portType;

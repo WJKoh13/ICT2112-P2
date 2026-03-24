@@ -150,7 +150,7 @@ builder.Services.AddScoped<ProRental.Data.Interfaces.ITransportationHubMapper, P
 
 // Domain
 builder.Services.AddScoped<ProRental.Domain.Control.TransportationHubFactory>();
-builder.Services.AddScoped<ProRental.Interfaces.IHubCarbonService, ProRental.Domain.Control.TransportationHubManager>();
+builder.Services.AddScoped<ProRental.Interfaces.Module3.P2_1.IHubCarbonService, ProRental.Domain.Control.TransportationHubManager>();
 builder.Services.AddScoped<ProRental.Interfaces.IHubInfoService, ProRental.Domain.Control.TransportationHubManager>();
 builder.Services.AddScoped<ProRental.Interfaces.IInventoryService, ProRental.Domain.Control.DummyInventoryService>(); // TODO: Replace with Module 2's real implementation
 builder.Services.AddFeature1Services();
@@ -163,7 +163,6 @@ builder.Services.AddScoped<TrainMapper>();
 builder.Services.AddScoped<IPricingRuleGateway, PricingRuleGateway>();
 
 // Domain
-builder.Services.AddScoped<IHubCarbonService, HubCarbonService>();
 builder.Services.AddScoped<IRouteDistanceCalculator, RouteDistanceCalculator>();
 builder.Services.AddScoped<ITransportService, TransportationManager>();
 builder.Services.AddScoped<ITransportCarbonService, TransportCarbonManager>();

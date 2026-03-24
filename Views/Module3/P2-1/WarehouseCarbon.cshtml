@@ -1,10 +1,10 @@
 @using ProRental.Domain.Entities
 @using ProRental.Interfaces
+@using ProRental.Interfaces.Module3.P2_1
 @{
     ViewData["Title"] = "Warehouse Carbon Emissions";
 
-    var hub = ViewData["Hub"] as TransportationHub;
-    var warehouse = hub?.Warehouse;
+    var warehouse = ViewData["Hub"] as Warehouse;
     var hours = ViewData["Hours"] is double hourValue ? hourValue : 0;
     var carbon = ViewData["CarbonEmission"] is double carbonValue ? carbonValue : 0;
     var storedProducts = ViewData["StoredProducts"] as List<ProductStorageInfo> ?? new List<ProductStorageInfo>();
@@ -61,7 +61,7 @@
                 <table class="table table-bordered align-middle mb-0">
                     <tr>
                         <th>Warehouse</th>
-                        <td>@(hub?.GetAddress() ?? "Unknown")</td>
+                        <td>@(warehouse?.GetAddress() ?? "Unknown")</td>
                     </tr>
                     <tr>
                         <th>Warehouse Code</th>
@@ -88,7 +88,7 @@
                 Warehouse Details
             </div>
             <div class="card-body">
-                @if (hub == null || warehouse == null)
+                @if (warehouse == null)
                 {
                     <div class="alert alert-warning mb-0">
                         Warehouse information could not be loaded for this hub.
@@ -99,19 +99,19 @@
                     <table class="table table-sm mb-0">
                         <tr>
                             <th>Status</th>
-                            <td>@(hub.GetOperationalStatus() ?? "Unknown")</td>
+                            <td>@(warehouse.GetOperationalStatus() ?? "Unknown")</td>
                         </tr>
                         <tr>
                             <th>Operation Time</th>
-                            <td>@(hub.GetOperationTime() ?? "N/A")</td>
+                            <td>@(warehouse.GetOperationTime() ?? "N/A")</td>
                         </tr>
                         <tr>
                             <th>Country</th>
-                            <td>@hub.GetCountryCode()</td>
+                            <td>@warehouse.GetCountryCode()</td>
                         </tr>
                         <tr>
                             <th>Address</th>
-                            <td>@hub.GetAddress()</td>
+                            <td>@warehouse.GetAddress()</td>
                         </tr>
                         <tr>
                             <th>Capacity</th>

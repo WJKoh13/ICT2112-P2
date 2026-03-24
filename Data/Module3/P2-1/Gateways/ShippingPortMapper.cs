@@ -16,21 +16,21 @@ public class ShippingPortMapper : AbstractTransportationHubMapper
     public override TransportationHub? FindById(int hubId)
     {
         return _context.TransportationHubs
-            .Include(h => h.ShippingPort)
+            .OfType<ShippingPort>()
             .FirstOrDefault(h => EF.Property<int>(h, "HubId") == hubId);
     }
 
     public ShippingPort? FindByPortCode(string portCode)
     {
-        return _context.ShippingPorts
-            .Include(s => s.Hub)
+        return _context.TransportationHubs
+            .OfType<ShippingPort>()
             .FirstOrDefault(s => EF.Property<string>(s, "PortCode") == portCode);
     }
 
     public List<ShippingPort> FindByPortName(string portName)
     {
-        return _context.ShippingPorts
-            .Include(s => s.Hub)
+        return _context.TransportationHubs
+            .OfType<ShippingPort>()
             .Where(s => EF.Property<string>(s, "PortName") == portName)
             .ToList();
     }
@@ -38,16 +38,17 @@ public class ShippingPortMapper : AbstractTransportationHubMapper
     public override List<TransportationHub> FindByType(HubType hubType)
     {
         return _context.TransportationHubs
-            .Include(h => h.ShippingPort)
+            .OfType<ShippingPort>()
             .Where(h => EF.Property<HubType?>(h, "HubType") == hubType)
+            .Cast<TransportationHub>()
             .ToList();
     }
 
     public override List<TransportationHub> FindAll()
     {
         return _context.TransportationHubs
-            .Include(h => h.ShippingPort)
-            .Where(h => h.ShippingPort != null)
+            .OfType<ShippingPort>()
+            .Cast<TransportationHub>()
             .ToList();
     }
 
@@ -71,25 +72,26 @@ public class ShippingPortMapper : AbstractTransportationHubMapper
 
     protected override void InsertSubtypeRow(TransportationHub hub, int hubId)
     {
-        if (hub.ShippingPort == null) return;
-        _context.ShippingPorts.Add(hub.ShippingPort);
+        if (hub is not ShippingPort port) return;
+        _context.TransportationHubs.Add(port);
         _context.SaveChanges();
     }
 
     protected override void UpdateSubtypeRow(TransportationHub hub)
     {
-        if (hub.ShippingPort == null) return;
-        _context.ShippingPorts.Update(hub.ShippingPort);
+        if (hub is not ShippingPort port) return;
+        _context.TransportationHubs.Update(port);
         _context.SaveChanges();
     }
 
     protected override void DeleteSubtypeRow(int hubId)
     {
-        var port = _context.ShippingPorts
+        var port = _context.TransportationHubs
+            .OfType<ShippingPort>()
             .FirstOrDefault(s => EF.Property<int>(s, "HubId") == hubId);
         if (port != null)
         {
-            _context.ShippingPorts.Remove(port);
+            _context.TransportationHubs.Remove(port);
             _context.SaveChanges();
         }
     }
@@ -97,7 +99,7 @@ public class ShippingPortMapper : AbstractTransportationHubMapper
     protected override TransportationHub? LoadSubtypeRow(int hubId)
     {
         return _context.TransportationHubs
-            .Include(h => h.ShippingPort)
+            .OfType<ShippingPort>()
             .FirstOrDefault(h => EF.Property<int>(h, "HubId") == hubId);
     }
 }

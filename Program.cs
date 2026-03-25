@@ -9,12 +9,18 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Npgsql;
 using ProRental.Domain.Enums;
 using ProRental.Domain.Entities;
-using ProRental.Interfaces.Module3.P2_1;
+using ProRental.Interfaces.Data;
+using ProRental.Data;
+using ProRental.Interfaces.Domain;
+using ProRental.Domain.Controls;
+using ProRental.Controllers.Module1;
+using ProRental.Data.Services;
+
 
 // uncomment when ready to code
 // using ProRental.Data;
 // using ProRental.Domain.Controls;
-// using ProRental.Domain.Entities;
+// //using ProRental.Domain.Entities;
 // using ProRental.Interfaces.Domain;
 // using ProRental.Interfaces.Data;
 // using ProRental.Controllers;
@@ -39,6 +45,7 @@ dataSourceBuilder.MapEnum<CarbonStageType>("carbon_stage_type", new Npgsql.NameT
 dataSourceBuilder.MapEnum<CartStatus>("cart_status_enum", new Npgsql.NameTranslation.NpgsqlNullNameTranslator());
 dataSourceBuilder.MapEnum<CheckoutStatus>("checkout_status_enum", new Npgsql.NameTranslation.NpgsqlNullNameTranslator());
 dataSourceBuilder.MapEnum<ClearanceBatchStatus>("clearance_batch_status", new Npgsql.NameTranslation.NpgsqlNullNameTranslator());
+dataSourceBuilder.MapEnum<ClearanceStatus>("clearance_status", new Npgsql.NameTranslation.NpgsqlNullNameTranslator());
 dataSourceBuilder.MapEnum<DeliveryDuration>("delivery_duration_enum", new Npgsql.NameTranslation.NpgsqlNullNameTranslator());
 dataSourceBuilder.MapEnum<DeliveryType>("delivery_type_enum", new Npgsql.NameTranslation.NpgsqlNullNameTranslator());
 dataSourceBuilder.MapEnum<FileFormat>("file_format_enum", new Npgsql.NameTranslation.NpgsqlNullNameTranslator());
@@ -83,7 +90,7 @@ var dataSource = dataSourceBuilder.Build();
 // builder.Services.AddDbContext<AppDbContext>(options =>
 //     options.UseNpgsql(dataSource));
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(dataSource, o => 
+    options.UseNpgsql(dataSource, o =>
     {
         o.MapEnum<AccessEventType>("access_event_type");
         o.MapEnum<AlertStatus>("alert_status");
@@ -93,6 +100,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         o.MapEnum<CartStatus>("cart_status_enum");
         o.MapEnum<CheckoutStatus>("checkout_status_enum");
         o.MapEnum<ClearanceBatchStatus>("clearance_batch_status");
+        o.MapEnum<ClearanceStatus>("clearance_status");
         o.MapEnum<DeliveryDuration>("delivery_duration_enum");
         o.MapEnum<DeliveryType>("delivery_type_enum");
         o.MapEnum<FileFormat>("file_format_enum");
@@ -185,11 +193,38 @@ builder.Services.AddScoped<TransportationFactory>();
 
 //Team P2-6
 // Data source
+// builder.Services.AddScoped<IOrderMapper, OrderMapper>();
+// builder.Services.AddScoped<IOrderService, OrderManagementControl>();
+// builder.Services.AddScoped<IInventoryService, FakeInventoryService>();
+// // Domain
 
-// Domain
+// // Presentation/Controllers
+// builder.Services.AddScoped<IOrderService, OrderManagementControl>();
+
+// Data source (mappers / DB-backed service implementations)
+builder.Services.AddScoped<ISessionMapper, SessionMapper>();
+builder.Services.AddScoped<IAuthenticationService, ProRentalAuthenticationService>();
+builder.Services.AddScoped<ICustomerValidationService, CustomerValidationService>();
+
+// Domain (controls — pure business logic, no DB dependency)
+builder.Services.AddScoped<ISessionService, SessionControl>();
+builder.Services.AddScoped<AuthenticationControl>();
+builder.Services.AddScoped<CustomerIDValidationControl>();
+
+// HTTP context accessor (required for session access in Razor layouts)
+builder.Services.AddHttpContextAccessor();
+
+// Session middleware (required for HttpContext.Session)
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromHours(2);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+});
 
 // Presentation/Controllers
-
+builder.Services.AddScoped<Module1Controller>();
 
 var app = builder.Build();
 
@@ -204,8 +239,8 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+app.UseSession();      
 app.UseRouting();
-
 app.UseAuthorization();
 
 app.MapControllerRoute(

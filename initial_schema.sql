@@ -176,67 +176,55 @@ CREATE TABLE train (
         REFERENCES transport(transport_id) ON DELETE CASCADE
 );
 
+-- DeliveryRoute & RouteLeg -- START
 
--- ============================================================
--- Route & Route Legs
--- ============================================================
 CREATE TABLE delivery_route (
-    route_id            INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    origin_address      VARCHAR(255)               NOT NULL,
-    destination_address VARCHAR(255)               NOT NULL,
-    total_distance_km   DOUBLE PRECISION,
-    is_valid            BOOLEAN                    DEFAULT TRUE,
-    origin_hub_id       INT,
-    destination_hub_id  INT,
-    CONSTRAINT fk_route_origin_hub      FOREIGN KEY (origin_hub_id)
-        REFERENCES transportation_hub(hub_id),
-    CONSTRAINT fk_route_destination_hub FOREIGN KEY (destination_hub_id)
-        REFERENCES transportation_hub(hub_id)
+    route_id              INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    origin_address        VARCHAR(255)     NOT NULL,
+    destination_address   VARCHAR(255)     NOT NULL,
+    total_distance_km     DOUBLE PRECISION NOT NULL DEFAULT 0,
+    is_valid              BOOLEAN          NOT NULL DEFAULT TRUE,
+
+    CONSTRAINT chk_delivery_route_total_distance
+        CHECK (total_distance_km >= 0)
 );
 
 CREATE TABLE route_leg (
-    leg_id         INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    route_id       INT            NOT NULL,
-    sequence       INT,
-    transport_mode transport_mode,
-    start_point    VARCHAR(255),
-    end_point      VARCHAR(255),
-    distance_km    DOUBLE PRECISION,
-    is_first_mile  BOOLEAN        DEFAULT FALSE,
-    is_last_mile   BOOLEAN        DEFAULT FALSE,
-    transport_id   INT,
-    CONSTRAINT fk_route_leg_route     FOREIGN KEY (route_id)
-        REFERENCES delivery_route(route_id),
-    CONSTRAINT fk_route_leg_transport FOREIGN KEY (transport_id)
-        REFERENCES transport(transport_id)
+    leg_id                INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    route_id              INT              NOT NULL,
+    sequence              INT              NOT NULL,
+    transport_mode        transport_mode   NOT NULL,
+    start_point           VARCHAR(255)     NOT NULL,
+    end_point             VARCHAR(255)     NOT NULL,
+    distance_km           DOUBLE PRECISION NOT NULL DEFAULT 0,
+    is_first_mile         BOOLEAN          NOT NULL DEFAULT FALSE,
+    is_main_transport     BOOLEAN          NOT NULL DEFAULT FALSE,
+    is_last_mile          BOOLEAN          NOT NULL DEFAULT FALSE,
+
+    CONSTRAINT fk_route_leg_route
+        FOREIGN KEY (route_id)
+        REFERENCES delivery_route(route_id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT chk_route_leg_distance
+        CHECK (distance_km >= 0),
+
+    CONSTRAINT chk_route_leg_sequence_positive
+        CHECK (sequence > 0),
+
+    CONSTRAINT chk_route_leg_exactly_one_role
+        CHECK (
+            (CASE WHEN is_first_mile THEN 1 ELSE 0 END) +
+            (CASE WHEN is_main_transport THEN 1 ELSE 0 END) +
+            (CASE WHEN is_last_mile THEN 1 ELSE 0 END)
+            = 1
+        ),
+
+    CONSTRAINT uq_route_leg_route_sequence
+        UNIQUE (route_id, sequence)
 );
 
-
--- ============================================================
--- Carbon Results & Leg Carbon
--- ============================================================
-CREATE TABLE carbon_result (
-    carbon_result_id  INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    total_carbon_kg   DOUBLE PRECISION,
-    created_at        TIMESTAMPTZ DEFAULT NOW(),
-    validation_passed BOOLEAN   DEFAULT FALSE
-);
-
-CREATE TABLE leg_carbon (
-    leg_id           INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    transport_mode   transport_mode,
-    distance_km      DOUBLE PRECISION,
-    weight_kg        DOUBLE PRECISION,
-    carbon_kg        DOUBLE PRECISION,
-    carbon_rate      DOUBLE PRECISION,
-    carbon_result_id INT,
-    route_leg_id     INT,
-    CONSTRAINT fk_leg_carbon_result FOREIGN KEY (carbon_result_id)
-        REFERENCES carbon_result(carbon_result_id),
-    CONSTRAINT fk_leg_carbon_leg    FOREIGN KEY (route_leg_id)
-        REFERENCES route_leg(leg_id)
-);
-
+-- DeliveryRoute & RouteLeg -- END
 
 -- ============================================================
 -- Shipping Options & Pricing Rules
@@ -262,20 +250,6 @@ CREATE TABLE pricing_rule (
     is_active        BOOLEAN        DEFAULT TRUE,
     -- NOTE: ERD typed carbon_surcharge as DateTime — corrected to NUMERIC(10,4)
     carbon_surcharge NUMERIC(10, 4)
-);
-
-
--- ============================================================
--- Customer Choice (Composite PK)
--- NOTE: customer_id and order_id reference external Customer/Order
---       tables not defined in this ERD — FK constraints omitted.
--- ============================================================
-CREATE TABLE customer_choice (
-    customer_id     INT             NOT NULL,
-    order_id        INT             NOT NULL,
-    preference_type preference_type,
-    created_at      TIMESTAMPTZ       DEFAULT NOW(),
-    PRIMARY KEY (customer_id, order_id)
 );
 
 
@@ -1266,14 +1240,6 @@ ALTER TABLE ReturnLog
 ALTER TABLE ClearanceLog
 	ADD CONSTRAINT fk_clearance_batch
 		FOREIGN KEY (ClearanceBatchId) REFERENCES ClearanceBatch(ClearanceBatchId) ON DELETE CASCADE;
-
--- Team 1 → Team 4/6: Customer and "Order" references
-ALTER TABLE customer_choice
-    ADD CONSTRAINT fk_customerchoice_customer
-        FOREIGN KEY (customer_id) REFERENCES Customer(customerId) ON DELETE CASCADE;
-ALTER TABLE customer_choice
-    ADD CONSTRAINT fk_customerchoice_order
-        FOREIGN KEY (order_id) REFERENCES "Order"(orderId) ON DELETE CASCADE;
 
 -- Team 1 → Team 6: batch_order.order_id
 ALTER TABLE batch_order

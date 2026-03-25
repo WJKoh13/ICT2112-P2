@@ -25,7 +25,7 @@ public partial class Ordercarbondatum
     public double   GetStaffcarbon()       => Staffcarbon;
     public double   GetBuildingcarbon()    => Buildingcarbon;
     public double   GetTotalcarbon()       => Totalcarbon;
-    public string   GetImpactlevel()       => Impactlevel;
+    public string?   GetImpactlevel()       => Impactlevel;
     public DateTime GetCalculatedat()      => Calculatedat;
 
     public string GetImpactBadgeColour() => Impactlevel switch

@@ -7,7 +7,8 @@
 
     // Build lookup dictionaries for quick access in the table
     var carbonByOrderId = carbonRecords.ToDictionary(c => c.GetOrderid());
-    var rewardByCarbon  = rewards.ToDictionary(r => r.GetOrdercarbondataid());
+    var rewardByCarbon = rewards.GroupBy(r => r.GetOrdercarbondataid())
+                            .ToDictionary(g => g.Key, g => g.First());
 }
 
 <div class="container mt-4">

@@ -592,6 +592,28 @@ INSERT INTO StaffFootprint (staffId, time, hoursWorked, totalStaffCo2) VALUES
 (2, '2026-03-21 12:00:00+08', 3.5, 12.8),
 (3, '2026-03-22 12:00:00+08', 5.0, 16.9);
 
+-- Rewards Dashboard Seed Data --
+
+-- Order Carbon Data
+INSERT INTO ordercarbondata (orderid, productcarbon, packagingcarbon, staffcarbon, buildingcarbon, totalcarbon, impactlevel, calculatedat) VALUES
+(1,  0, 0, 10.5, 5.2,  15.7,  'Low',       NOW()),
+(2,  0, 0, 8.3,  4.1,  12.4,  'Low',       NOW()),
+(3,  0, 0, 9.1,  3.8,  12.9,  'Low',       NOW()),
+(4,  0, 0, 11.2, 6.0,  17.2,  'Low',       NOW()),
+(5,  0, 0, 7.5,  3.5,  11.0,  'Low',       NOW()),
+(6,  0, 0, 95.0, 45.0, 140.0, 'High',      NOW()),
+(7,  0, 0, 55.0, 25.0, 80.0,  'Moderate',  NOW()),
+(8,  0, 0, 210.0,90.0, 300.0, 'Very High', NOW());
+
+-- Customer Rewards (Low = $10, Moderate = $5)
+INSERT INTO customerrewards (customerid, ordercarbondataid, rewardtype, rewardvalue, createdat)
+SELECT o.customerid, cd.ordercarbondataid, 'Voucher',
+    CASE cd.impactlevel WHEN 'Low' THEN 10.0 WHEN 'Moderate' THEN 5.0 END,
+    NOW()
+FROM ordercarbondata cd
+JOIN "Order" o ON o.orderid = cd.orderid
+WHERE cd.impactlevel IN ('Low', 'Moderate');
+
 --Packaging Material--
 INSERT INTO PackagingMaterial (name, type, recyclable, reusable)
 VALUES

@@ -11,8 +11,8 @@ public static class PreferenceTypeModes
     public static readonly IReadOnlyDictionary<PreferenceType, List<TransportMode>> AllowedModes =
         new Dictionary<PreferenceType, List<TransportMode>>
         {
-            [PreferenceType.FAST] = [TransportMode.PLANE, TransportMode.TRUCK],
-            [PreferenceType.CHEAP] = [TransportMode.SHIP, TransportMode.TRUCK],
-            [PreferenceType.GREEN] = [TransportMode.TRAIN, TransportMode.TRUCK]
+            [PreferenceType.FAST] = [TransportMode.PLANE],
+            [PreferenceType.CHEAP] = [TransportMode.SHIP],
+            [PreferenceType.GREEN] = [TransportMode.TRAIN]
         };
 }

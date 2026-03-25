@@ -182,7 +182,6 @@ builder.Services.AddScoped<ProRental.Domain.Module3.P2_1.Controls.ReturnStageSur
 builder.Services.AddScoped<IHubCarbonService, TransportationHubManager>();
 builder.Services.AddScoped<IRouteDistanceCalculator, RouteDistanceCalculator>();
 builder.Services.AddScoped<ITransportService, TransportationManager>();
-builder.Services.AddScoped<ITransportCarbonService, TransportCarbonManager>();
 builder.Services.AddScoped<TransportationFactory>();
 builder.Services.AddScoped<ProRental.Domain.Module3.P2_1.Controls.ReturnStageCalculator>();
 builder.Services.AddScoped<ProRental.Domain.Module3.P2_1.Controls.ReturnStageSurchargeService>();

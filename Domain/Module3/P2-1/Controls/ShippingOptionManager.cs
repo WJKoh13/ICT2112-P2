@@ -1,3 +1,4 @@
+using ProRental.Data.UnitOfWork;
 using ProRental.Domain.Entities;
 using ProRental.Domain.Enums;
 using ProRental.Interfaces.Module3.P2_1;
@@ -25,8 +26,23 @@ public sealed class ShippingOptionManager : IShippingOptionService
     private readonly IOrderService _orderService;
     private readonly IRoutingService _routingService;
     private readonly ITransportCarbonService _transportCarbonService;
+    private readonly AppDbContext? _context;
 
     public ShippingOptionManager(
+        IShippingOptionMapper shippingOptionMapper,
+        IOrderService orderService,
+        IRoutingService routingService,
+        ITransportCarbonService transportCarbonService,
+        AppDbContext context)
+    {
+        _shippingOptionMapper = shippingOptionMapper;
+        _orderService = orderService;
+        _routingService = routingService;
+        _transportCarbonService = transportCarbonService;
+        _context = context;
+    }
+
+    internal ShippingOptionManager(
         IShippingOptionMapper shippingOptionMapper,
         IOrderService orderService,
         IRoutingService routingService,
@@ -36,6 +52,7 @@ public sealed class ShippingOptionManager : IShippingOptionService
         _orderService = orderService;
         _routingService = routingService;
         _transportCarbonService = transportCarbonService;
+        _context = null;
     }
 
     public async Task<IReadOnlyList<ShippingPreferenceCard>> GetPreferenceChoicesForOrderAsync(
@@ -71,6 +88,21 @@ public sealed class ShippingOptionManager : IShippingOptionService
             throw new ArgumentOutOfRangeException(nameof(request.OrderId));
         }
 
+        if (_context is null || _context.Database.CurrentTransaction is not null)
+        {
+            return await ConfirmPreferenceSelectionCoreAsync(request, cancellationToken);
+        }
+
+        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+        var result = await ConfirmPreferenceSelectionCoreAsync(request, cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return result;
+    }
+
+    private async Task<ShippingSelectionResult> ConfirmPreferenceSelectionCoreAsync(
+        SelectShippingPreferenceRequest request,
+        CancellationToken cancellationToken)
+    {
         var context = await _orderService.GetShippingContextAsync(request.OrderId, cancellationToken)
             ?? throw new InvalidOperationException($"Order '{request.OrderId}' was not found.");
 
@@ -90,12 +122,15 @@ public sealed class ShippingOptionManager : IShippingOptionService
 
         var route = _routingService.CreateMultiModalRoute(DefaultOrigin, context.DestinationAddress, [.. allowedModes]);
         var routeId = route.GetRouteId();
+        var selectedTransportMode = ResolveSelectedTransportMode(route, profile.PrimaryTransportMode);
+        var quoteInput = new RouteQuoteInput(
+            context.HubId,
+            context.Items
+                .Select(item => new RouteQuoteItem(item.ProductId, item.Quantity, item.UnitWeightKg))
+                .ToArray());
         var quote = _transportCarbonService.CalculateRouteQuote(
             route,
-            Math.Max(context.Quantity, 1),
-            Math.Max(context.WeightKg, 1d),
-            context.ProductId,
-            context.HubId);
+            quoteInput);
 
         var existingOptions = await _shippingOptionMapper.FindByOrderIdAsync(request.OrderId, cancellationToken);
         var option = existingOptions.FirstOrDefault() ?? new ShippingOption();
@@ -108,7 +143,7 @@ public sealed class ShippingOptionManager : IShippingOptionService
             quote.Cost,
             quote.CarbonFootprintKg,
             profile.DeliveryDays,
-            profile.PrimaryTransportMode);
+            selectedTransportMode);
 
         if (existingOptions.Count > 0)
         {
@@ -126,6 +161,25 @@ public sealed class ShippingOptionManager : IShippingOptionService
         await _shippingOptionMapper.SaveChangesAsync(cancellationToken);
 
         return option.GetSelectionResult(route.GetTotalDistanceKm()) with { OrderId = request.OrderId };
+    }
+
+    private static TransportMode ResolveSelectedTransportMode(DeliveryRoute route, TransportMode fallback)
+    {
+        var routeLegs = route.GetOrderedRouteLegs();
+        var mainLegTransportMode = routeLegs
+            .FirstOrDefault(routeLeg => routeLeg.GetIsMainTransport() == true)
+            ?.GetTransportMode();
+
+        if (mainLegTransportMode.HasValue)
+        {
+            return mainLegTransportMode.Value;
+        }
+
+        var firstNonTruckTransportMode = routeLegs
+            .Select(routeLeg => routeLeg.GetTransportMode())
+            .FirstOrDefault(transportMode => transportMode.HasValue && transportMode.Value != TransportMode.TRUCK);
+
+        return firstNonTruckTransportMode ?? fallback;
     }
 
     private static PreferenceProfile GetPreferenceProfile(PreferenceType preferenceType)

@@ -15,5 +15,5 @@ public interface ITransportCarbonService
     double CalculateRouteCarbon(IReadOnlyList<double> legCarbonValues);
     double CalculateLegCarbonSurcharge(int quantity, double weightKg, double distanceKm, double storageCo2, TransportMode transportMode);
     double CalculateTotalCarbonSurcharge(IReadOnlyList<double> legSurcharges);
-    RouteQuoteResult CalculateRouteQuote(DeliveryRoute route, int quantity, double weightKg, int productId, int hubId);
+    RouteQuoteResult CalculateRouteQuote(DeliveryRoute route, RouteQuoteInput quoteInput);
 }

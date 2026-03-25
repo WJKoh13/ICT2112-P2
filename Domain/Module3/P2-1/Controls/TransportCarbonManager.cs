@@ -52,24 +52,34 @@ public sealed class TransportCarbonManager : ITransportCarbonService
         return legSurcharges.Sum();
     }
 
-    public RouteQuoteResult CalculateRouteQuote(DeliveryRoute route, int quantity, double weightKg, int productId, int hubId)
+    public RouteQuoteResult CalculateRouteQuote(DeliveryRoute route, RouteQuoteInput quoteInput)
     {
         ArgumentNullException.ThrowIfNull(route);
+        ArgumentNullException.ThrowIfNull(quoteInput);
 
         if (route.GetIsValid() is false)
         {
             throw new InvalidOperationException("A quote cannot be calculated for an invalid route.");
         }
 
+        if (quoteInput.Items.Count == 0)
+        {
+            throw new InvalidOperationException("A route quote requires at least one order item.");
+        }
+
         var routeLegs = route.GetOrderedRouteLegs();
         var quoteLegs = routeLegs.Count > 0
             ? routeLegs.Select(routeLeg => new QuoteLeg(
-                routeLeg.GetDistanceKm(),
+                routeLeg.GetDistanceKm() ?? 0d,
                 routeLeg.GetTransportMode() ?? TransportMode.TRUCK))
             : [new QuoteLeg(route.GetTotalDistanceKm(), TransportMode.TRUCK)];
 
         var quoteLegList = quoteLegs.ToList();
-        var storageCo2Total = _hubCarbonService.CalculateProductStorageCarbon(productId, hubId);
+        var totalShipmentWeightKg = quoteInput.Items.Sum(item => item.Quantity * item.UnitWeightKg);
+        var storageCo2Total = quoteInput.Items
+            .Select(item => item.ProductId)
+            .Distinct()
+            .Sum(productId => _hubCarbonService.CalculateProductStorageCarbon(productId, quoteInput.HubId));
         // Storage carbon is a route-level cost, so split it across legs to avoid double counting.
         var storageCo2PerLeg = quoteLegList.Count > 0
             ? storageCo2Total / quoteLegList.Count
@@ -81,14 +91,14 @@ public sealed class TransportCarbonManager : ITransportCarbonService
 
         foreach (var leg in quoteLegList)
         {
-            var legCarbonBase = CalculateLegCarbon(quantity, weightKg, leg.DistanceKm, storageCo2PerLeg);
+            var legCarbonBase = CalculateLegCarbon(1, totalShipmentWeightKg, leg.DistanceKm, storageCo2PerLeg);
             var pricingRule = _pricingRuleGateway.FindByTransportMode(leg.TransportMode)
                 .FirstOrDefault(rule => rule.ReadIsActive());
             var baseRate = (double)(pricingRule?.ReadBaseRatePerKm() ?? 0m);
 
             legCarbonBases.Add(legCarbonBase);
             pricedLegCarbonValues.Add(legCarbonBase * baseRate);
-            legSurcharges.Add(CalculateLegCarbonSurcharge(quantity, weightKg, leg.DistanceKm, storageCo2PerLeg, leg.TransportMode));
+            legSurcharges.Add(CalculateLegCarbonSurcharge(1, totalShipmentWeightKg, leg.DistanceKm, storageCo2PerLeg, leg.TransportMode));
         }
 
         var totalCarbonKg = Math.Round(CalculateRouteCarbon(legCarbonBases), 2, MidpointRounding.AwayFromZero);

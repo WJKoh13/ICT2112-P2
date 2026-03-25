@@ -91,9 +91,16 @@ internal static class TransportCarbonManagerTests
         truckLeg.ConfigureLeg(2, "Airport Hub", "Customer", 8d, TransportMode.TRUCK, false, true);
         route.RouteLegs.Add(truckLeg);
 
-        var quote = manager.CalculateRouteQuote(route, 1, 2d, 10, 20);
+        var quote = manager.CalculateRouteQuote(
+            route,
+            new RouteQuoteInput(
+                20,
+                [
+                    new RouteQuoteItem(10, 2, 2d),
+                    new RouteQuoteItem(11, 1, 5d)
+                ]));
 
-        TestAssertions.AssertEqual(new RouteQuoteResult(98.97m, 62d), quote);
+        TestAssertions.AssertEqual(new RouteQuoteResult(450.74m, 254d), quote);
     }
 
     private static TransportCarbonManager CreateManager()

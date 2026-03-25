@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 using ProRental.Configuration.Module3.P2_1;
 using ProRental.Controllers;
+using ProRental.Data.Gateways;
 using ProRental.Data.UnitOfWork;
 using ProRental.Data.Module3.P2_1;
 using ProRental.Data.Module3.P2_1.Gateways;
@@ -13,7 +14,6 @@ using ProRental.Data.Module3.P2_1.Interfaces;
 using ProRental.Domain.Controls;
 using ProRental.Domain.Entities;
 using ProRental.Domain.Enums;
-using ProRental.Domain.Module3.P2_1.Mocks;
 using ProRental.Interfaces;
 using ProRental.Interfaces.Module3.P2_1;
 using ProRental.Models.Module3.P2_1;
@@ -304,6 +304,7 @@ internal static class Phase1Tests
         var orderService = typeof(IOrderService);
         var routingService = typeof(IRoutingService);
         var transportCarbonService = typeof(ITransportCarbonService);
+        var orderShippingContext = typeof(OrderShippingContext);
 
         AssertMethod(mapper, "FindOrderWithCheckoutAsync", typeof(Task<Order?>), typeof(int), typeof(CancellationToken));
         AssertMethod(mapper, "FindByOrderIdAsync", typeof(Task<IReadOnlyList<ShippingOption>>), typeof(int), typeof(CancellationToken));
@@ -320,7 +321,10 @@ internal static class Phase1Tests
         AssertMethod(transportCarbonService, "CalculateRouteCarbon", typeof(double), typeof(IReadOnlyList<double>));
         AssertMethod(transportCarbonService, "CalculateLegCarbonSurcharge", typeof(double), typeof(int), typeof(double), typeof(double), typeof(double), typeof(TransportMode));
         AssertMethod(transportCarbonService, "CalculateTotalCarbonSurcharge", typeof(double), typeof(IReadOnlyList<double>));
-        AssertMethod(transportCarbonService, "CalculateRouteQuote", typeof(RouteQuoteResult), typeof(DeliveryRoute), typeof(int), typeof(double), typeof(int), typeof(int));
+        AssertMethod(transportCarbonService, "CalculateRouteQuote", typeof(RouteQuoteResult), typeof(DeliveryRoute), typeof(RouteQuoteInput));
+
+        TestAssertions.AssertEqual(typeof(IReadOnlyList<OrderShippingItem>), orderShippingContext.GetProperty(nameof(OrderShippingContext.Items))?.PropertyType);
+        TestAssertions.AssertEqual(typeof(double), orderShippingContext.GetProperty(nameof(OrderShippingContext.TotalShipmentWeightKg))?.PropertyType);
     }
 
     private static void AssertMethod(Type type, string name, Type returnType, params Type[] parameterTypes)
@@ -510,8 +514,10 @@ internal static class Phase3Tests
         dataSourceBuilder.MapEnum<CartStatus>("cart_status_enum", translator);
         dataSourceBuilder.MapEnum<CheckoutStatus>("checkout_status_enum", translator);
         dataSourceBuilder.MapEnum<DeliveryDuration>("delivery_duration_enum", translator);
+        dataSourceBuilder.MapEnum<HubType>("hub_type", translator);
         dataSourceBuilder.MapEnum<PaymentMethod>("payment_method_enum", translator);
         dataSourceBuilder.MapEnum<OrderStatus>("order_status_enum", translator);
+        dataSourceBuilder.MapEnum<ProductStatus>("product_status", translator);
         dataSourceBuilder.MapEnum<UserRole>("user_role_enum", translator);
         dataSourceBuilder.MapEnum<PreferenceType>("preference_type", translator);
         dataSourceBuilder.MapEnum<TransportMode>("transport_mode", translator);
@@ -524,8 +530,10 @@ internal static class Phase3Tests
                 builder.MapEnum<CartStatus>("cart_status_enum");
                 builder.MapEnum<CheckoutStatus>("checkout_status_enum");
                 builder.MapEnum<DeliveryDuration>("delivery_duration_enum");
+                builder.MapEnum<HubType>("hub_type");
                 builder.MapEnum<PaymentMethod>("payment_method_enum");
                 builder.MapEnum<OrderStatus>("order_status_enum");
+                builder.MapEnum<ProductStatus>("product_status");
                 builder.MapEnum<UserRole>("user_role_enum");
                 builder.MapEnum<PreferenceType>("preference_type");
                 builder.MapEnum<TransportMode>("transport_mode");
@@ -535,7 +543,7 @@ internal static class Phase3Tests
         return new AppDbContext(options);
     }
 
-    internal static (int OrderId, int CustomerId, int CheckoutId) CreateOrderFixture(AppDbContext context)
+    internal static OrderFixture CreateOrderFixture(AppDbContext context, bool includeAdditionalOrderItem = false)
     {
         var suffix = Guid.NewGuid().ToString("N")[..12];
 
@@ -575,7 +583,105 @@ internal static class Phase3Tests
         context.Orders.Add(order);
         context.SaveChanges();
 
-        return (order.GetOrderContext().OrderId, customer.GetCustomerId(), checkout.GetSelectionState().CheckoutId);
+        var warehouseHubId = CreateWarehouseFixture(context, suffix);
+        var (categoryId, productId) = CreateProductFixture(context, suffix);
+        var productIds = new List<int> { productId };
+        CreateOrderItemFixture(context, order.GetOrderContext().OrderId, productId);
+
+        if (includeAdditionalOrderItem)
+        {
+            var (_, secondProductId) = CreateProductFixture(context, $"{suffix}-2", categoryId);
+            productIds.Add(secondProductId);
+            CreateOrderItemFixture(context, order.GetOrderContext().OrderId, secondProductId, quantity: 1);
+        }
+
+        return new OrderFixture(
+            order.GetOrderContext().OrderId,
+            customer.GetCustomerId(),
+            checkout.GetSelectionState().CheckoutId,
+            user.GetUserId(),
+            cart.GetCartId(),
+            categoryId,
+            productIds,
+            warehouseHubId);
+    }
+
+    private static int CreateWarehouseFixture(AppDbContext context, string suffix)
+    {
+        var warehouse = new Warehouse();
+        warehouse.SetHubType(HubType.WAREHOUSE);
+        warehouse.SetAddress($"Phase 3 Warehouse {suffix}");
+        warehouse.SetCountryCode("SG");
+        warehouse.SetLatitude(1.290270);
+        warehouse.SetLongitude(103.851959);
+        warehouse.SetWarehouseCode($"WH-{suffix}");
+        warehouse.SetMaxProductCapacity(100);
+        warehouse.SetTotalWarehouseVolume(1000d);
+
+        context.TransportationHubs.Add(warehouse);
+        context.SaveChanges();
+
+        return warehouse.GetHubId();
+    }
+
+    private static (int CategoryId, int ProductId) CreateProductFixture(AppDbContext context, string suffix, int? categoryId = null)
+    {
+        var now = DateTime.UtcNow;
+        var resolvedCategoryId = categoryId;
+
+        if (!resolvedCategoryId.HasValue)
+        {
+            var category = new Category();
+            SetPrivateField(category, "_name", $"Phase 3 Category {suffix}");
+            SetPrivateField(category, "_description", "Feature 1 test category");
+            SetPrivateField(category, "_createddate", now);
+            SetPrivateField(category, "_updateddate", now);
+            context.Categories.Add(category);
+            context.SaveChanges();
+
+            resolvedCategoryId = GetPrivateField<int>(category, "_categoryid");
+        }
+
+        var product = new Product();
+        SetPrivateField(product, "_categoryid", resolvedCategoryId.Value);
+        SetPrivateField(product, "_sku", $"PHASE3-SKU-{suffix}");
+        SetPrivateField(product, "_threshold", 0.1000m);
+        SetPrivateField(product, "_createdat", now);
+        SetPrivateField(product, "_updatedat", now);
+        product.UpdateStatus(ProductStatus.AVAILABLE);
+        context.Products.Add(product);
+        context.SaveChanges();
+
+        return (resolvedCategoryId.Value, GetPrivateField<int>(product, "_productid"));
+    }
+
+    internal static void CreateOrderItemFixture(AppDbContext context, int orderId, int productId, int quantity = 2)
+    {
+        var orderItem = new Orderitem();
+        SetPrivateField(orderItem, "_orderid", orderId);
+        SetPrivateField(orderItem, "_productid", productId);
+        SetPrivateField(orderItem, "_quantity", quantity);
+        SetPrivateField(orderItem, "_unitprice", 60.00m);
+        SetPrivateField(orderItem, "_rentalstartdate", DateTime.UtcNow.Date);
+        SetPrivateField(orderItem, "_rentalenddate", DateTime.UtcNow.Date.AddDays(3));
+
+        context.Orderitems.Add(orderItem);
+        context.SaveChanges();
+    }
+
+    private static void SetPrivateField<TTarget, TValue>(TTarget target, string fieldName, TValue value)
+    {
+        var field = typeof(TTarget).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)
+            ?? throw new InvalidOperationException($"Field '{fieldName}' was not found on {typeof(TTarget).Name}.");
+        field.SetValue(target, value);
+    }
+
+    private static TValue GetPrivateField<TValue>(object target, string fieldName)
+    {
+        var field = target.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)
+            ?? throw new InvalidOperationException($"Field '{fieldName}' was not found on {target.GetType().Name}.");
+        return (TValue)(field.GetValue(target)
+            ?? throw new InvalidOperationException($"Field '{fieldName}' on {target.GetType().Name} was null."));
     }
 
     private static DeliveryRoute CreateRoute(AppDbContext context)
@@ -602,6 +708,19 @@ internal static class Phase3Tests
         var option = new ShippingOption();
         option.ConfigureGeneratedOption(orderId, routeId, preferenceType, displayName, 19.99m, 5.5, 3, transportMode);
         return option;
+    }
+
+    internal sealed record OrderFixture(
+        int OrderId,
+        int CustomerId,
+        int CheckoutId,
+        int UserId,
+        int CartId,
+        int CategoryId,
+        IReadOnlyList<int> ProductIds,
+        int WarehouseHubId)
+    {
+        public int ProductId => ProductIds[0];
     }
 
 }
@@ -649,7 +768,7 @@ internal static class Phase4Tests
     private static void ShippingOptionManagerReturnsPreferenceCardsWithoutRouting()
     {
         var repository = new InMemoryShippingOptionMapper();
-        var orderService = new StubOrderService(new OrderShippingContext(10, 20, 30, "Singapore", 101, 202, 5.5, 2));
+        var orderService = new StubOrderService(CreateOrderShippingContext());
         var routingService = new StubRoutingService();
         var transportCarbonService = new StubTransportCarbonService();
         var manager = new ShippingOptionManager(repository, orderService, routingService, transportCarbonService);
@@ -669,7 +788,7 @@ internal static class Phase4Tests
     {
         var repository = new InMemoryShippingOptionMapper();
         repository.Order = CreateOrder(10, 30, 20);
-        var orderService = new StubOrderService(new OrderShippingContext(10, 20, 30, "Singapore", 101, 202, 5.5, 2));
+        var orderService = new StubOrderService(CreateOrderShippingContext());
         var routingService = new StubRoutingService();
         var transportCarbonService = new StubTransportCarbonService();
         var manager = new ShippingOptionManager(repository, orderService, routingService, transportCarbonService);
@@ -684,6 +803,11 @@ internal static class Phase4Tests
         TestAssertions.AssertEqual(1, transportCarbonService.RouteQuoteRequests.Count);
         TestAssertions.AssertEqual(PreferenceType.GREEN, result.PreferenceType);
         TestAssertions.AssertEqual("TRAIN", result.TransportModeLabel);
+
+        var quoteRequest = transportCarbonService.RouteQuoteRequests.Single();
+        TestAssertions.AssertEqual(202, quoteRequest.QuoteInput.HubId);
+        TestAssertions.AssertEqual(2, quoteRequest.QuoteInput.Items.Count);
+        TestAssertions.AssertEqual(16.5d, quoteRequest.QuoteInput.Items.Sum(item => item.Quantity * item.UnitWeightKg));
     }
 
     private static void ShippingOptionManagerReusesPersistedOptionOnReselection()
@@ -696,7 +820,7 @@ internal static class Phase4Tests
         var transportCarbonService = new StubTransportCarbonService();
         var manager = new ShippingOptionManager(
             repository,
-            new StubOrderService(new OrderShippingContext(10, 20, 30, "Singapore", 101, 202, 5.5, 2)),
+            new StubOrderService(CreateOrderShippingContext()),
             routingService,
             transportCarbonService);
 
@@ -710,6 +834,17 @@ internal static class Phase4Tests
         TestAssertions.AssertEqual(1, transportCarbonService.RouteQuoteRequests.Count);
         TestAssertions.AssertEqual(PreferenceType.FAST, selection.PreferenceType);
         TestAssertions.AssertEqual("PLANE", selection.TransportModeLabel);
+    }
+
+    private static OrderShippingContext CreateOrderShippingContext()
+    {
+        OrderShippingItem[] items =
+        [
+            new OrderShippingItem(101, 2, 5.5d),
+            new OrderShippingItem(102, 1, 5.5d)
+        ];
+
+        return new OrderShippingContext(10, 20, 30, "Singapore", 202, items, 16.5d);
     }
 
     private static ShippingOption CreatePersistedOption(
@@ -846,15 +981,16 @@ internal static class Phase4Tests
             route.SetTotalDistanceKm(24d);
 
             var primaryMode = modes.FirstOrDefault();
-            if (primaryMode != default)
-            {
-                var firstLeg = new RouteLeg();
-                firstLeg.ConfigureLeg(1, origin, $"{primaryMode} Hub", 16d, primaryMode, true, false);
-                route.RouteLegs.Add(firstLeg);
-            }
+            var firstLeg = new RouteLeg();
+            firstLeg.ConfigureLeg(1, origin, "Departure Hub", 4d, TransportMode.TRUCK, true, false, false);
+            route.RouteLegs.Add(firstLeg);
+
+            var mainLeg = new RouteLeg();
+            mainLeg.ConfigureLeg(2, "Departure Hub", "Arrival Hub", 16d, primaryMode, false, true, false);
+            route.RouteLegs.Add(mainLeg);
 
             var lastLeg = new RouteLeg();
-            lastLeg.ConfigureLeg(2, "Delivery Hub", destination, 8d, TransportMode.TRUCK, false, true);
+            lastLeg.ConfigureLeg(3, "Arrival Hub", destination, 4d, TransportMode.TRUCK, false, false, true);
             route.RouteLegs.Add(lastLeg);
 
             return route;
@@ -868,7 +1004,7 @@ internal static class Phase4Tests
         public List<IReadOnlyList<double>> RouteRequests { get; } = [];
         public List<(int Quantity, double WeightKg, double DistanceKm, double StorageCo2, TransportMode TransportMode)> LegSurchargeRequests { get; } = [];
         public List<IReadOnlyList<double>> TotalSurchargeRequests { get; } = [];
-        public List<(DeliveryRoute Route, int Quantity, double WeightKg, int ProductId, int HubId)> RouteQuoteRequests { get; } = [];
+        public List<(DeliveryRoute Route, RouteQuoteInput QuoteInput)> RouteQuoteRequests { get; } = [];
 
         public double CalculateLegCarbon(int quantity, double weightKg, double distanceKm, double storageCo2)
         {
@@ -904,9 +1040,9 @@ internal static class Phase4Tests
             return legSurcharges.Sum();
         }
 
-        public RouteQuoteResult CalculateRouteQuote(DeliveryRoute route, int quantity, double weightKg, int productId, int hubId)
+        public RouteQuoteResult CalculateRouteQuote(DeliveryRoute route, RouteQuoteInput quoteInput)
         {
-            RouteQuoteRequests.Add((route, quantity, weightKg, productId, hubId));
+            RouteQuoteRequests.Add((route, quoteInput));
             return new RouteQuoteResult(18m + RouteQuoteRequests.Count, 4.2d + RouteQuoteRequests.Count);
         }
     }
@@ -1011,9 +1147,9 @@ internal static class Phase5Tests
 
     private static IReadOnlyList<ShippingPreferenceCard> CreateControllerOptions() =>
     [
-        new ShippingPreferenceCard(42, PreferenceType.FAST, "Fastest", "Fast profile", "PLANE + TRUCK"),
-        new ShippingPreferenceCard(42, PreferenceType.CHEAP, "Cheapest", "Cheap profile", "SHIP + TRUCK"),
-        new ShippingPreferenceCard(42, PreferenceType.GREEN, "Greenest", "Green profile", "TRAIN + TRUCK")
+        new ShippingPreferenceCard(42, PreferenceType.FAST, "Fastest", "Fast profile", "PLANE"),
+        new ShippingPreferenceCard(42, PreferenceType.CHEAP, "Cheapest", "Cheap profile", "SHIP"),
+        new ShippingPreferenceCard(42, PreferenceType.GREEN, "Greenest", "Green profile", "TRAIN")
     ];
 
     private static ShippingSelectionResult CreateSelectionResult() =>
@@ -1062,8 +1198,16 @@ internal static class Phase6Tests
     private static void Feature1RegistrationResolvesExpectedServices()
     {
         var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["GoogleMaps:ApiKey"] = string.Empty
+            })
+            .Build();
+
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql("Host=localhost;Database=testrental;Username=test;Password=test"));
+        services.AddSingleton<IConfiguration>(configuration);
         services.AddScoped<IHubCarbonService, StubHubCarbonService>();
         services.AddFeature1Services();
 
@@ -1073,7 +1217,7 @@ internal static class Phase6Tests
 
         TestAssertions.AssertTrue(scopedProvider.GetService<IShippingOptionMapper>() is ShippingOptionMapper, "Expected shipping option mapper registration.");
         TestAssertions.AssertTrue(scopedProvider.GetService<IOrderService>() is ShippingOrderContextService, "Expected order context service registration.");
-        TestAssertions.AssertTrue(scopedProvider.GetService<IRoutingService>() is MockRoutingService, "Expected routing service registration.");
+        TestAssertions.AssertTrue(scopedProvider.GetService<IRoutingService>() is RouteManager, "Expected routing service registration.");
         TestAssertions.AssertTrue(scopedProvider.GetService<ITransportCarbonService>() is ProRental.Domain.Module3.P2_1.Controls.TransportCarbonManager, "Expected transport carbon service registration.");
         TestAssertions.AssertTrue(scopedProvider.GetService<IShippingOptionService>() is ShippingOptionManager, "Expected shipping option manager registration.");
         TestAssertions.AssertTrue(scopedProvider.GetService<IRankingService>() is RankingManager, "Expected ranking manager registration.");
@@ -1099,7 +1243,10 @@ internal static class Phase7Tests
     public static IReadOnlyList<PhaseTest> All { get; } =
     [
         new("Feature1 shows three preference cards without persisting shipping options", Feature1ShowsPreferenceCardsWithoutPersistingOptions),
-        new("Feature1 selection writes one persisted option and checkout.option_id end-to-end", Feature1AppliesSelectionEndToEnd)
+        new("Feature1 selection writes one persisted option and checkout.option_id end-to-end for multi-item orders", Feature1AppliesSelectionEndToEnd),
+        new("Feature1 order context aggregates real multi-item order inputs", Feature1OrderContextResolvesRealInputs),
+        new("Feature1 order context rejects orders without items", Feature1OrderContextRejectsOrdersWithoutItems),
+        new("Feature1 confirm flow rolls back route and option writes when checkout selection fails", Feature1SelectionRollsBackOnFailure)
     ];
 
     private static void Feature1ShowsPreferenceCardsWithoutPersistingOptions()
@@ -1125,7 +1272,7 @@ internal static class Phase7Tests
         using var context = Phase3Tests.CreateDbContext();
         using var transaction = context.Database.BeginTransaction();
 
-        var snapshot = Phase3Tests.CreateOrderFixture(context);
+        var snapshot = Phase3Tests.CreateOrderFixture(context, includeAdditionalOrderItem: true);
         var manager = CreateManager(context);
 
         var result = manager.ConfirmPreferenceSelectionAsync(
@@ -1136,22 +1283,256 @@ internal static class Phase7Tests
 
         var checkout = context.Checkouts
             .First(entity => EF.Property<int>(entity, "Checkoutid") == snapshot.CheckoutId);
+        var persistedOption = persistedOptions.Single();
+        var routeId = persistedOption.GetSummary().RouteId
+            ?? throw new InvalidOperationException("Expected persisted option to reference a route.");
+        var route = context.DeliveryRoutes
+            .Include(entity => entity.RouteLegs)
+            .First(entity => EF.Property<int>(entity, "RouteId") == routeId);
+        var routeLegs = route.GetOrderedRouteLegs();
 
         TestAssertions.AssertEqual(1, persistedOptions.Count);
         TestAssertions.AssertEqual(result.OptionId, checkout.GetSelectionState().SelectedOptionId);
         TestAssertions.AssertEqual(PreferenceType.GREEN, result.PreferenceType);
         TestAssertions.AssertTrue(result.OptionId > 0, "Expected a persisted shipping option id.");
+        TestAssertions.AssertEqual("TRAIN", result.TransportModeLabel);
+        TestAssertions.AssertEqual(3, routeLegs.Count);
+        TestAssertions.AssertTrue(routeLegs[0].GetIsFirstMile() == true, "Expected first leg to be marked as first-mile.");
+        TestAssertions.AssertEqual(TransportMode.TRUCK, routeLegs[0].GetTransportMode() ?? throw new InvalidOperationException("Expected first leg transport mode."));
+        TestAssertions.AssertTrue(routeLegs[1].GetIsMainTransport() == true, "Expected second leg to be marked as main transport.");
+        TestAssertions.AssertEqual(TransportMode.TRAIN, routeLegs[1].GetTransportMode() ?? throw new InvalidOperationException("Expected main leg transport mode."));
+        TestAssertions.AssertTrue(routeLegs[2].GetIsLastMile() == true, "Expected final leg to be marked as last-mile.");
+        TestAssertions.AssertEqual(TransportMode.TRUCK, routeLegs[2].GetTransportMode() ?? throw new InvalidOperationException("Expected last leg transport mode."));
 
         transaction.Rollback();
     }
 
-    private static ShippingOptionManager CreateManager(AppDbContext context)
+    private static void Feature1OrderContextResolvesRealInputs()
     {
+        using var context = Phase3Tests.CreateDbContext();
+        using var transaction = context.Database.BeginTransaction();
+
+        var snapshot = Phase3Tests.CreateOrderFixture(context, includeAdditionalOrderItem: true);
+        Phase3Tests.CreateOrderItemFixture(context, snapshot.OrderId, snapshot.ProductId, quantity: 1);
+
+        var service = new ShippingOrderContextService(
+            context,
+            new StubInventoryService(),
+            new TransportationHubMapper(context));
+
+        var shippingContext = service.GetShippingContextAsync(snapshot.OrderId).GetAwaiter().GetResult()
+            ?? throw new InvalidOperationException("Expected a shipping context result.");
+        var resolvedWarehouse = new TransportationHubMapper(context).FindById(shippingContext.HubId);
+        var firstProduct = shippingContext.Items.Single(item => item.ProductId == snapshot.ProductIds[0]);
+        var secondProduct = shippingContext.Items.Single(item => item.ProductId == snapshot.ProductIds[1]);
+
+        TestAssertions.AssertEqual(snapshot.OrderId, shippingContext.OrderId);
+        TestAssertions.AssertEqual(snapshot.CheckoutId, shippingContext.CheckoutId);
+        TestAssertions.AssertTrue(shippingContext.HubId > 0, "Expected a resolved warehouse hub id.");
+        TestAssertions.AssertTrue(resolvedWarehouse?.GetHubType() == HubType.WAREHOUSE, "Expected the resolved hub to be a warehouse.");
+        TestAssertions.AssertEqual(2, shippingContext.Items.Count);
+        TestAssertions.AssertEqual(3, firstProduct.Quantity);
+        TestAssertions.AssertEqual(1, secondProduct.Quantity);
+        TestAssertions.AssertEqual(5.5d, firstProduct.UnitWeightKg);
+        TestAssertions.AssertEqual(5.5d, secondProduct.UnitWeightKg);
+        TestAssertions.AssertEqual(22d, shippingContext.TotalShipmentWeightKg);
+
+        transaction.Rollback();
+    }
+
+    private static void Feature1OrderContextRejectsOrdersWithoutItems()
+    {
+        using (var context = Phase3Tests.CreateDbContext())
+        using (var transaction = context.Database.BeginTransaction())
+        {
+            var snapshot = Phase3Tests.CreateOrderFixture(context);
+            context.Orderitems
+                .Where(entity => EF.Property<int>(entity, "Orderid") == snapshot.OrderId)
+                .ExecuteDelete();
+
+            var service = new ShippingOrderContextService(
+                context,
+                new StubInventoryService(),
+                new TransportationHubMapper(context));
+
+            var missingItemsException = TestAssertions.AssertThrows<InvalidOperationException>(
+                () => service.GetShippingContextAsync(snapshot.OrderId).GetAwaiter().GetResult(),
+                "Expected order-context lookup to reject orders without items.");
+            TestAssertions.AssertTrue(
+                missingItemsException.Message.Contains("does not contain any order items", StringComparison.Ordinal),
+                "Expected missing-items error message.");
+
+            transaction.Rollback();
+        }
+    }
+
+    private static void Feature1SelectionRollsBackOnFailure()
+    {
+        using var context = Phase3Tests.CreateDbContext();
+
+        var snapshot = Phase3Tests.CreateOrderFixture(context, includeAdditionalOrderItem: true);
+        var routeIdsBefore = context.DeliveryRoutes
+            .Select(entity => EF.Property<int>(entity, "RouteId"))
+            .ToArray();
+
+        try
+        {
+            var manager = CreateManager(context, new ThrowingCheckoutSelectionMapper(context));
+
+            TestAssertions.AssertThrows<InvalidOperationException>(
+                () => manager.ConfirmPreferenceSelectionAsync(
+                    new SelectShippingPreferenceRequest(snapshot.OrderId, PreferenceType.GREEN)).GetAwaiter().GetResult(),
+                "Expected the confirm flow to surface the simulated checkout failure.");
+
+            context.ChangeTracker.Clear();
+
+            var persistedOptions = new ShippingOptionMapper(context).FindByOrderIdAsync(snapshot.OrderId).GetAwaiter().GetResult();
+            var routeIdsAfter = context.DeliveryRoutes
+                .Select(entity => EF.Property<int>(entity, "RouteId"))
+                .ToArray();
+
+            TestAssertions.AssertEqual(0, persistedOptions.Count);
+            TestAssertions.AssertSequence(routeIdsBefore.OrderBy(id => id), routeIdsAfter.OrderBy(id => id));
+        }
+        finally
+        {
+            CleanupOrderFixture(context, snapshot, routeIdsBefore);
+        }
+    }
+
+    private static ShippingOptionManager CreateManager(AppDbContext context, IShippingOptionMapper? mapper = null)
+    {
+        var hubMapper = new TransportationHubMapper(context);
         return new ShippingOptionManager(
-            new ShippingOptionMapper(context),
-            new ShippingOrderContextService(context),
-            new MockRoutingService(context),
-            new ProRental.Domain.Module3.P2_1.Controls.TransportCarbonManager(new PricingRuleGateway(context), new StubHubCarbonService()));
+            mapper ?? new ShippingOptionMapper(context),
+            new ShippingOrderContextService(context, new StubInventoryService(), hubMapper),
+            new RouteManager(context, hubMapper, new RouteLegBuilder(new StubRouteDistanceCalculator())),
+            new ProRental.Domain.Module3.P2_1.Controls.TransportCarbonManager(new PricingRuleGateway(context), new StubHubCarbonService()),
+            context);
+    }
+
+    private static void CleanupOrderFixture(AppDbContext context, Phase3Tests.OrderFixture snapshot, IReadOnlyCollection<int> routeIdsBefore)
+    {
+        context.ChangeTracker.Clear();
+
+        var newRouteIds = context.DeliveryRoutes
+            .Select(entity => EF.Property<int>(entity, "RouteId"))
+            .Where(routeId => !routeIdsBefore.Contains(routeId))
+            .ToArray();
+
+        context.ShippingOptions
+            .Where(entity => EF.Property<int?>(entity, "OrderId") == snapshot.OrderId)
+            .ExecuteDelete();
+
+        if (newRouteIds.Length > 0)
+        {
+            context.RouteLegs
+                .Where(entity => newRouteIds.Contains(EF.Property<int>(entity, "RouteId")))
+                .ExecuteDelete();
+            context.DeliveryRoutes
+                .Where(entity => newRouteIds.Contains(EF.Property<int>(entity, "RouteId")))
+                .ExecuteDelete();
+        }
+
+        context.Orderitems
+            .Where(entity => EF.Property<int>(entity, "Orderid") == snapshot.OrderId)
+            .ExecuteDelete();
+        context.Orders
+            .Where(entity => EF.Property<int>(entity, "Orderid") == snapshot.OrderId)
+            .ExecuteDelete();
+        context.Checkouts
+            .Where(entity => EF.Property<int>(entity, "Checkoutid") == snapshot.CheckoutId)
+            .ExecuteDelete();
+        context.Carts
+            .Where(entity => EF.Property<int>(entity, "Cartid") == snapshot.CartId)
+            .ExecuteDelete();
+        context.Products
+            .Where(entity => snapshot.ProductIds.Contains(EF.Property<int>(entity, "Productid")))
+            .ExecuteDelete();
+        context.Categories
+            .Where(entity => EF.Property<int>(entity, "Categoryid") == snapshot.CategoryId)
+            .ExecuteDelete();
+
+        var warehouse = context.Set<Warehouse>()
+            .FirstOrDefault(entity => EF.Property<int>(entity, "HubId") == snapshot.WarehouseHubId);
+        if (warehouse is not null)
+        {
+            context.Remove(warehouse);
+            context.SaveChanges();
+        }
+
+        context.Customers
+            .Where(entity => EF.Property<int>(entity, "Customerid") == snapshot.CustomerId)
+            .ExecuteDelete();
+        context.Users
+            .Where(entity => EF.Property<int>(entity, "Userid") == snapshot.UserId)
+            .ExecuteDelete();
+    }
+
+    private sealed class StubInventoryService : IInventoryService
+    {
+        public Product? GetProductById(int productId) => null;
+        public decimal GetProductWeight(int productId) => 5.5m;
+        public List<ProductDropdownItem> GetAllProductDropdownItems() => [];
+        public ProductStorageInfo? GetProductStorageInfo(int productId) => null;
+        public List<ProductStorageInfo> GetAllProductStorageInfo() => [];
+    }
+
+    private sealed class StubRouteDistanceCalculator : IRouteDistanceCalculator
+    {
+        public double CalculateDistanceKm(string startPoint, string endPoint)
+        {
+            if (string.Equals(startPoint, endPoint, StringComparison.Ordinal))
+            {
+                return 4d;
+            }
+
+            if (startPoint.StartsWith("Phase 3 Warehouse", StringComparison.Ordinal))
+            {
+                return 4d;
+            }
+
+            if (string.Equals(endPoint, "Phase 3 Address", StringComparison.Ordinal))
+            {
+                return 16d;
+            }
+
+            return 8d;
+        }
+    }
+
+    private sealed class ThrowingCheckoutSelectionMapper : IShippingOptionMapper
+    {
+        private readonly ShippingOptionMapper _inner;
+
+        public ThrowingCheckoutSelectionMapper(AppDbContext context)
+        {
+            _inner = new ShippingOptionMapper(context);
+        }
+
+        public Task<Order?> FindOrderWithCheckoutAsync(int orderId, CancellationToken cancellationToken = default) =>
+            _inner.FindOrderWithCheckoutAsync(orderId, cancellationToken);
+
+        public Task<IReadOnlyList<ShippingOption>> FindByOrderIdAsync(int orderId, CancellationToken cancellationToken = default) =>
+            _inner.FindByOrderIdAsync(orderId, cancellationToken);
+
+        public Task<ShippingOption?> FindByIdAsync(int optionId, CancellationToken cancellationToken = default) =>
+            _inner.FindByIdAsync(optionId, cancellationToken);
+
+        public Task AddAsync(ShippingOption option, CancellationToken cancellationToken = default) =>
+            _inner.AddAsync(option, cancellationToken);
+
+        public Task AddRangeAsync(IEnumerable<ShippingOption> options, CancellationToken cancellationToken = default) =>
+            _inner.AddRangeAsync(options, cancellationToken);
+
+        public Task UpdateAsync(ShippingOption option, CancellationToken cancellationToken = default) =>
+            _inner.UpdateAsync(option, cancellationToken);
+
+        public Task SetCheckoutSelectedOptionAsync(int checkoutId, int optionId, CancellationToken cancellationToken = default) =>
+            throw new InvalidOperationException("Simulated checkout selection failure.");
+
+        public Task SaveChangesAsync(CancellationToken cancellationToken = default) =>
+            _inner.SaveChangesAsync(cancellationToken);
     }
 }
 
@@ -1191,5 +1572,20 @@ internal static class TestAssertions
         {
             throw new InvalidOperationException(message);
         }
+    }
+
+    public static TException AssertThrows<TException>(Action action, string message)
+        where TException : Exception
+    {
+        try
+        {
+            action();
+        }
+        catch (TException exception)
+        {
+            return exception;
+        }
+
+        throw new InvalidOperationException(message);
     }
 }

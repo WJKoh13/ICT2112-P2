@@ -178,9 +178,17 @@ builder.Services.AddScoped<IRouteDistanceCalculator, RouteDistanceCalculator>();
 builder.Services.AddScoped<ITransportService, TransportationManager>();
 builder.Services.AddScoped<ITransportCarbonService, TransportCarbonManager>();
 builder.Services.AddScoped<TransportationFactory>();
+builder.Services.AddScoped<IRouteQueryService, RouteQueryService>();
+builder.Services.AddScoped<IBatchOrderMapper, BatchOrderMapper>();
+builder.Services.AddScoped<IDeliveryBatchMapper, DeliveryBatchMapper>();
+builder.Services.AddScoped<IBatchValidator, BatchValidator>();
+builder.Services.AddScoped<IBatchDisplayManager, BatchQueryManager>();
+builder.Services.AddScoped<IBatchQueryManager, BatchQueryManager>();
+builder.Services.AddScoped<IBatchDelivery, BatchConsolidationManager>();
 
 // Presentation/Controllers
 builder.Services.AddScoped<ProRental.Controllers.Module3.P2_1.ReturnStageController>();
+builder.Services.AddScoped<ProRental.Controllers.BatchDeliveryController>();
 
 
 //Team P2-2

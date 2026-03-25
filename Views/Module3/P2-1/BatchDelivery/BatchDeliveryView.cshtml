@@ -1,0 +1,65 @@
+@model ProRental.Models.Module3.P2_1.BatchDeliveryPageViewModel
+@{
+    ViewData["Title"] = "BatchDeliveryView";
+}
+
+<section class="py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <p class="text-uppercase text-muted small mb-1">Module 3 • Batch Delivery &amp; Consolidation</p>
+            <h1 class="h3 mb-1">BatchDeliveryView</h1>
+            <p class="text-muted mb-0">Display of available delivery batches and first-leg carbon savings.</p>
+        </div>
+        <a asp-controller="BatchDelivery" asp-action="BatchOperations" class="btn btn-outline-primary">
+            Open Order / Shipping Operations
+        </a>
+    </div>
+
+    <div class="alert alert-success d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">Total Estimated Carbon Savings</span>
+        <span class="fs-5">@Model.TotalCarbonSavingsKg.ToString("0.##") kg CO₂e</span>
+    </div>
+
+    @if (Model.Batches.Count == 0)
+    {
+        <div class="alert alert-info">No delivery batches are available yet.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Batch ID</th>
+                        <th>Hub ID</th>
+                        <th>Destination</th>
+                        <th>Status</th>
+                        <th>Orders</th>
+                        <th>Weight (kg)</th>
+                        <th>Carbon Savings (kg)</th>
+                        <th>Order IDs</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var batch in Model.Batches)
+                    {
+                        <tr>
+                            <td>@batch.BatchId</td>
+                            <td>@(batch.HubId?.ToString() ?? "-")</td>
+                            <td>@batch.DestinationAddress</td>
+                            <td>
+                                <span class="badge @(batch.Status == "SHIPPEDOUT" ? "text-bg-secondary" : "text-bg-primary")">
+                                    @batch.Status
+                                </span>
+                            </td>
+                            <td>@batch.TotalOrders</td>
+                            <td>@batch.BatchWeightKg.ToString("0.##")</td>
+                            <td class="fw-semibold text-success">@batch.CarbonSavingsKg.ToString("0.##")</td>
+                            <td>@(string.IsNullOrWhiteSpace(batch.OrderIds) ? "-" : batch.OrderIds)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

@@ -11,4 +11,21 @@ public interface IOrderService
     Task<OrderShippingContext?> GetShippingContextAsync(
         int orderId,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<OrderItemDetail>> OrderDetails(
+        int orderId,
+        CancellationToken cancellationToken = default);
+
+    Task<int> GetOrderItemQuantity(
+        int orderId,
+        int productId,
+        CancellationToken cancellationToken = default);
+
+    Task<string?> GetDeliveryAddress(
+        int orderId,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> IsOrderDispatchedAsync(
+        int orderId,
+        CancellationToken cancellationToken = default);
 }

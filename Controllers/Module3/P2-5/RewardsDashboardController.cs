@@ -50,17 +50,24 @@ public class RewardsDashboardController : Controller
     }
 
     // ── ProcessOrder ──────────────────────────────────────────────────────────
-    // Calculates carbon automatically from the system — no manual input needed
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult ProcessOrder(int orderId)
     {
-        // totalCarbon = 0 means auto-calculate from footprint services
         var carbonData = _rewardsControl.CreateOrderCarbonData(orderId, 0);
 
         TempData["SuccessMessage"] = $"Order #{orderId} processed. " +
             $"Total carbon: {carbonData.GetTotalcarbon():F2}g — Impact: {carbonData.GetImpactlevel()}";
 
         return RedirectToAction(nameof(DisplayRewards));
+    }
+
+    // ── MyRewards ─────────────────────────────────────────────────────────────
+    // Customer-facing page — shows all issued rewards
+    // TODO: filter by logged-in customerId once auth is integrated
+    public IActionResult MyRewards()
+    {
+        var rewards = _rewardsControl.GetAllRewards();
+        return View("~/Views/Module3/P2-5/MyRewardsView.cshtml", rewards);
     }
 }

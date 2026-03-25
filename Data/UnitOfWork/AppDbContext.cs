@@ -165,12 +165,6 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Vettingrecord> Vettingrecords { get; set; }
 
-    public virtual DbSet<Warehouse> Warehouses { get; set; }
-
-//     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-// #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-//         => optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=pro_rental;Username=devuser;Password=devpassword");
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder
@@ -937,9 +931,6 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("destination_address");
-            entity.Property("DestinationHubId")
-                .HasField("_destinationHubId")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("destination_hub_id");
             entity.Property("IsValid")
                 .HasField("_isValid")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
@@ -950,54 +941,9 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("origin_address");
-            entity.Property("OriginHubId")
-                .HasField("_originHubId")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("origin_hub_id");
             entity.Property("TotalDistanceKm")
                 .HasField("_totalDistanceKm")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("total_distance_km");
-
-            entity.HasOne(d => d.DestinationHub).WithMany(p => p.DeliveryRouteDestinationHubs)
-                .HasForeignKey("DestinationHubId")
-                .HasConstraintName("fk_route_destination_hub");
-
-            entity.HasOne(d => d.OriginHub).WithMany(p => p.DeliveryRouteOriginHubs)
-                .HasForeignKey("OriginHubId")
-                .HasConstraintName("fk_route_origin_hub");
-        });
-
-        modelBuilder.Entity<Deliverymethod>(entity =>
-        {
-            entity.HasKey("Deliveryid").HasName("deliverymethod_pkey");
-
-            entity.ToTable("deliverymethod");
-
-            entity.Property("Deliveryid")
-                .HasField("_deliveryid")
-                .UsePropertyAccessMode(PropertyAccessMode.Field)
-                .UseIdentityAlwaysColumn()
-                .HasColumnName("deliveryid");
-            entity.Property("Carrierid")
-                .HasField("_carrierid")
-                .UsePropertyAccessMode(PropertyAccessMode.Field)
-                .HasMaxLength(50)
-                .HasColumnName("carrierid");
-            entity.Property("Deliverycost")
-                .HasField("_deliverycost")
-                .UsePropertyAccessMode(PropertyAccessMode.Field)
-                .HasPrecision(10, 2)
-                .HasColumnName("deliverycost");
-            entity.Property("Durationdays")
-                .HasField("_durationdays")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("durationdays");
-            entity.Property("Orderid")
-                .HasField("_orderid")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("orderid");
-
-            entity.HasOne(d => d.Order).WithMany(p => p.Deliverymethods)
-                .HasForeignKey("Orderid")
-                .OnDelete(DeleteBehavior.Restrict)
-                .HasConstraintName("fk_deliverymethod_order");
         });
 
         modelBuilder.Entity<Deposit>(entity =>
@@ -2438,6 +2384,9 @@ public partial class AppDbContext : DbContext
 
             entity.ToTable("route_leg");
 
+            // entity.HasIndex("RouteId", "Sequence", "uq_route_leg_route_sequence").IsUnique();
+            entity.HasIndex("RouteId", "Sequence").HasDatabaseName("uq_route_leg_route_sequence").IsUnique();
+
             entity.Property("LegId")
                 .HasField("_legId")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
@@ -2461,6 +2410,11 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValue(false)
                 .HasColumnName("is_last_mile");
+            entity.Property("IsMainTransport")
+                .HasField("_isMainTransport")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasDefaultValue(false)
+                .HasColumnName("is_main_transport");
             entity.Property("RouteId")
                 .HasField("_routeId")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("route_id");
@@ -2472,18 +2426,10 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("start_point");
-            entity.Property("TransportId")
-                .HasField("_transportId")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("transport_id");
 
             entity.HasOne(d => d.Route).WithMany(p => p.RouteLegs)
                 .HasForeignKey("RouteId")
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_route_leg_route");
-
-            entity.HasOne(d => d.Transport).WithMany(p => p.RouteLegs)
-                .HasForeignKey("TransportId")
-                .HasConstraintName("fk_route_leg_transport");
         });
 
         modelBuilder.Entity<Session>(entity =>

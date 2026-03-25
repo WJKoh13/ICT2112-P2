@@ -1,19 +1,35 @@
 using ProRental.Data.UnitOfWork;
+using ProRental.Data.Module3.P2_1.Gateways;
+using ProRental.Data.Module3.P2_1.Interfaces;
+using ProRental.Data.Module3.P2_1.Mappers;
+using ProRental.Domain.Module3.P2_1.Controls;
+using ProRental.Domain.Module3.P2_1.Factories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Npgsql;
+using ProRental.Configuration.Module3.P2_1;
 using ProRental.Domain.Enums;
 using ProRental.Domain.Entities;
+using ProRental.Testing;
+using ProRental.Interfaces.Module3.P2_1;
 
 // uncomment when ready to code
 // using ProRental.Data;
 // using ProRental.Domain.Controls;
 // using ProRental.Domain.Entities;
-// using ProRental.Interfaces.Domain;
-// using ProRental.Interfaces.Data;
+// using ProRental.Interfaces.Module3.P2_1;
 // using ProRental.Controllers;
 
+//p2-1 feat 1 test
+
 var builder = WebApplication.CreateBuilder(args);
+
+if (args.Length > 0 && string.Equals(args[0], "--phase-tests", StringComparison.OrdinalIgnoreCase))
+{
+    Environment.ExitCode = await PhaseTestRunner.RunAsync(args.Skip(1).ToArray());
+    return;
+}
+//end p2-1 feat 1 test
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -133,12 +149,17 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 //Services builder(add your mappers/gateways, controllers, control and interface classes here)
 //Team P2-1
 // Data source
+builder.Services.AddFeature1Services();
+//TODO: ADD THIS INTO A REGISTRATION
+builder.Services.AddScoped<ITransportMapper, TransportMapper>();
+builder.Services.AddScoped<TruckMapper>();
+builder.Services.AddScoped<ShipMapper>();
+builder.Services.AddScoped<PlaneMapper>();
+builder.Services.AddScoped<TrainMapper>();
+builder.Services.AddScoped<IPricingRuleGateway, PricingRuleGateway>();
 builder.Services.AddScoped<ProRental.Data.Module3.P2_1.Interfaces.IReturnStageGateway, ProRental.Data.Module3.P2_1.Gateways.ReturnStageGateway>();
 
 // Domain
-builder.Services.AddScoped<ProRental.Domain.Module3.P2_1.Controls.ReturnStageCalculator>();
-builder.Services.AddScoped<ProRental.Domain.Module3.P2_1.Controls.ReturnStageSurchargeService>();
-builder.Services.AddScoped<ProRental.Domain.Module3.P2_1.Controls.ReturnCarbonReportService>();
 
 // Presentation/Controllers
 builder.Services.AddScoped<ProRental.Controllers.Module3.P2_1.ReturnStageController>();

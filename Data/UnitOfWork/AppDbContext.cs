@@ -8,10 +8,6 @@ namespace ProRental.Data.UnitOfWork;
 
 public partial class AppDbContext : DbContext
 {
-    public AppDbContext()
-    {
-    }
-
     public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options)
     {
@@ -29,8 +25,6 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<CarbonEmission> CarbonEmissions { get; set; }
 
-    public virtual DbSet<CarbonResult> CarbonResults { get; set; }
-
     public virtual DbSet<Cart> Carts { get; set; }
 
     public virtual DbSet<Cartitem> Cartitems { get; set; }
@@ -47,8 +41,6 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Customer> Customers { get; set; }
 
-    public virtual DbSet<CustomerChoice> CustomerChoices { get; set; }
-
     public virtual DbSet<Customerreward> Customerrewards { get; set; }
 
     public virtual DbSet<Damagereport> Damagereports { get; set; }
@@ -64,8 +56,6 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<Ecobadge> Ecobadges { get; set; }
 
     public virtual DbSet<Inventoryitem> Inventoryitems { get; set; }
-
-    public virtual DbSet<LegCarbon> LegCarbons { get; set; }
 
     public virtual DbSet<Lineitem> Lineitems { get; set; }
 
@@ -175,9 +165,9 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Warehouse> Warehouses { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=pro_rental;Username=devuser;Password=devpassword");
+//     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+// #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+//         => optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=pro_rental;Username=devuser;Password=devpassword");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -1142,45 +1132,6 @@ public partial class AppDbContext : DbContext
             entity.HasOne(d => d.Product).WithMany(p => p.Inventoryitems)
                 .HasForeignKey("Productid")
                 .HasConstraintName("fk_inventory_product");
-        });
-
-        modelBuilder.Entity<LegCarbon>(entity =>
-        {
-            entity.HasKey("LegId").HasName("leg_carbon_pkey");
-
-            entity.ToTable("leg_carbon");
-
-            entity.Property("LegId")
-                .HasField("_legId")
-                .UsePropertyAccessMode(PropertyAccessMode.Field)
-                .UseIdentityAlwaysColumn()
-                .HasColumnName("leg_id");
-            entity.Property("CarbonKg")
-                .HasField("_carbonKg")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("carbon_kg");
-            entity.Property("CarbonRate")
-                .HasField("_carbonRate")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("carbon_rate");
-            entity.Property("CarbonResultId")
-                .HasField("_carbonResultId")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("carbon_result_id");
-            entity.Property("DistanceKm")
-                .HasField("_distanceKm")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("distance_km");
-            entity.Property("RouteLegId")
-                .HasField("_routeLegId")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("route_leg_id");
-            entity.Property("WeightKg")
-                .HasField("_weightKg")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("weight_kg");
-
-            entity.HasOne(d => d.CarbonResult).WithMany(p => p.LegCarbons)
-                .HasForeignKey("CarbonResultId")
-                .HasConstraintName("fk_leg_carbon_result");
-
-            entity.HasOne(d => d.RouteLeg).WithMany(p => p.LegCarbons)
-                .HasForeignKey("RouteLegId")
-                .HasConstraintName("fk_leg_carbon_leg");
         });
 
         modelBuilder.Entity<Lineitem>(entity =>

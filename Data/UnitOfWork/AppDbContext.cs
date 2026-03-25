@@ -23,6 +23,8 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<CarbonEmission> CarbonEmissions { get; set; }
 
+    public virtual DbSet<CarbonResult> CarbonResults { get; set; }
+
     public virtual DbSet<Cart> Carts { get; set; }
 
     public virtual DbSet<Cartitem> Cartitems { get; set; }
@@ -39,6 +41,8 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Customer> Customers { get; set; }
 
+    public virtual DbSet<CustomerChoice> CustomerChoices { get; set; }
+
     public virtual DbSet<Customerreward> Customerrewards { get; set; }
 
     public virtual DbSet<Damagereport> Damagereports { get; set; }
@@ -47,11 +51,15 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<DeliveryRoute> DeliveryRoutes { get; set; }
 
+    public virtual DbSet<Deliverymethod> Deliverymethods { get; set; }
+
     public virtual DbSet<Deposit> Deposits { get; set; }
 
     public virtual DbSet<Ecobadge> Ecobadges { get; set; }
 
     public virtual DbSet<Inventoryitem> Inventoryitems { get; set; }
+
+    public virtual DbSet<LegCarbon> LegCarbons { get; set; }
 
     public virtual DbSet<Lineitem> Lineitems { get; set; }
 
@@ -157,6 +165,15 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Vettingrecord> Vettingrecords { get; set; }
 
+<<<<<<< HEAD
+    public virtual DbSet<Warehouse> Warehouses { get; set; }
+
+//     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+// #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+//         => optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=pro_rental;Username=devuser;Password=devpassword");
+
+=======
+>>>>>>> origin/p2-1/Staging
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder
@@ -245,6 +262,7 @@ public partial class AppDbContext : DbContext
                 .HasField("_createdat")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
                 .HasColumnName("createdat");
             entity.Property("Currentstock")
                 .HasField("_currentstock")
@@ -264,6 +282,7 @@ public partial class AppDbContext : DbContext
                 .HasField("_updatedat")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
                 .HasColumnName("updatedat");
 
             entity.HasOne(d => d.Product).WithMany(p => p.Alerts)
@@ -284,29 +303,40 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("analyticsid");
             entity.Property("Enddate")
                 .HasField("_enddate")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("enddate");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("enddate");
             entity.Property("Loanamt")
                 .HasField("_loanamt")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("loanamt");
-            entity.Property("Refprimaryid")
-                .HasField("_refprimaryid")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("refprimaryid");
-            entity.Property("Refprimaryname")
-                .HasField("_refprimaryname")
+            entity.Property("Primaryitem")
+                .HasField("_primaryitem")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
-                .HasColumnName("refprimaryname");
-            entity.Property("Refvalue")
-                .HasField("_refvalue")
+                .HasColumnName("primaryitem");
+            entity.Property("Primarysupplier")
+                .HasField("_primarysupplier")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
-                .HasPrecision(10, 2)
-                .HasColumnName("refvalue");
+                .HasMaxLength(255)
+                .HasColumnName("primarysupplier");
             entity.Property("Returnamt")
                 .HasField("_returnamt")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("returnamt");
             entity.Property("Startdate")
                 .HasField("_startdate")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("startdate");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("startdate");
+            entity.Property("Supplierreliability")
+                .HasField("_supplierreliability")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasPrecision(10, 2)
+                .HasColumnName("supplierreliability");
+            entity.Property("Turnoverrate")
+                .HasField("_turnoverrate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasPrecision(10, 2)
+                .HasColumnName("turnoverrate");
 
             entity.HasMany(d => d.Transactionlogs).WithMany(p => p.Analytics)
                 .UsingEntity<Dictionary<string, object>>(
@@ -345,6 +375,7 @@ public partial class AppDbContext : DbContext
                 .HasField("_addedTimestamp")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("now()")
+                .HasColumnType("timestamp without time zone")
                 .HasColumnName("added_timestamp");
 
             entity.HasOne(d => d.Batch).WithMany(p => p.BatchOrders)
@@ -385,7 +416,9 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("room");
             entity.Property("Timehourly")
                 .HasField("_timehourly")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("timehourly");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("timehourly");
             entity.Property("Totalroomco2")
                 .HasField("_totalroomco2")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("totalroomco2");
@@ -420,6 +453,33 @@ public partial class AppDbContext : DbContext
                 .HasConstraintName("fk_carbon_emission_stage");
         });
 
+        modelBuilder.Entity<CarbonResult>(entity =>
+        {
+            entity.HasKey("CarbonResultId").HasName("carbon_result_pkey");
+
+            entity.ToTable("carbon_result");
+
+            entity.Property("CarbonResultId")
+                .HasField("_carbonResultId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .UseIdentityAlwaysColumn()
+                .HasColumnName("carbon_result_id");
+            entity.Property("CreatedAt")
+                .HasField("_createdAt")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasDefaultValueSql("now()")
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("created_at");
+            entity.Property("TotalCarbonKg")
+                .HasField("_totalCarbonKg")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("total_carbon_kg");
+            entity.Property("ValidationPassed")
+                .HasField("_validationPassed")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasDefaultValue(false)
+                .HasColumnName("validation_passed");
+        });
+
         modelBuilder.Entity<Cart>(entity =>
         {
             entity.HasKey("Cartid").HasName("cart_pkey");
@@ -436,10 +496,14 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("customerid");
             entity.Property("Rentalend")
                 .HasField("_rentalend")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("rentalend");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("rentalend");
             entity.Property("Rentalstart")
                 .HasField("_rentalstart")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("rentalstart");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("rentalstart");
             entity.Property("Sessionid")
                 .HasField("_sessionid")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("sessionid");
@@ -506,6 +570,7 @@ public partial class AppDbContext : DbContext
                 .HasField("_createddate")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
                 .HasColumnName("createddate");
             entity.Property("Description")
                 .HasField("_description")
@@ -519,6 +584,7 @@ public partial class AppDbContext : DbContext
                 .HasField("_updateddate")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
                 .HasColumnName("updateddate");
         });
 
@@ -538,18 +604,20 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("cartid");
             entity.Property("Createdat")
                 .HasField("_createdat")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("createdat");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("createdat");
             entity.Property("Customerid")
                 .HasField("_customerid")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("customerid");
+            entity.Property("Deliveryid")
+                .HasField("_deliveryid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("deliveryid");
             entity.Property("Notifyoptin")
                 .HasField("_notifyoptin")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValue(false)
                 .HasColumnName("notifyoptin");
-            entity.Property("OptionId")
-                .HasField("_optionId")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("option_id");
 
             entity.HasOne(d => d.Cart).WithMany(p => p.Checkouts)
                 .HasForeignKey("Cartid")
@@ -560,8 +628,8 @@ public partial class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_checkout_customer");
 
-            entity.HasOne(d => d.Option).WithMany(p => p.Checkouts)
-                .HasForeignKey("OptionId")
+            entity.HasOne(d => d.Delivery).WithMany(p => p.Checkouts)
+                .HasForeignKey("Deliveryid")
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_checkout_delivery");
         });
@@ -584,11 +652,14 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("batchname");
             entity.Property("Clearancedate")
                 .HasField("_clearancedate")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("clearancedate");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("clearancedate");
             entity.Property("Createddate")
                 .HasField("_createddate")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
                 .HasColumnName("createddate");
         });
 
@@ -624,7 +695,9 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("recommendedprice");
             entity.Property("Saledate")
                 .HasField("_saledate")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("saledate");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("saledate");
 
             entity.HasOne(d => d.Clearancebatch).WithMany(p => p.Clearanceitems)
                 .HasForeignKey("Clearancebatchid")
@@ -656,7 +729,9 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("clearancebatchid");
             entity.Property("Clearancedate")
                 .HasField("_clearancedate")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("clearancedate");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("clearancedate");
             entity.Property("Detailsjson")
                 .HasField("_detailsjson")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("detailsjson");
@@ -701,6 +776,34 @@ public partial class AppDbContext : DbContext
                 .HasConstraintName("fk_customer_user");
         });
 
+        modelBuilder.Entity<CustomerChoice>(entity =>
+        {
+            entity.HasKey("CustomerId", "OrderId").HasName("customer_choice_pkey");
+
+            entity.ToTable("customer_choice");
+
+            entity.Property("CustomerId")
+                .HasField("_customerId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("customer_id");
+            entity.Property("OrderId")
+                .HasField("_orderId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("order_id");
+            entity.Property("CreatedAt")
+                .HasField("_createdAt")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasDefaultValueSql("now()")
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("created_at");
+
+            entity.HasOne(d => d.Customer).WithMany(p => p.CustomerChoices)
+                .HasForeignKey("CustomerId")
+                .HasConstraintName("fk_customerchoice_customer");
+
+            entity.HasOne(d => d.Order).WithMany(p => p.CustomerChoices)
+                .HasForeignKey("OrderId")
+                .HasConstraintName("fk_customerchoice_order");
+        });
+
         modelBuilder.Entity<Customerreward>(entity =>
         {
             entity.HasKey("Rewardid").HasName("customerrewards_pkey");
@@ -714,7 +817,9 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("rewardid");
             entity.Property("Createdat")
                 .HasField("_createdat")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("createdat");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("createdat");
             entity.Property("Customerid")
                 .HasField("_customerid")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("customerid");
@@ -767,6 +872,7 @@ public partial class AppDbContext : DbContext
                 .HasField("_reportdate")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
                 .HasColumnName("reportdate");
             entity.Property("Returnitemid")
                 .HasField("_returnitemid")
@@ -849,6 +955,40 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("total_distance_km");
         });
 
+        modelBuilder.Entity<Deliverymethod>(entity =>
+        {
+            entity.HasKey("Deliveryid").HasName("deliverymethod_pkey");
+
+            entity.ToTable("deliverymethod");
+
+            entity.Property("Deliveryid")
+                .HasField("_deliveryid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .UseIdentityAlwaysColumn()
+                .HasColumnName("deliveryid");
+            entity.Property("Carrierid")
+                .HasField("_carrierid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasMaxLength(50)
+                .HasColumnName("carrierid");
+            entity.Property("Deliverycost")
+                .HasField("_deliverycost")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasPrecision(10, 2)
+                .HasColumnName("deliverycost");
+            entity.Property("Durationdays")
+                .HasField("_durationdays")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("durationdays");
+            entity.Property("Orderid")
+                .HasField("_orderid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("orderid");
+
+            entity.HasOne(d => d.Order).WithMany(p => p.Deliverymethods)
+                .HasForeignKey("Orderid")
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_deliverymethod_order");
+        });
+
         modelBuilder.Entity<Deposit>(entity =>
         {
             entity.HasKey("Depositid").HasName("deposit_pkey");
@@ -862,7 +1002,9 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("depositid");
             entity.Property("Createdat")
                 .HasField("_createdat")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("createdat");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("createdat");
             entity.Property("Forfeitedamount")
                 .HasField("_forfeitedamount")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
@@ -945,10 +1087,13 @@ public partial class AppDbContext : DbContext
                 .HasField("_createdat")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
                 .HasColumnName("createdat");
             entity.Property("Expirydate")
                 .HasField("_expirydate")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("expirydate");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("expirydate");
             entity.Property("Productid")
                 .HasField("_productid")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("productid");
@@ -961,11 +1106,51 @@ public partial class AppDbContext : DbContext
                 .HasField("_updatedat")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
                 .HasColumnName("updatedat");
 
             entity.HasOne(d => d.Product).WithMany(p => p.Inventoryitems)
                 .HasForeignKey("Productid")
                 .HasConstraintName("fk_inventory_product");
+        });
+
+        modelBuilder.Entity<LegCarbon>(entity =>
+        {
+            entity.HasKey("LegId").HasName("leg_carbon_pkey");
+
+            entity.ToTable("leg_carbon");
+
+            entity.Property("LegId")
+                .HasField("_legId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .UseIdentityAlwaysColumn()
+                .HasColumnName("leg_id");
+            entity.Property("CarbonKg")
+                .HasField("_carbonKg")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("carbon_kg");
+            entity.Property("CarbonRate")
+                .HasField("_carbonRate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("carbon_rate");
+            entity.Property("CarbonResultId")
+                .HasField("_carbonResultId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("carbon_result_id");
+            entity.Property("DistanceKm")
+                .HasField("_distanceKm")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("distance_km");
+            entity.Property("RouteLegId")
+                .HasField("_routeLegId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("route_leg_id");
+            entity.Property("WeightKg")
+                .HasField("_weightKg")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("weight_kg");
+
+            entity.HasOne(d => d.CarbonResult).WithMany(p => p.LegCarbons)
+                .HasForeignKey("CarbonResultId")
+                .HasConstraintName("fk_leg_carbon_result");
+
+            entity.HasOne(d => d.RouteLeg).WithMany(p => p.LegCarbons)
+                .HasForeignKey("RouteLegId")
+                .HasConstraintName("fk_leg_carbon_leg");
         });
 
         modelBuilder.Entity<Lineitem>(entity =>
@@ -1050,11 +1235,14 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("customerid");
             entity.Property("Duedate")
                 .HasField("_duedate")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("duedate");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("duedate");
             entity.Property("Loandate")
                 .HasField("_loandate")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
                 .HasColumnName("loandate");
             entity.Property("Orderid")
                 .HasField("_orderid")
@@ -1064,7 +1252,9 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("remarks");
             entity.Property("Returndate")
                 .HasField("_returndate")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("returndate");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("returndate");
 
             entity.HasOne(d => d.Customer).WithMany(p => p.Loanlists)
                 .HasForeignKey("Customerid")
@@ -1093,10 +1283,14 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("detailsjson");
             entity.Property("Duedate")
                 .HasField("_duedate")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("duedate");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("duedate");
             entity.Property("Loandate")
                 .HasField("_loandate")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("loandate");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("loandate");
             entity.Property("Loanlistid")
                 .HasField("_loanlistid")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("loanlistid");
@@ -1105,7 +1299,9 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("rentalorderlogid");
             entity.Property("Returndate")
                 .HasField("_returndate")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("returndate");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("returndate");
 
             entity.HasOne(d => d.Loanlist).WithMany(p => p.Loanlogs)
                 .HasForeignKey("Loanlistid")
@@ -1135,6 +1331,7 @@ public partial class AppDbContext : DbContext
                 .HasField("_datesent")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
                 .HasColumnName("datesent");
             entity.Property("Isread")
                 .HasField("_isread")
@@ -1204,7 +1401,9 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("customerid");
             entity.Property("Orderdate")
                 .HasField("_orderdate")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("orderdate");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("orderdate");
             entity.Property("Totalamount")
                 .HasField("_totalamount")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
@@ -1245,7 +1444,9 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("buildingcarbon");
             entity.Property("Calculatedat")
                 .HasField("_calculatedat")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("calculatedat");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("calculatedat");
             entity.Property("Impactlevel")
                 .HasField("_impactlevel")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
@@ -1294,10 +1495,14 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("quantity");
             entity.Property("Rentalenddate")
                 .HasField("_rentalenddate")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("rentalenddate");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("rentalenddate");
             entity.Property("Rentalstartdate")
                 .HasField("_rentalstartdate")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("rentalstartdate");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("rentalstartdate");
             entity.Property("Unitprice")
                 .HasField("_unitprice")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
@@ -1337,6 +1542,7 @@ public partial class AppDbContext : DbContext
                 .HasField("_timestamp")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
                 .HasColumnName("timestamp");
             entity.Property("Updatedby")
                 .HasField("_updatedby")
@@ -1478,7 +1684,9 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("amount");
             entity.Property("Createdat")
                 .HasField("_createdat")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("createdat");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("createdat");
             entity.Property("Orderid")
                 .HasField("_orderid")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("orderid");
@@ -1602,6 +1810,7 @@ public partial class AppDbContext : DbContext
                 .HasField("_createdat")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
                 .HasColumnName("createdat");
             entity.Property("Sku")
                 .HasField("_sku")
@@ -1617,6 +1826,7 @@ public partial class AppDbContext : DbContext
                 .HasField("_updatedat")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
                 .HasColumnName("updatedat");
 
             entity.HasOne(d => d.Category).WithMany(p => p.Products)
@@ -1791,10 +2001,14 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("detailsjson");
             entity.Property("Expecteddeliverydate")
                 .HasField("_expecteddeliverydate")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("expecteddeliverydate");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("expecteddeliverydate");
             entity.Property("Podate")
                 .HasField("_podate")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("podate");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("podate");
             entity.Property("Poid")
                 .HasField("_poid")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("poid");
@@ -1846,7 +2060,9 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("penaltyamount");
             entity.Property("Returndate")
                 .HasField("_returndate")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("returndate");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("returndate");
             entity.Property("Returnmethod")
                 .HasField("_returnmethod")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
@@ -1893,7 +2109,9 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("ratingid");
             entity.Property("Calculatedat")
                 .HasField("_calculatedat")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("calculatedat");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("calculatedat");
             entity.Property("Calculatedbyuserid")
                 .HasField("_calculatedbyuserid")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("calculatedbyuserid");
@@ -1934,7 +2152,9 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("detailsjson");
             entity.Property("Orderdate")
                 .HasField("_orderdate")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("orderdate");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("orderdate");
             entity.Property("Orderid")
                 .HasField("_orderid")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("orderid");
@@ -1967,7 +2187,9 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("requestid");
             entity.Property("Completedat")
                 .HasField("_completedat")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("completedat");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("completedat");
             entity.Property("Completedby")
                 .HasField("_completedby")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
@@ -1975,7 +2197,9 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("completedby");
             entity.Property("Createdat")
                 .HasField("_createdat")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("createdat");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("createdat");
             entity.Property("Remarks")
                 .HasField("_remarks")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("remarks");
@@ -2054,6 +2278,10 @@ public partial class AppDbContext : DbContext
             entity.Property("WaterLitres")
                 .HasField("_waterLitres")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("water_litres");
+            entity.Property("StageType")
+                .HasField("_stageType")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnName("stage_type");
 
             entity.HasOne(d => d.Return).WithMany(p => p.ReturnStages)
                 .HasForeignKey("ReturnId")
@@ -2074,7 +2302,9 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("returnitemid");
             entity.Property("Completiondate")
                 .HasField("_completiondate")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("completiondate");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("completiondate");
             entity.Property("Image")
                 .HasField("_image")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
@@ -2110,7 +2340,9 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("returnlogid");
             entity.Property("Completiondate")
                 .HasField("_completiondate")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("completiondate");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("completiondate");
             entity.Property("Customerid")
                 .HasField("_customerid")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
@@ -2129,7 +2361,9 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("rentalorderlogid");
             entity.Property("Requestdate")
                 .HasField("_requestdate")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("requestdate");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("requestdate");
             entity.Property("Returnrequestid")
                 .HasField("_returnrequestid")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("returnrequestid");
@@ -2160,7 +2394,9 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("returnrequestid");
             entity.Property("Completiondate")
                 .HasField("_completiondate")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("completiondate");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("completiondate");
             entity.Property("Customerid")
                 .HasField("_customerid")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("customerid");
@@ -2171,6 +2407,7 @@ public partial class AppDbContext : DbContext
                 .HasField("_requestdate")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
                 .HasColumnName("requestdate");
 
             entity.HasOne(d => d.Customer).WithMany(p => p.Returnrequests)
@@ -2251,10 +2488,14 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("sessionid");
             entity.Property("Createdat")
                 .HasField("_createdat")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("createdat");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("createdat");
             entity.Property("Expiresat")
                 .HasField("_expiresat")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("expiresat");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("expiresat");
             entity.Property("Role")
                 .HasField("_role")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
@@ -2554,7 +2795,9 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("logid");
             entity.Property("Changedat")
                 .HasField("_changedat")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("changedat");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("changedat");
             entity.Property("Changereason")
                 .HasField("_changereason")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
@@ -2607,7 +2850,9 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("amount");
             entity.Property("Createdat")
                 .HasField("_createdat")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("createdat");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("createdat");
             entity.Property("Providertransactionid")
                 .HasField("_providertransactionid")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
@@ -2630,6 +2875,7 @@ public partial class AppDbContext : DbContext
                 .HasField("_createdat")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
                 .HasColumnName("createdat");
         });
 
@@ -2780,7 +3026,9 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("supplierid");
             entity.Property("Vettedat")
                 .HasField("_vettedat")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("vettedat");
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("vettedat");
             entity.Property("Vettedbyuserid")
                 .HasField("_vettedbyuserid")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("vettedbyuserid");

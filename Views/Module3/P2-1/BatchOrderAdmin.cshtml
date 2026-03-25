@@ -1,0 +1,97 @@
+@model List<ProRental.Domain.Entities.DeliveryBatch>
+@{
+    ViewData["Title"] = "Batch Order Creation & Shipping";
+    var message = ViewData["Message"] as string;
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-1">Order Creation / Shipping Admin</h2>
+            <p class="text-muted mb-0">Quick and dirty demo page for order intake and shipping updates.</p>
+        </div>
+        <a asp-controller="BatchDelivery" asp-action="BatchDeliveryView" class="btn btn-outline-primary">Back to BatchDeliveryView</a>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(message))
+    {
+        <div class="alert alert-info">@message</div>
+    }
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-light"><strong>Create Order (Demo Intake)</strong></div>
+                <div class="card-body">
+                    <form asp-controller="BatchAdmin" asp-action="CreateOrderAndOption" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-3">
+                            <label class="form-label">Order ID</label>
+                            <input type="number" class="form-control" name="orderId" min="1" required />
+                            <div class="form-text">Enter an existing order ID for demo intake.</div>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" name="useBatchShipping" value="true" checked id="useBatchShipping" />
+                            <label class="form-check-label" for="useBatchShipping">
+                                Customer chooses batch shipping to save carbon footprint
+                            </label>
+                        </div>
+                        <button class="btn btn-success" type="submit">Submit Order Choice</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-light"><strong>Mark Batches as Shipped Out</strong></div>
+                <div class="card-body">
+                    <form asp-controller="BatchAdmin" asp-action="MarkBatchesAsShipped" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-3">
+                            <label class="form-label">Batch IDs (comma separated)</label>
+                            <input type="text" class="form-control" name="batchIdsCsv" placeholder="1, 2, 3" required />
+                        </div>
+                        <button class="btn btn-warning" type="submit">Mark as Shipped</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mt-4">
+        <div class="card-header bg-light"><strong>Current Batches</strong></div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>Batch ID</th>
+                            <th>Status</th>
+                            <th>Total Orders</th>
+                            <th>Carbon Savings (kg)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @if (Model.Count == 0)
+                    {
+                        <tr><td colspan="4" class="text-center py-3 text-muted">No batches yet.</td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var batch in Model)
+                        {
+                            <tr>
+                                <td>@batch.GetDeliveryBatchIdentifier()</td>
+                                <td>@(batch.GetDeliveryBatchStatus()?.ToString() ?? "N/A")</td>
+                                <td>@batch.GetTotalOrders()</td>
+                                <td class="fw-semibold text-success">@batch.GetCarbonSavings().ToString("0.##") kg</td>
+                            </tr>
+                        }
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

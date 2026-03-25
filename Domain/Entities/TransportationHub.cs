@@ -27,4 +27,11 @@ public abstract partial class TransportationHub
     private string? OperationTime { get => _operationTime; set => _operationTime = value; }
 
     public virtual ICollection<DeliveryBatch> DeliveryBatches { get; private set; } = new List<DeliveryBatch>();
+<<<<<<< HEAD
+
+    public virtual ICollection<DeliveryRoute> DeliveryRouteDestinationHubs { get; private set; } = new List<DeliveryRoute>();
+
+    public virtual ICollection<DeliveryRoute> DeliveryRouteOriginHubs { get; private set; } = new List<DeliveryRoute>();
+=======
+>>>>>>> origin/p2-1/Staging
 }

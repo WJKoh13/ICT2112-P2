@@ -108,6 +108,7 @@ internal static class Phase0Tests
         new("Checkout grouped methods round-trip values", CheckoutSelectionAccessorsRoundTrip),
         new("Order grouped methods round-trip values", OrderAccessorsRoundTrip),
         new("DeliveryRoute accessors round-trip values", DeliveryRouteAccessorsRoundTrip),
+        new("RouteLeg derives exactly one role flag", RouteLegDerivesExactlyOneRoleFlag),
         new("Feature1 enum mappings use snake_case column names", Feature1EnumMappingsUseSnakeCase)
     ];
 
@@ -176,15 +177,35 @@ internal static class Phase0Tests
         route.SetDestinationAddress("Customer B");
         route.SetTotalDistanceKm(128.5);
         route.SetIsValid(true);
-        route.SetOriginHubId(14);
-        route.SetDestinationHubId(15);
 
         TestAssertions.AssertEqual("Warehouse A", route.GetOriginAddress());
         TestAssertions.AssertEqual("Customer B", route.GetDestinationAddress());
         TestAssertions.AssertEqual(128.5, route.GetTotalDistanceKm());
         TestAssertions.AssertEqual(true, route.GetIsValid());
-        TestAssertions.AssertEqual(14, route.GetOriginHubId());
-        TestAssertions.AssertEqual(15, route.GetDestinationHubId());
+    }
+
+    private static void RouteLegDerivesExactlyOneRoleFlag()
+    {
+        var firstLeg = new RouteLeg();
+        firstLeg.ConfigureLeg(1, "Warehouse", "Airport Hub", 18d, TransportMode.PLANE, true, false);
+
+        TestAssertions.AssertEqual(true, firstLeg.GetIsFirstMile());
+        TestAssertions.AssertEqual(false, firstLeg.GetIsMainTransport());
+        TestAssertions.AssertEqual(false, firstLeg.GetIsLastMile());
+
+        var lastLeg = new RouteLeg();
+        lastLeg.ConfigureLeg(2, "Airport Hub", "Customer", 8d, TransportMode.TRUCK, false, true);
+
+        TestAssertions.AssertEqual(false, lastLeg.GetIsFirstMile());
+        TestAssertions.AssertEqual(false, lastLeg.GetIsMainTransport());
+        TestAssertions.AssertEqual(true, lastLeg.GetIsLastMile());
+
+        var singleLeg = new RouteLeg();
+        singleLeg.ConfigureLeg(1, "Warehouse", "Customer", 24d, TransportMode.TRUCK, true, true);
+
+        TestAssertions.AssertEqual(false, singleLeg.GetIsFirstMile());
+        TestAssertions.AssertEqual(true, singleLeg.GetIsMainTransport());
+        TestAssertions.AssertEqual(false, singleLeg.GetIsLastMile());
     }
 
     private static void Feature1EnumMappingsUseSnakeCase()

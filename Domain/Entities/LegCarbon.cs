@@ -20,8 +20,13 @@ public partial class LegCarbon
     private double? _carbonRate;
     private double? CarbonRate { get => _carbonRate; set => _carbonRate = value; }
 
+    private int? _carbonResultId;
+    private int? CarbonResultId { get => _carbonResultId; set => _carbonResultId = value; }
+
     private int? _routeLegId;
     private int? RouteLegId { get => _routeLegId; set => _routeLegId = value; }
+
+    public virtual CarbonResult? CarbonResult { get; private set; }
 
     public virtual RouteLeg? RouteLeg { get; private set; }
 }

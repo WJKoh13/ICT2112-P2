@@ -4,5 +4,5 @@ namespace ProRental.Interfaces.Module3.P2_1;
 
 public interface IRouteQueryService
 {
-    RouteLeg RetrieveFirstMileLeg(int routeId);
+    RouteLeg? retrieveFirstMileLeg(int routeId);
 }

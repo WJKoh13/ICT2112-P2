@@ -28,8 +28,6 @@
                 <dd class="col-sm-8">@Model.CarbonFootprintKg.ToString("0.##") kg CO2</dd>
                 <dt class="col-sm-4 text-muted">Transport</dt>
                 <dd class="col-sm-8">@Model.TransportModeLabel</dd>
-                <dt class="col-sm-4 text-muted">Distance</dt>
-                <dd class="col-sm-8">@(Model.DistanceKm is double distanceKm ? $"{distanceKm:0.##} km" : "Not available")</dd>
             </dl>
         </div>
     </div>

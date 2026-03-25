@@ -3,7 +3,6 @@ using ProRental.Data.Module3.P2_1;
 using ProRental.Data.Module3.P2_1.Gateways;
 using ProRental.Data.Module3.P2_1.Interfaces;
 using ProRental.Domain.Controls;
-using ProRental.Domain.Module3.P2_1.Controls;
 using ProRental.Domain.Module3.P2_1.Mocks;
 using ProRental.Interfaces.Module3.P2_1;
 
@@ -17,15 +16,9 @@ public static class Feature1ServiceCollectionExtensions
 {
     public static IServiceCollection AddFeature1Services(this IServiceCollection services)
     {
-        services.AddHttpClient<IGoogleMapsApi, GoogleMapsAPI>(client =>
-        {
-            client.BaseAddress = new Uri("https://routes.googleapis.com/");
-        });
         services.AddScoped<IShippingOptionMapper, ShippingOptionMapper>();
         services.AddScoped<IOrderService, ShippingOrderContextService>();
-        services.AddScoped<IRouteQueryService, RouteManager>();
-        services.AddScoped<IRouteLegBuilder, RouteLegBuilder>();
-        services.AddScoped<IRoutingService, RouteManager>();
+        services.AddScoped<IRoutingService, MockRoutingService>();
         services.AddScoped<IShippingOptionCarbonInputService, MockShippingOptionCarbonInputService>();
         services.AddScoped<IPricingRuleGateway, PricingRuleGateway>();
         services.AddScoped<ITransportCarbonService, ProRental.Domain.Module3.P2_1.Controls.TransportCarbonManager>();

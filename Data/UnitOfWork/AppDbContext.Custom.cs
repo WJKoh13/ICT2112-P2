@@ -107,7 +107,7 @@ public partial class AppDbContext
         modelBuilder.Entity<DeliveryBatch>(entity =>
         {
             entity.Property("DeliveryBatchStatus").HasField("_deliveryBatchStatus").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("deliverybatchstatus").HasColumnType("batch_status");
+                          .HasColumnName("delivery_batch_status").HasColumnType("batch_status");
         });
 
         modelBuilder.Entity<Inventoryitem>(entity =>

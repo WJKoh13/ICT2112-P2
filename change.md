@@ -102,17 +102,15 @@ Role:
 - `GetDestinationAddress()`
 - `GetTotalDistanceKm()`
 - `GetIsValid()`
+- `GetOriginHubId()`
+- `GetDestinationHubId()`
 - `GetOrderedRouteLegs()`
 - `SetOriginAddress(string originAddress)`
 - `SetDestinationAddress(string destinationAddress)`
 - `SetTotalDistanceKm(double totalDistanceKm)`
 - `SetIsValid(bool isValid)`
-
-Role:
-
-- stores route-level address and aggregate distance state
-- exposes ordered `RouteLeg` entries as the source of route composition
-- no longer carries origin/destination hub foreign keys after the schema change
+- `SetOriginHubId(int? originHubId)`
+- `SetDestinationHubId(int? destinationHubId)`
 
 **`RouteLeg`**
 
@@ -123,7 +121,6 @@ Role:
 - `GetEndPoint()`
 - `GetDistanceKm()`
 - `GetIsFirstMile()`
-- `GetIsMainTransport()`
 - `GetIsLastMile()`
 - `GetTransportMode()`
 - `ConfigureLeg(int sequence, string startPoint, string endPoint, double distanceKm, TransportMode transportMode, bool isFirstMile, bool isLastMile)`

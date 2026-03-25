@@ -2,10 +2,6 @@
     ViewData["Title"] = "Home — Pro Rentals";
     Layout = null; @* Full-page homepage — renders its own navbar, footer, and styles *@
 }
-
-@using Microsoft.AspNetCore.Http
-@inject IHttpContextAccessor HttpContextAccessor
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -70,105 +66,7 @@
        Add new <li class="nav-item"> entries inside the relevant
        <ul class="dropdown-menu"> to extend a module's nav links.
        ================================================================ *@
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
-        <div class="container">
-
-            @* Brand / Logo *@
-            <a class="navbar-brand fw-bold" href="#">
-                <i class="bi bi-box-seam-fill me-2" style="color: #2d7a4f;"></i>Pro Rentals
-            </a>
-
-            @* Mobile hamburger *@
-            <button class="navbar-toggler" type="button"
-                    data-bs-toggle="collapse" data-bs-target="#mainNav"
-                    aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="mainNav">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-
-                    @* Module 1 — Order Processing *@
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button"
-                           data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-cart3 me-1"></i>Order Processing
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><h6 class="dropdown-header text-uppercase" style="color: #2d7a4f; font-size: 0.7rem;">Module 1</h6></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-plus-circle me-2" style="color: #2d7a4f;"></i>Place Order</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-search me-2" style="color: #2d7a4f;"></i>Track Order</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-truck me-2" style="color: #2d7a4f;"></i>Manage Dispatch</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-arrow-return-left me-2" style="color: #2d7a4f;"></i>Handle Returns</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-cash-coin me-2" style="color: #2d7a4f;"></i>Deposit Refunds</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-bell me-2" style="color: #2d7a4f;"></i>Order Notifications</a></li>
-                        </ul>
-                    </li>
-
-                    @* Module 2 — Inventory Management *@
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button"
-                           data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-boxes me-1"></i>Inventory Management
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><h6 class="dropdown-header text-uppercase" style="color: #0d6efd; font-size: 0.7rem;">Module 2</h6></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-grid me-2" style="color: #0d6efd;"></i>Product Catalogue</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-box-seam me-2" style="color: #0d6efd;"></i>Stock Management</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-arrow-repeat me-2" style="color: #0d6efd;"></i>Return Processing Pipeline</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-building-check me-2" style="color: #0d6efd;"></i>Trusted Supplier Registry</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-bar-chart-line me-2" style="color: #0d6efd;"></i>Analytics &amp; Reports</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-tag me-2" style="color: #0d6efd;"></i>Product Clearance</a></li>
-                        </ul>
-                    </li>
-
-                    @* Module 3 — Carbon Footprint *@
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button"
-                           data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-leaf me-1"></i>Carbon Footprint
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><h6 class="dropdown-header text-uppercase" style="color: #0a9396; font-size: 0.7rem;">Module 3</h6></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-calculator me-2" style="color: #0a9396;"></i>Product Carbon Calculator</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-truck-flatbed me-2" style="color: #0a9396;"></i>Shipment Carbon Tracker</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-signpost-2 me-2" style="color: #0a9396;"></i>Route Distance Determination</a></li>
-                            <li><a class="dropdown-item" asp-controller="Warehouse" asp-action="GetWarehouseCarbon" asp-route-hubId="1"><i class="bi bi-building me-2" style="color: #0a9396;"></i>Warehouse Storage Emissions</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-recycle me-2" style="color: #0a9396;"></i>Return Process Carbon Lifecycle</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-collection me-2" style="color: #0a9396;"></i>Batch Delivery Consolidation</a></li>
-                        </ul>
-                    </li>
-
-                </ul>
-
-                @* Auth buttons *@
-                <div class="d-flex gap-2">
-                    @if (HttpContextAccessor.HttpContext!.Session.GetInt32("SessionId") != null)
-                    {
-                        <span class="navbar-text text-white-50 small me-1">
-                            <i class="bi bi-person-circle me-1"></i>@HttpContextAccessor.HttpContext!.Session.GetString("UserName")
-                            <span class="badge bg-secondary ms-1">@HttpContextAccessor.HttpContext!.Session.GetString("UserRole")</span>
-                            </span>
-                        <form asp-controller="Module1" asp-action="Logout" method="post" class="d-inline">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-outline-danger btn-sm">
-                                <i class="bi bi-box-arrow-right me-1"></i>Logout
-                                </button>
-                        </form>
-                    }
-                    else
-                    {
-                        <a href="/Module1/Login" class="btn btn-outline-light btn-sm">
-                        <i class="bi bi-box-arrow-in-right me-1"></i>Login
-                        </a>
-                        <a href="/Module1/Signup" class="btn btn-primary btn-sm">
-                        <i class="bi bi-person-plus me-1"></i>Register
-                        </a>
-                    }
-                </div>
-            </div>
-        </div>
-    </nav>
+    @await Html.PartialAsync("_MainNavbar")
 
 
     @* ================================================================
@@ -307,11 +205,12 @@
                                 <li class="mb-3"><a href="#" class="module-link-3 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Route Distance Determination</a></li>
                                 <li class="mb-3"><a asp-controller="Warehouse" asp-action="GetWarehouseCarbon" asp-route-hubId="1" class="module-link-3 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Warehouse Storage Emissions</a></li>
                                 <li class="mb-3"><a asp-controller="ReturnStage" asp-action="StageBreakdown" class="module-link-3 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Return Process Carbon Lifecycle</a></li>
-                                <li class="mb-0"><a href="#" class="module-link-3 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Batch Delivery Consolidation</a></li>
+                                <li class="mb-2"><a asp-controller="BatchDelivery" asp-action="DisplayBatchTable" class="module-link-3 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Batch Delivery Consolidation</a></li>
+                                <li class="mb-0"><a asp-controller="BatchAdmin" asp-action="BatchOrderAdmin" class="module-link-3 d-flex align-items-center"><i class="bi bi-chevron-right me-2"></i>Order Creation / Shipping Admin</a></li>
                             </ul>
                         </div>
                         <div class="card-footer bg-white border-0 pb-3 px-3">
-                            <a href="#" class="btn btn-module-3 w-100">
+                            <a asp-controller="BatchDelivery" asp-action="DisplayBatchTable" class="btn btn-module-3 w-100">
                                 Go to Module 3 <i class="bi bi-arrow-right ms-2"></i>
                             </a>
                         </div>
@@ -466,7 +365,7 @@
                     </div>
                 </div>
                 <div class="col-md-auto">
-                    <a href="/Module1/StaffLogin" class="btn btn-warning btn-lg fw-semibold">
+                    <a href="#" class="btn btn-warning btn-lg fw-semibold">
                         <i class="bi bi-box-arrow-in-right me-2"></i>Staff Login
                     </a>
                 </div>

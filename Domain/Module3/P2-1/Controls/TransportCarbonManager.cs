@@ -64,9 +64,9 @@ public sealed class TransportCarbonManager : ITransportCarbonService
         var routeLegs = route.GetOrderedRouteLegs();
         var quoteLegs = routeLegs.Count > 0
             ? routeLegs.Select(routeLeg => new QuoteLeg(
-                routeLeg.GetDistanceKm(),
+                routeLeg.GetDistanceKm() ?? 0d,
                 routeLeg.GetTransportMode() ?? TransportMode.TRUCK))
-            : [new QuoteLeg(route.GetTotalDistanceKm(), TransportMode.TRUCK)];
+            : [new QuoteLeg(route.GetTotalDistanceKm() ?? 0d, TransportMode.TRUCK)];
 
         var quoteLegList = quoteLegs.ToList();
         var storageCo2Total = _hubCarbonService.CalculateProductStorageCarbon(productId, hubId);

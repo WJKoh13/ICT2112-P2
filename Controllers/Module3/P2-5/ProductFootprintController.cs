@@ -19,7 +19,12 @@ public sealed class ProductFootprintController : Controller
     public IActionResult Index()
     {
         var model = new ProductFootprintCalculationViewModel();
-        TryPopulateProductOptions(model);
+        PopulatePageData(model);
+        if (TempData.TryGetValue("StatusMessage", out var statusMessage))
+        {
+            model.StatusMessage = statusMessage?.ToString();
+        }
+
         return View("~/Views/Module3/P2-5/ProductFootprintCalculator.cshtml", model);
     }
 
@@ -27,7 +32,7 @@ public sealed class ProductFootprintController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult Index(ProductFootprintCalculationViewModel model)
     {
-        TryPopulateProductOptions(model);
+        PopulatePageData(model);
 
         if (!ModelState.IsValid)
         {
@@ -47,6 +52,8 @@ public sealed class ProductFootprintController : Controller
 
             model.CarbonFootprint = result.CarbonFootprint;
             model.CalculatedAt = result.CalculatedAt;
+            model.StatusMessage = "Product carbon footprint saved successfully.";
+            TryPopulateSavedFootprints(model);
         }
         catch (InvalidOperationException exception)
         {
@@ -72,6 +79,39 @@ public sealed class ProductFootprintController : Controller
         return View("~/Views/Module3/P2-5/ProductFootprintCalculator.cshtml", model);
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult Delete(int productCarbonFootprintId)
+    {
+        try
+        {
+            var wasDeleted = _productFootprintCalculatorService.DeleteFootprint(productCarbonFootprintId);
+            TempData["StatusMessage"] = wasDeleted
+                ? "Product carbon footprint deleted successfully."
+                : "The selected product carbon footprint record was not found.";
+        }
+        catch (ArgumentOutOfRangeException exception)
+        {
+            TempData["StatusMessage"] = exception.Message;
+        }
+        catch (DbUpdateException exception)
+        {
+            TempData["StatusMessage"] = $"Unable to delete the product carbon footprint record: {exception.GetBaseException().Message}";
+        }
+        catch (Exception exception)
+        {
+            TempData["StatusMessage"] = $"An unexpected error occurred while deleting: {exception.GetBaseException().Message}";
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    private void PopulatePageData(ProductFootprintCalculationViewModel model)
+    {
+        TryPopulateProductOptions(model);
+        TryPopulateSavedFootprints(model);
+    }
+
     private void TryPopulateProductOptions(ProductFootprintCalculationViewModel model)
     {
         try
@@ -90,6 +130,19 @@ public sealed class ProductFootprintController : Controller
         {
             model.ProductOptions = [];
             ModelState.AddModelError(string.Empty, $"Unable to load products: {exception.Message}");
+        }
+    }
+
+    private void TryPopulateSavedFootprints(ProductFootprintCalculationViewModel model)
+    {
+        try
+        {
+            model.SavedFootprints = _productFootprintCalculatorService.GetAllFootprints();
+        }
+        catch (Exception exception)
+        {
+            model.SavedFootprints = [];
+            ModelState.AddModelError(string.Empty, $"Unable to load saved product footprints: {exception.Message}");
         }
     }
 }

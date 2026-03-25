@@ -13,10 +13,10 @@ public partial class RouteLeg
     public int? GetSequence() => _sequence;
     public string GetStartPoint() => _startPoint ?? string.Empty;
     public string GetEndPoint() => _endPoint ?? string.Empty;
-    public double GetDistanceKm() => _distanceKm;
-    public bool GetIsFirstMile() => _isFirstMile;
-    public bool GetIsMainTransport() => _isMainTransport;
-    public bool GetIsLastMile() => _isLastMile;
+    public double? GetDistanceKm() => _distanceKm;
+    public bool? GetIsFirstMile() => _isFirstMile;
+    public bool? GetIsMainTransport() => _isMainTransport;
+    public bool? GetIsLastMile() => _isLastMile;
     public TransportMode? GetTransportMode() => _transportMode;
 
     public void ConfigureLeg(
@@ -30,7 +30,7 @@ public partial class RouteLeg
         bool isLastMile)
     {
         var isSingleLeg = isFirstMile && isLastMile;
-        var normalizedIsMainTransport = isSingleLeg || isMainTransport || (!isFirstMile && !isLastMile);
+        var isMainTransport = isSingleLeg || (!isFirstMile && !isLastMile);
 
         _sequence = sequence;
         _startPoint = startPoint;
@@ -38,7 +38,7 @@ public partial class RouteLeg
         _distanceKm = distanceKm;
         _transportMode = transportMode;
         _isFirstMile = isFirstMile && !isSingleLeg;
-        _isMainTransport = normalizedIsMainTransport && !_isFirstMile;
+        _isMainTransport = isMainTransport;
         _isLastMile = isLastMile && !isSingleLeg;
     }
 

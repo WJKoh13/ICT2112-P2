@@ -1,0 +1,238 @@
+/* =============================================================================
+   ProRental Design System — site.css
+   Lead Designer: ProRental Design Lead, March 2026
+   Bootstrap Version: 5.3.3 (locally installed via libman.json)
+   ===============================================================================
+
+   DESIGN PHILOSOPHY
+   -----------------
+   This project uses stock Bootstrap 5.3 as its primary design framework.
+   Do NOT introduce a separate CSS framework (e.g. Tailwind, Bulma, Foundation).
+   All layouts, grids, spacing, and typography must use Bootstrap utility classes.
+
+   COLOUR PALETTE (Eco-Green / Sustainability Theme)
+   -------------------------------------------------
+   Primary (brand green) : #2d7a4f  — buttons, links, active nav states
+   Primary hover         : #1e5435  — darker shade for hover/active states
+   Primary RGB           : 45, 122, 79  (used by Bootstrap alpha utilities)
+   Background light      : Bootstrap default #f8f9fa  (--bs-light)
+   Background dark areas : Bootstrap default #212529  (--bs-dark)
+   Body text             : Bootstrap default #212529
+   Muted text            : Bootstrap default #6c757d  (--bs-secondary)
+
+   TYPOGRAPHY
+   ----------
+   Font family  : Bootstrap default (system-ui / native stack — no Google Fonts needed)
+   Base size    : 16px desktop, 14px mobile — see Section 1 below
+   Do NOT override Bootstrap heading sizes (h1–h6).
+   Use Bootstrap text-* utility classes for size adjustments.
+
+   COMPONENT CONVENTIONS
+   ---------------------
+   Buttons  : Use .btn + .btn-primary for primary actions.
+              Use .btn-outline-primary for secondary actions.
+              Never use custom button HTML — always use Bootstrap .btn classes.
+   Forms    : Use .form-control, .form-label, .form-check Bootstrap classes.
+              Wrap forms in .card > .card-body when inside a page section.
+   Cards    : Use .card + .card-body for all boxed content sections.
+   Tables   : Use .table + .table-striped + .table-hover for all data tables.
+              Always wrap in .table-responsive for mobile friendliness.
+   Alerts   : Use Bootstrap .alert-* classes. Do NOT create custom alert styles.
+   Badges   : Use .badge + .bg-primary / .bg-success / .bg-danger etc.
+   Modals   : Use Bootstrap modal component. Trigger via data-bs-toggle="modal".
+   Icons    : Use Bootstrap Icons (bi bi-*). Library loaded in _Layout.cshtml.
+              Reference: https://icons.getbootstrap.com/
+
+   LAYOUT CONVENTIONS
+   ------------------
+   - All pages render inside the shared .container in _Layout.cshtml.
+   - Do NOT add extra wrapping .container inside views — layout already provides one.
+   - Use the Bootstrap grid (.row > .col-*) for all multi-column layouts.
+   - Use Bootstrap spacing utilities (m-*, p-*, g-*) — avoid custom margins/padding.
+   - Responsive breakpoints: xs (<576px), sm (>=576px), md (>=768px), lg (>=992px), xl (>=1200px).
+
+   ADDING CUSTOM CSS
+   -----------------
+   Only write custom CSS here for project-specific overrides that cannot be achieved
+   with Bootstrap utility classes alone. Keep custom rules minimal and well-commented.
+   Each custom rule must have a comment explaining why a Bootstrap utility was insufficient.
+
+   DO NOT:
+   - Override Bootstrap's core variables globally (e.g. do not reset --bs-font-size-base).
+   - Write inline styles in .cshtml view files.
+   - Import additional CSS frameworks or icon libraries (Bootstrap Icons is already loaded).
+   - Add vendor prefixes by hand — Bootstrap handles browser compatibility.
+
+   ============================================================================= */
+
+
+/* =============================================================================
+   1. TYPOGRAPHY — Base font size (responsive scaling)
+   ============================================================================= */
+
+/* Mobile: 14px keeps things compact on small screens */
+html {
+    font-size: 14px;
+}
+
+/* Desktop (>=768px): scale up to the standard 16px reading size */
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+
+/* =============================================================================
+   2. BRAND THEME — Bootstrap 5.3 CSS variable overrides (eco-green)
+      Bootstrap 5.3 exposes its design tokens as CSS custom properties.
+      Overriding them here is the correct, upgrade-safe way to apply a brand theme.
+      Reference: https://getbootstrap.com/docs/5.3/customize/css-variables/
+   ============================================================================= */
+
+:root {
+    /* Primary brand colour — eco green */
+    --bs-primary:           #2d7a4f;
+    --bs-primary-rgb:       45, 122, 79;
+
+    /* Link colours */
+    --bs-link-color:        #2d7a4f;
+    --bs-link-color-rgb:    45, 122, 79;
+    --bs-link-hover-color:  #1e5435;
+}
+
+
+/* =============================================================================
+   3. BUTTON OVERRIDES — .btn-primary component-scoped CSS variables
+      Bootstrap 5.3 exposes button colours as component-level CSS variables.
+      Override here so .btn-primary always reflects the brand green.
+      Reference: https://getbootstrap.com/docs/5.3/components/buttons/#css
+   ============================================================================= */
+
+.btn-primary {
+    --bs-btn-bg:                    #2d7a4f;
+    --bs-btn-border-color:          #2d7a4f;
+    --bs-btn-hover-bg:              #1e5435;
+    --bs-btn-hover-border-color:    #1e5435;
+    --bs-btn-active-bg:             #1e5435;
+    --bs-btn-active-border-color:   #1e5435;
+    --bs-btn-disabled-bg:           #2d7a4f;
+    --bs-btn-disabled-border-color: #2d7a4f;
+}
+
+.btn-outline-primary {
+    --bs-btn-color:              #2d7a4f;
+    --bs-btn-border-color:       #2d7a4f;
+    --bs-btn-hover-bg:           #2d7a4f;
+    --bs-btn-hover-border-color: #2d7a4f;
+    --bs-btn-active-bg:          #1e5435;
+    --bs-btn-active-border-color:#1e5435;
+}
+
+
+/* =============================================================================
+   4. NAVBAR — Brand accent colour
+      The navbar brand logotype uses the eco-green for visual identity.
+   ============================================================================= */
+
+.navbar-brand {
+    color: #2d7a4f !important;
+    font-weight: 600;
+}
+
+.navbar-brand:hover,
+.navbar-brand:focus {
+    color: #1e5435 !important;
+}
+
+
+/* =============================================================================
+   5. ACCESSIBILITY — Focus ring
+      Maintains a clear visible focus outline for keyboard and assistive-tech users
+      on all interactive Bootstrap elements. Do NOT remove or weaken this rule.
+   ============================================================================= */
+
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+
+/* =============================================================================
+   6. MODULE 3 P2-1 — Return Carbon Tracker (StageBreakdown view)
+      Custom rules required because Bootstrap utilities cannot express:
+        - multi-stop gradients on hero banners
+        - per-stage-type colour pairs (background + text) on badge elements
+        - a gradient progress bar fill
+        - a left-border accent on a table row's first child
+        - a translateY hover lift on cards
+   ============================================================================= */
+
+/* Hero banner — teal-to-dark gradient (Module 3 brand colour: #0a9396) */
+.carbon-hero {
+    background: linear-gradient(135deg, #0a3d2e 0%, #0a9396 100%);
+    border-radius: 0.75rem;
+    color: #fff;
+}
+
+/* Stat card hover lift — Bootstrap .card has no built-in translateY utility */
+.carbon-stat-card {
+    transition: transform 0.15s ease;
+}
+.carbon-stat-card:hover {
+    transform: translateY(-2px);
+}
+
+/* Stage type badges — each stage needs a distinct background/text pair */
+.stage-badge {
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    padding: 0.3em 0.75em;
+    border-radius: 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    display: inline-block;
+}
+.stage-DAMAGE_INSPECTION { background-color: #fff3cd; color: #856404; }
+.stage-REPAIRING         { background-color: #cfe2ff; color: #084298; }
+.stage-SERVICING         { background-color: #d1ecf1; color: #0c5460; }
+.stage-CLEANING          { background-color: #d4edda; color: #155724; }
+.stage-RETURN            { background-color: #e2d9f3; color: #432874; }
+
+/* Carbon progress bar — two-colour gradient not achievable with bg-* utilities */
+.carbon-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #0a9396, #0d6efd);
+}
+
+/* High-carbon row accent — left border on td:first-child requires a pseudo-selector */
+.high-carbon-row { background-color: #fff5f5 !important; }
+.high-carbon-row td:first-child { border-left: 3px solid var(--bs-danger); }
+
+
+/* =============================================================================
+   7. LAYOUT — Sticky footer
+      Keeps the <footer> pinned to the bottom of the viewport on short pages.
+      Footer markup lives in Views/Shared/_Layout.cshtml.
+   ============================================================================= */
+
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    margin-bottom: 60px; /* Reserve space equal to footer height */
+}
+
+.footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    white-space: nowrap;
+    line-height: 60px;
+}

@@ -15,7 +15,7 @@ public class PackagingProfileGateway : IPackagingProfileGateway
         _db = db;
     }
 
-    public void Save(int orderId, float volume, string fragilityLevel)
+    public void Save(int orderId, double volume, string fragilityLevel)
     {
         var profile = new Packagingprofile();
         _db.Packagingprofiles.Add(profile);

@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-
 namespace ProRental.Domain.Entities;
 
 public partial class Packagingprofile
@@ -12,14 +10,14 @@ public partial class Packagingprofile
         var fragility = fragilityLevel?.ToLowerInvariant() ?? "low";
 
         if (fragility.Contains("high"))
-            return candidateMaterials.FirstOrDefault(m => EF.Property<string?>(m, "Type")?.Equals("cushion", StringComparison.OrdinalIgnoreCase) == true)
+            return candidateMaterials.FirstOrDefault(m => m.ReadMaterialType().Equals("cushion", StringComparison.OrdinalIgnoreCase) == true)
                 ?? candidateMaterials.First();
 
         if (fragility.Contains("medium"))
-            return candidateMaterials.FirstOrDefault(m => EF.Property<string?>(m, "Type")?.Equals("bubble", StringComparison.OrdinalIgnoreCase) == true)
+            return candidateMaterials.FirstOrDefault(m => m.ReadMaterialType().Equals("bubble", StringComparison.OrdinalIgnoreCase) == true)
                 ?? candidateMaterials.First();
 
-        return candidateMaterials.FirstOrDefault(m => EF.Property<string?>(m, "Type")?.Equals("box", StringComparison.OrdinalIgnoreCase) == true)
+        return candidateMaterials.FirstOrDefault(m => m.ReadMaterialType().Equals("box", StringComparison.OrdinalIgnoreCase) == true)
             ?? candidateMaterials.First();
     }
     
@@ -33,7 +31,7 @@ public partial class Packagingprofile
         
         var ordered = candidateMaterials
             .OrderBy(m => {
-                var t = EF.Property<string?>(m, "Type")?.ToLowerInvariant() ?? "";
+                var t = m.ReadMaterialType()?.ToLowerInvariant() ?? "";
                 return t switch
                 {
                     "plastic" => 1,
@@ -44,7 +42,7 @@ public partial class Packagingprofile
                     _ => 6
                 };
             })
-            .ThenBy(m => EF.Property<string?>(m, "Name"))
+            .ThenBy(m => m.ReadMaterialName())
             .ToList();
 
         return ordered.Take(target).ToList();

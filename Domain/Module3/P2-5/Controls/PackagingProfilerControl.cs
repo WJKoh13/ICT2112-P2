@@ -93,7 +93,7 @@ public class PackagingProfilerControl : IPackagingProfilerControl
 
                 foreach (var material in profile.Materials)
                 {
-                    var footprintKg = _footprintControl.CalculatePackagingFootprint(new List<MaterialFootprintDto> { material });
+                    var footprintg = _footprintControl.CalculatePackagingFootprint(profile.Volume, new List<MaterialFootprintDto> { material });
 
                     results.Add((dynamic)new
                     {
@@ -110,7 +110,7 @@ public class PackagingProfilerControl : IPackagingProfilerControl
                         Recyclable = material.Recyclable,
                         Reusable = material.Reusable,
 
-                        FootprintKg = footprintKg
+                        Footprintg = footprintg
                     });
                 }
             }

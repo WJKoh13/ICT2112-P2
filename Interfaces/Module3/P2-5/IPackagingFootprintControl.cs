@@ -4,5 +4,5 @@ namespace ProRental.Interfaces.Module3.P2_5;
 
 public interface IPackagingFootprintControl
 {
-    float CalculatePackagingFootprint(List<MaterialFootprintDto> materials);
+    float CalculatePackagingFootprint(double volume, List<MaterialFootprintDto> materials);
 }

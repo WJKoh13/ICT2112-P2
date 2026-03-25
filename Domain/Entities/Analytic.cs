@@ -20,14 +20,17 @@ public partial class Analytic
     private int? _returnamt;
     private int? Returnamt { get => _returnamt; set => _returnamt = value; }
 
-    private int? _refprimaryid;
-    private int? Refprimaryid { get => _refprimaryid; set => _refprimaryid = value; }
+    private string? _primarysupplier;
+    private string? Primarysupplier { get => _primarysupplier; set => _primarysupplier = value; }
 
-    private string? _refprimaryname;
-    private string? Refprimaryname { get => _refprimaryname; set => _refprimaryname = value; }
+    private string? _primaryitem;
+    private string? Primaryitem { get => _primaryitem; set => _primaryitem = value; }
 
-    private decimal? _refvalue;
-    private decimal? Refvalue { get => _refvalue; set => _refvalue = value; }
+    private decimal? _supplierreliability;
+    private decimal? Supplierreliability { get => _supplierreliability; set => _supplierreliability = value; }
+
+    private decimal? _turnoverrate;
+    private decimal? Turnoverrate { get => _turnoverrate; set => _turnoverrate = value; }
 
     public virtual ICollection<Reportexport> Reportexports { get; private set; } = new List<Reportexport>();
 

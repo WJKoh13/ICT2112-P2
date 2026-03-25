@@ -93,55 +93,58 @@ var dataSource = dataSourceBuilder.Build();
 // 4. Register the DbContext using the data source instead of a raw string
 // builder.Services.AddDbContext<AppDbContext>(options =>
 //     options.UseNpgsql(dataSource));
+var nullTranslator = new Npgsql.NameTranslation.NpgsqlNullNameTranslator();
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(dataSource, o => 
+    options.UseNpgsql(dataSource, o =>
     {
-        o.MapEnum<AccessEventType>("access_event_type");
-        o.MapEnum<AlertStatus>("alert_status");
-        o.MapEnum<AnalyticsType>("analytics_type_enum");
-        o.MapEnum<BatchStatus>("batch_status");
-        o.MapEnum<CarbonStageType>("carbon_stage_type");
-        o.MapEnum<CartStatus>("cart_status_enum");
-        o.MapEnum<CheckoutStatus>("checkout_status_enum");
-        o.MapEnum<ClearanceBatchStatus>("clearance_batch_status");
-        o.MapEnum<ClearanceStatus>("clearance_status");
-        o.MapEnum<DeliveryDuration>("delivery_duration_enum");
-        o.MapEnum<DeliveryType>("delivery_type_enum");
-        o.MapEnum<FileFormat>("file_format_enum");
-        o.MapEnum<HubType>("hub_type");
-        o.MapEnum<InventoryStatus>("inventory_status");
-        o.MapEnum<LoanStatus>("loan_status");
-        o.MapEnum<LogType>("log_type_enum");
-        o.MapEnum<NotificationFrequency>("notification_frequency_enum");
-        o.MapEnum<NotificationGranularity>("notification_granularity_enum");
-        o.MapEnum<NotificationType>("notification_type_enum");
-        o.MapEnum<OrderHistoryStatus>("order_history_status_enum");
-        o.MapEnum<OrderStatus>("order_status_enum");
-        o.MapEnum<PaymentMethod>("payment_method_enum");
-        o.MapEnum<PaymentPurpose>("payment_purpose_enum");
-        o.MapEnum<POStatus>("po_status_enum");
-        o.MapEnum<PreferenceType>("preference_type");
-        o.MapEnum<ProductStatus>("product_status");
-        o.MapEnum<PurchaseOrderStatus>("purchase_order_status_enum");
-        o.MapEnum<RatingBand>("rating_band_enum");
-        o.MapEnum<RentalStatus>("rental_status_enum");
-        o.MapEnum<ReplenishmentReason>("reason_code_enum");
-        o.MapEnum<ReplenishmentStatus>("replenishment_status_enum");
-        o.MapEnum<ReturnItemStatus>("return_item_status");
-        o.MapEnum<ReturnRequestStatus>("return_request_status");
-        o.MapEnum<ReturnStatus>("return_status_enum");
-        o.MapEnum<ShipmentStatus>("shipment_status_enum");
-        o.MapEnum<StageType>("stagetype");
-        o.MapEnum<SupplierCategory>("supplier_category_enum");
-        o.MapEnum<TransactionPurpose>("transaction_purpose_enum");
-        o.MapEnum<TransactionStatus>("transaction_status_enum");
-        o.MapEnum<TransactionType>("transaction_type_enum");
-        o.MapEnum<TransportMode>("transport_mode");
-        o.MapEnum<UserRole>("user_role_enum");
-        o.MapEnum<VettingDecision>("vetting_decision_enum");
-        o.MapEnum<VettingResult>("vetting_result_enum");
-        o.MapEnum<VisualType>("visual_type_enum");
-    }));
+        o.MapEnum<AccessEventType>("access_event_type", nameTranslator: nullTranslator);
+        o.MapEnum<AlertStatus>("alert_status", nameTranslator: nullTranslator);
+        o.MapEnum<AnalyticsType>("analytics_type_enum", nameTranslator: nullTranslator);
+        o.MapEnum<BatchStatus>("batch_status", nameTranslator: nullTranslator);
+        o.MapEnum<CarbonStageType>("carbon_stage_type", nameTranslator: nullTranslator);
+        o.MapEnum<CartStatus>("cart_status_enum", nameTranslator: nullTranslator);
+        o.MapEnum<CheckoutStatus>("checkout_status_enum", nameTranslator: nullTranslator);
+        o.MapEnum<ClearanceBatchStatus>("clearance_batch_status", nameTranslator: nullTranslator);
+        o.MapEnum<ClearanceStatus>("clearance_status", nameTranslator: nullTranslator);
+        o.MapEnum<DeliveryDuration>("delivery_duration_enum", nameTranslator: nullTranslator);
+        o.MapEnum<DeliveryType>("delivery_type_enum", nameTranslator: nullTranslator);
+        o.MapEnum<FileFormat>("file_format_enum", nameTranslator: nullTranslator);
+        o.MapEnum<HubType>("hub_type", nameTranslator: nullTranslator);
+        o.MapEnum<InventoryStatus>("inventory_status", nameTranslator: nullTranslator);
+        o.MapEnum<LoanStatus>("loan_status", nameTranslator: nullTranslator);
+        o.MapEnum<LogType>("log_type_enum", nameTranslator: nullTranslator);
+        o.MapEnum<NotificationFrequency>("notification_frequency_enum", nameTranslator: nullTranslator);
+        o.MapEnum<NotificationGranularity>("notification_granularity_enum", nameTranslator: nullTranslator);
+        o.MapEnum<NotificationType>("notification_type_enum", nameTranslator: nullTranslator);
+        o.MapEnum<OrderHistoryStatus>("order_history_status_enum", nameTranslator: nullTranslator);
+        o.MapEnum<OrderStatus>("order_status_enum", nameTranslator: nullTranslator);
+        o.MapEnum<PaymentMethod>("payment_method_enum", nameTranslator: nullTranslator);
+        o.MapEnum<PaymentPurpose>("payment_purpose_enum", nameTranslator: nullTranslator);
+        o.MapEnum<POStatus>("po_status_enum", nameTranslator: nullTranslator);
+        o.MapEnum<PreferenceType>("preference_type", nameTranslator: nullTranslator);
+        o.MapEnum<ProductStatus>("product_status", nameTranslator: nullTranslator);
+        o.MapEnum<PurchaseOrderStatus>("purchase_order_status_enum", nameTranslator: nullTranslator);
+        o.MapEnum<RatingBand>("rating_band_enum", nameTranslator: nullTranslator);
+        o.MapEnum<RentalStatus>("rental_status_enum", nameTranslator: nullTranslator);
+        o.MapEnum<ReplenishmentReason>("reason_code_enum", nameTranslator: nullTranslator);
+        o.MapEnum<ReplenishmentStatus>("replenishment_status_enum", nameTranslator: nullTranslator);
+        o.MapEnum<ReturnItemStatus>("return_item_status", nameTranslator: nullTranslator);
+        o.MapEnum<ReturnRequestStatus>("return_request_status", nameTranslator: nullTranslator);
+        o.MapEnum<ReturnStatus>("return_status_enum", nameTranslator: nullTranslator);
+        o.MapEnum<ShipmentStatus>("shipment_status_enum", nameTranslator: nullTranslator);
+        o.MapEnum<StageType>("stagetype", nameTranslator: nullTranslator);
+        o.MapEnum<SupplierCategory>("supplier_category_enum", nameTranslator: nullTranslator);
+        o.MapEnum<TransactionPurpose>("transaction_purpose_enum", nameTranslator: nullTranslator);
+        o.MapEnum<TransactionStatus>("transaction_status_enum", nameTranslator: nullTranslator);
+        o.MapEnum<TransactionType>("transaction_type_enum", nameTranslator: nullTranslator);
+        o.MapEnum<TransportMode>("transport_mode", nameTranslator: nullTranslator);
+        o.MapEnum<UserRole>("user_role_enum", nameTranslator: nullTranslator);
+        o.MapEnum<VettingDecision>("vetting_decision_enum", nameTranslator: nullTranslator);
+        o.MapEnum<VettingResult>("vetting_result_enum", nameTranslator: nullTranslator);
+        o.MapEnum<VisualType>("visual_type_enum", nameTranslator: nullTranslator);
+    })
+    .EnableSensitiveDataLogging()
+    .LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information));
 
 //Services builder(add your mappers/gateways, controllers, control and interface classes here)
 //Team P2-1
@@ -154,15 +157,12 @@ builder.Services.AddScoped<ShipMapper>();
 builder.Services.AddScoped<PlaneMapper>();
 builder.Services.AddScoped<TrainMapper>();
 builder.Services.AddScoped<IPricingRuleGateway, PricingRuleGateway>();
+builder.Services.AddScoped<ProRental.Data.Module3.P2_1.Interfaces.IReturnStageGateway, ProRental.Data.Module3.P2_1.Gateways.ReturnStageGateway>();
 
 // Domain
-builder.Services.AddScoped<IHubCarbonService, HubCarbonService>();
-builder.Services.AddScoped<IRouteDistanceCalculator, RouteDistanceCalculator>();
-builder.Services.AddScoped<ITransportService, TransportationManager>();
-builder.Services.AddScoped<ITransportCarbonService, TransportCarbonManager>();
-builder.Services.AddScoped<TransportationFactory>();
 
 // Presentation/Controllers
+builder.Services.AddScoped<ProRental.Controllers.Module3.P2_1.ReturnStageController>();
 
 
 //Team P2-2

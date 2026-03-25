@@ -14,7 +14,7 @@ public class CarbonMonitoringController : Controller
 
     public IActionResult CarbonDashboardView()
     {
-        var viewModel = _carbonChartService.BuildDashboardViewModel();
-        return View("~/Views/Module3/P2-5/CarbonDashboardView.cshtml", viewModel);
+        var dto = _carbonChartService.BuildDashboardDto();
+        return View("~/Views/Module3/P2-5/CarbonDashboardView.cshtml", dto);
     }
 }

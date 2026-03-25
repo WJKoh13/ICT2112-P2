@@ -174,26 +174,9 @@
                         <span class="badge rounded-pill text-bg-light text-success fw-semibold mb-3">Module 3 P2-5</span>
                         <h1 class="display-6 fw-bold mb-3">Carbon Dashboard</h1>
                         <p class="lead mb-0 text-white-50">
-                            Scaffold page for footprint trendlines, distribution charts, and carbon hotspot monitoring.
+                            Track product, building, and staff emissions in one place with trendlines, comparisons, and hotspot alerts.
                         </p>
                     </div>
-                </div>
-            </div>
-
-            <div class="card chart-card mb-4">
-                <div class="card-body p-4">
-                    <h2 class="h6 mb-3">Summary</h2>
-                    <div class="row g-3 text-muted small">
-                        <div class="col-md-3"><strong>Product rows:</strong> @(Model?.ProductPieChart.Count ?? 0)</div>
-                        <div class="col-md-3"><strong>Building rows:</strong> @(Model?.BuildingPieChart.Count ?? 0)</div>
-                        <div class="col-md-3"><strong>Staff rows:</strong> @(Model?.StaffPieChart.Count ?? 0)</div>
-                    </div>
-                    @if ((Model?.BuildingTrendline.Count ?? 0) == 0)
-                    {
-                        <div class="alert alert-warning mt-3 mb-0">
-                            No building chart data reached the view. Check the `buildingfootprint` table contents and the database connection in `appsettings.json`.
-                        </div>
-                    }
                 </div>
             </div>
 
@@ -240,7 +223,10 @@
                     @if (Model?.HotspotAlerts.Count > 0)
                     {
                         <div id="hotspotThresholdAlert" class="alert alert-warning" role="alert">
-                            @string.Join(" ", Model.HotspotAlerts)
+                            @foreach (var alert in Model.HotspotAlerts)
+                            {
+                                <div>@alert</div>
+                            }
                         </div>
                     }
                     <div class="chart-canvas-wrap chart-canvas-wrap-hotspot">

@@ -2216,11 +2216,6 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValue(false)
                 .HasColumnName("is_last_mile");
-            entity.Property("IsMainTransport")
-                .HasField("_isMainTransport")
-                .UsePropertyAccessMode(PropertyAccessMode.Field)
-                .HasDefaultValue(false)
-                .HasColumnName("is_main_transport");
             entity.Property("RouteId")
                 .HasField("_routeId")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("route_id");

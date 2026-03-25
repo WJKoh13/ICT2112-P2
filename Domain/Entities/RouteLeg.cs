@@ -26,9 +26,6 @@ public partial class RouteLeg
     private bool _isFirstMile;
     private bool IsFirstMile { get => _isFirstMile; set => _isFirstMile = value; }
 
-    private bool _isMainTransport;
-    private bool IsMainTransport { get => _isMainTransport; set => _isMainTransport = value; }
-
     private bool _isLastMile;
     private bool IsLastMile { get => _isLastMile; set => _isLastMile = value; }
 

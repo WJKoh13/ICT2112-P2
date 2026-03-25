@@ -17,21 +17,19 @@ public sealed class RouteLegBuilder : IRouteLegBuilder
         _routeDistanceCalculator = routeDistanceCalculator;
     }
 
-    public RouteLeg BuildFirstMileLeg(string origin, TransportMode primaryMode)
+    public RouteLeg BuildFirstMileLeg(string startPoint, string endPoint)
     {
-        var endPoint = $"{primaryMode} Hub";
-        return BuildLeg(1, origin, endPoint, primaryMode, isFirstMile: true, isLastMile: false);
+        return BuildLeg(1, startPoint, endPoint, TransportMode.TRUCK, isFirstMile: true, isMainTransport: false, isLastMile: false);
     }
 
     public RouteLeg BuildMainTransportLeg(int sequence, string startPoint, string endPoint, TransportMode transportMode)
     {
-        return BuildLeg(sequence, startPoint, endPoint, transportMode, isFirstMile: false, isLastMile: false);
+        return BuildLeg(sequence, startPoint, endPoint, transportMode, isFirstMile: false, isMainTransport: true, isLastMile: false);
     }
 
-    public RouteLeg BuildLastMileLeg(int sequence, TransportMode previousMode, string destination)
+    public RouteLeg BuildLastMileLeg(int sequence, string startPoint, string endPoint)
     {
-        var startPoint = $"{previousMode} Hub";
-        return BuildLeg(sequence, startPoint, destination, TransportMode.TRUCK, isFirstMile: false, isLastMile: true);
+        return BuildLeg(sequence, startPoint, endPoint, TransportMode.TRUCK, isFirstMile: false, isMainTransport: false, isLastMile: true);
     }
 
     private RouteLeg BuildLeg(
@@ -40,11 +38,12 @@ public sealed class RouteLegBuilder : IRouteLegBuilder
         string endPoint,
         TransportMode transportMode,
         bool isFirstMile,
+        bool isMainTransport,
         bool isLastMile)
     {
         var distanceKm = _routeDistanceCalculator.CalculateDistanceKm(startPoint, endPoint);
         var routeLeg = new RouteLeg();
-        routeLeg.ConfigureLeg(sequence, startPoint, endPoint, distanceKm, transportMode, isFirstMile, isLastMile);
+        routeLeg.ConfigureLeg(sequence, startPoint, endPoint, distanceKm, transportMode, isFirstMile, isMainTransport, isLastMile);
         return routeLeg;
     }
 }

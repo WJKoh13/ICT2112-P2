@@ -31,7 +31,6 @@ public sealed class ShippingOptionMapper : IShippingOptionMapper
     {
         // Options are returned in insertion order so checkout presents a stable FAST/CHEAP/GREEN set.
         var options = await _context.ShippingOptions
-            .Include(option => option.Route)
             .AsNoTracking()
             .Where(option => EF.Property<int?>(option, "OrderId") == orderId)
             .OrderBy(option => EF.Property<int?>(option, "OptionId"))
@@ -43,7 +42,6 @@ public sealed class ShippingOptionMapper : IShippingOptionMapper
     public Task<ShippingOption?> FindByIdAsync(int optionId, CancellationToken cancellationToken = default)
     {
         return _context.ShippingOptions
-            .Include(option => option.Route)
             .FirstOrDefaultAsync(option => EF.Property<int>(option, "OptionId") == optionId, cancellationToken);
     }
 

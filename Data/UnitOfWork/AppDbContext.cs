@@ -834,9 +834,6 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("destination_address");
-            entity.Property("DestinationHubId")
-                .HasField("_destinationHubId")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("destination_hub_id");
             entity.Property("IsValid")
                 .HasField("_isValid")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
@@ -847,20 +844,9 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("origin_address");
-            entity.Property("OriginHubId")
-                .HasField("_originHubId")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("origin_hub_id");
             entity.Property("TotalDistanceKm")
                 .HasField("_totalDistanceKm")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("total_distance_km");
-
-            entity.HasOne(d => d.DestinationHub).WithMany(p => p.DeliveryRouteDestinationHubs)
-                .HasForeignKey("DestinationHubId")
-                .HasConstraintName("fk_route_destination_hub");
-
-            entity.HasOne(d => d.OriginHub).WithMany(p => p.DeliveryRouteOriginHubs)
-                .HasForeignKey("OriginHubId")
-                .HasConstraintName("fk_route_origin_hub");
         });
 
         modelBuilder.Entity<Deposit>(entity =>
@@ -2204,6 +2190,9 @@ public partial class AppDbContext : DbContext
 
             entity.ToTable("route_leg");
 
+            // entity.HasIndex("RouteId", "Sequence", "uq_route_leg_route_sequence").IsUnique();
+            entity.HasIndex("RouteId", "Sequence").HasDatabaseName("uq_route_leg_route_sequence").IsUnique();
+
             entity.Property("LegId")
                 .HasField("_legId")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
@@ -2227,6 +2216,11 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValue(false)
                 .HasColumnName("is_last_mile");
+            entity.Property("IsMainTransport")
+                .HasField("_isMainTransport")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasDefaultValue(false)
+                .HasColumnName("is_main_transport");
             entity.Property("RouteId")
                 .HasField("_routeId")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("route_id");
@@ -2238,18 +2232,10 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("start_point");
-            entity.Property("TransportId")
-                .HasField("_transportId")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("transport_id");
 
             entity.HasOne(d => d.Route).WithMany(p => p.RouteLegs)
                 .HasForeignKey("RouteId")
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_route_leg_route");
-
-            entity.HasOne(d => d.Transport).WithMany(p => p.RouteLegs)
-                .HasForeignKey("TransportId")
-                .HasConstraintName("fk_route_leg_transport");
         });
 
         modelBuilder.Entity<Session>(entity =>
@@ -2381,10 +2367,6 @@ public partial class AppDbContext : DbContext
             entity.HasOne(d => d.Order).WithMany(p => p.ShippingOptions)
                 .HasForeignKey("OrderId")
                 .HasConstraintName("fk_shipping_option_order");
-
-            entity.HasOne(d => d.Route).WithMany(p => p.ShippingOptions)
-                .HasForeignKey("RouteId")
-                .HasConstraintName("fk_shipping_option_route");
         });
 
         modelBuilder.Entity<ShippingPort>(entity =>

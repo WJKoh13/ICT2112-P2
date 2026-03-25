@@ -59,7 +59,7 @@ public sealed class RouteManager : IRoutingService, IRouteQueryService
             route.RouteLegs.Add(routeLeg);
         }
 
-        route.SetTotalDistanceKm(Math.Round(routeLegs.Sum(routeLeg => routeLeg.GetDistanceKm() ?? 0d), 2, MidpointRounding.AwayFromZero));
+        route.SetTotalDistanceKm(Math.Round(routeLegs.Sum(routeLeg => routeLeg.GetDistanceKm()), 2, MidpointRounding.AwayFromZero));
 
         _context.DeliveryRoutes.Add(route);
         _context.SaveChanges();
@@ -78,41 +78,28 @@ public sealed class RouteManager : IRoutingService, IRouteQueryService
             .AsNoTracking()
             .FirstOrDefault(routeLeg =>
                 EF.Property<int>(routeLeg, "RouteId") == routeId &&
-                (routeLeg.GetIsFirstMile() ?? false))
+                routeLeg.GetIsFirstMile())
             ?? throw new InvalidOperationException($"First-mile route leg for route '{routeId}' was not found.");
     }
 
     private List<RouteLeg> BuildRouteLegs(RouteContext routeContext, string destination, IReadOnlyList<TransportMode> modes)
     {
-        var routeLegs = new List<RouteLeg>();
-
-        if (modes.Count == 1)
-        {
-            routeLegs.Add(_routeLegBuilder.BuildMainTransportLeg(1, routeContext.WarehouseAddress, destination, modes[0]));
-            return routeLegs;
-        }
-
-        routeLegs.Add(_routeLegBuilder.BuildMainTransportLeg(
-            1,
-            routeContext.WarehouseAddress,
-            routeContext.OriginHubAddress,
-            TransportMode.TRUCK));
-
         var mainTransportMode = modes[0];
-        routeLegs.Add(_routeLegBuilder.BuildMainTransportLeg(
-            2,
-            routeContext.OriginHubAddress,
-            routeContext.DestinationHubAddress,
-            mainTransportMode));
-
-        routeLegs.Add(_routeLegBuilder.BuildMainTransportLeg(
-            3,
-            routeContext.DestinationHubAddress,
-            destination,
-            TransportMode.TRUCK));
-
-        MarkRouteRoles(routeLegs, mainTransportMode);
-        return routeLegs;
+        return
+        [
+            _routeLegBuilder.BuildFirstMileLeg(
+                routeContext.WarehouseAddress,
+                routeContext.OriginHubAddress),
+            _routeLegBuilder.BuildMainTransportLeg(
+                2,
+                routeContext.OriginHubAddress,
+                routeContext.DestinationHubAddress,
+                mainTransportMode),
+            _routeLegBuilder.BuildLastMileLeg(
+                3,
+                routeContext.DestinationHubAddress,
+                destination)
+        ];
     }
 
     private RouteContext ResolveRouteContext(string origin, string destination, IReadOnlyList<TransportMode> modes)
@@ -200,41 +187,6 @@ public sealed class RouteManager : IRoutingService, IRouteQueryService
             TransportMode.TRAIN => "TRAIN Hub",
             _ => "TRUCK Hub"
         };
-    }
-
-    private static void MarkRouteRoles(IReadOnlyList<RouteLeg> routeLegs, TransportMode mainTransportMode)
-    {
-        if (routeLegs.Count < 3)
-        {
-            return;
-        }
-
-        routeLegs[0].ConfigureLeg(
-            routeLegs[0].GetSequence() ?? 1,
-            routeLegs[0].GetStartPoint(),
-            routeLegs[0].GetEndPoint(),
-            routeLegs[0].GetDistanceKm() ?? 0d,
-            TransportMode.TRUCK,
-            isFirstMile: true,
-            isLastMile: false);
-
-        routeLegs[1].ConfigureLeg(
-            routeLegs[1].GetSequence() ?? 2,
-            routeLegs[1].GetStartPoint(),
-            routeLegs[1].GetEndPoint(),
-            routeLegs[1].GetDistanceKm() ?? 0d,
-            mainTransportMode,
-            isFirstMile: false,
-            isLastMile: false);
-
-        routeLegs[2].ConfigureLeg(
-            routeLegs[2].GetSequence() ?? 3,
-            routeLegs[2].GetStartPoint(),
-            routeLegs[2].GetEndPoint(),
-            routeLegs[2].GetDistanceKm() ?? 0d,
-            TransportMode.TRUCK,
-            isFirstMile: false,
-            isLastMile: true);
     }
 
     private sealed record RouteContext(

@@ -94,6 +94,7 @@ var dataSource = dataSourceBuilder.Build();
 // builder.Services.AddDbContext<AppDbContext>(options =>
 //     options.UseNpgsql(dataSource));
 var nullTranslator = new Npgsql.NameTranslation.NpgsqlNullNameTranslator();
+var nullTranslator = new Npgsql.NameTranslation.NpgsqlNullNameTranslator();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(dataSource, o =>
     {
@@ -167,9 +168,7 @@ builder.Services.AddScoped<IPricingRuleGateway, PricingRuleGateway>();
 builder.Services.AddScoped<ProRental.Data.Module3.P2_1.Interfaces.IReturnStageGateway, ProRental.Data.Module3.P2_1.Gateways.ReturnStageGateway>();
 
 // Domain
-builder.Services.AddScoped<ProRental.Domain.Module3.P2_1.Controls.ReturnStageCalculator>();
-builder.Services.AddScoped<ProRental.Domain.Module3.P2_1.Controls.ReturnStageSurchargeService>();
-builder.Services.AddScoped<ProRental.Domain.Module3.P2_1.Controls.ReturnCarbonReportService>();
+builder.Services.AddScoped<IHubCarbonService, HubCarbonService>();
 builder.Services.AddScoped<IRouteDistanceCalculator, RouteDistanceCalculator>();
 builder.Services.AddScoped<ITransportService, TransportationManager>();
 builder.Services.AddScoped<ITransportCarbonService, TransportCarbonManager>();

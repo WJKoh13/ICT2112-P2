@@ -55,6 +55,42 @@ public sealed class ProductFootprintGateway : IProductFootprintGateway
             .ToList();
     }
 
+    public List<ProductFootprintListItem> GetAllFootprints()
+    {
+        return _dbContext.Productfootprints
+            .Join(
+                _dbContext.Products,
+                footprint => EF.Property<int>(footprint, "Productid"),
+                product => EF.Property<int>(product, "Productid"),
+                (footprint, product) => new ProductFootprintListItem(
+                    EF.Property<int>(footprint, "Productcarbonfootprintid"),
+                    EF.Property<int>(footprint, "Productid"),
+                    EF.Property<string>(product, "Sku"),
+                    EF.Property<int>(footprint, "Badgeid"),
+                    EF.Property<double?>(footprint, "Producttoxicpercentage"),
+                    EF.Property<double>(footprint, "Totalco2"),
+                    EF.Property<DateTime>(footprint, "Calculatedat")))
+            .AsEnumerable()
+            .OrderByDescending(footprint => footprint.CalculatedAt)
+            .ThenBy(footprint => footprint.ProductName)
+            .ToList();
+    }
+
+    public bool DeleteFootprint(int productCarbonFootprintId)
+    {
+        var productFootprint = _dbContext.Productfootprints
+            .FirstOrDefault(footprint => EF.Property<int>(footprint, "Productcarbonfootprintid") == productCarbonFootprintId);
+
+        if (productFootprint is null)
+        {
+            return false;
+        }
+
+        _dbContext.Productfootprints.Remove(productFootprint);
+        _dbContext.SaveChanges();
+        return true;
+    }
+
     public ProductFootprintCalculationResult SaveCalculatedFootprint(int productId, double toxicPercentage, double totalCo2)
     {
         // productfootprint.badgeid is required by the current schema,

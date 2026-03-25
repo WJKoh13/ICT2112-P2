@@ -38,6 +38,21 @@ public sealed class ProductFootprintCalculatorControl : IProductFootprintCalcula
         return _productCatalogService.GetProductDropdownItems();
     }
 
+    public List<ProductFootprintListItem> GetAllFootprints()
+    {
+        return _productFootprintGateway.GetAllFootprints();
+    }
+
+    public bool DeleteFootprint(int productCarbonFootprintId)
+    {
+        if (productCarbonFootprintId <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(productCarbonFootprintId), "Invalid product footprint id.");
+        }
+
+        return _productFootprintGateway.DeleteFootprint(productCarbonFootprintId);
+    }
+
     public ProductFootprintCalculationResult CalculateAndStoreFootprint(int productId, double productMass, double toxicPercentage)
     {
         if (!_productCatalogService.ProductExists(productId))

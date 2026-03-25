@@ -23,5 +23,9 @@ public sealed class ProductFootprintCalculationViewModel
 
     public DateTime? CalculatedAt { get; set; }
 
+    public string? StatusMessage { get; set; }
+
     public List<SelectListItem> ProductOptions { get; set; } = [];
+
+    public List<ProductFootprintListItem> SavedFootprints { get; set; } = [];
 }

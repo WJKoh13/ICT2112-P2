@@ -98,15 +98,13 @@ public class CarbonFootprintController : Controller
             totalRoomCo2 = Math.Round(totalRoomCo2, 2);
 
             // Create the footprint record
-            var footprint = new Buildingfootprint
-            {
-                Timehourly = DateTime.UtcNow,
-                Zone = request.Zone,
-                Block = request.Block,
-                Floor = request.Floor,
-                Room = request.Room,
-                Totalroomco2 = totalRoomCo2
-            };
+            var footprint = Buildingfootprint.Create(
+                DateTime.UtcNow,
+                request.Zone,
+                request.Block,
+                request.Floor,
+                request.Room,
+                totalRoomCo2);
 
             // Save to database
             var created = await _buildingGateway.CreateBuildingFootprintAsync(footprint);

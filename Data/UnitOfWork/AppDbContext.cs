@@ -622,10 +622,19 @@ public partial class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_checkout_customer");
 
+            entity.Property("OptionId")
+                .HasField("_optionId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnName("option_id");
+
             entity.HasOne(d => d.Delivery).WithMany(p => p.Checkouts)
                 .HasForeignKey("Deliveryid")
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_checkout_delivery");
+
+            entity.HasOne(d => d.Option).WithMany(p => p.Checkouts)
+                .HasForeignKey("OptionId")
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<Clearancebatch>(entity =>
@@ -947,6 +956,14 @@ public partial class AppDbContext : DbContext
             entity.Property("TotalDistanceKm")
                 .HasField("_totalDistanceKm")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("total_distance_km");
+            entity.Property("OriginHubId")
+                .HasField("_originHubId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnName("origin_hub_id");
+            entity.Property("DestinationHubId")
+                .HasField("_destinationHubId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasColumnName("destination_hub_id");
         });
 
         modelBuilder.Entity<Deliverymethod>(entity =>
@@ -2464,9 +2481,16 @@ public partial class AppDbContext : DbContext
                 .HasMaxLength(255)
                 .HasColumnName("start_point");
 
+            entity.Property<int?>("TransportId").HasColumnName("transport_id");
+
             entity.HasOne(d => d.Route).WithMany(p => p.RouteLegs)
                 .HasForeignKey("RouteId")
                 .HasConstraintName("fk_route_leg_route");
+
+            entity.HasOne<Transport>().WithMany(t => t.RouteLegs)
+                .HasForeignKey("TransportId")
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_route_leg_transport");
         });
 
         modelBuilder.Entity<Session>(entity =>
@@ -2938,6 +2962,18 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("operational_status");
+
+            entity.HasMany(h => h.DeliveryRouteOriginHubs)
+                .WithOne()
+                .HasForeignKey("OriginHubId")
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_route_origin_hub");
+
+            entity.HasMany(h => h.DeliveryRouteDestinationHubs)
+                .WithOne()
+                .HasForeignKey("DestinationHubId")
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_route_destination_hub");
         });
 
         modelBuilder.Entity<Truck>(entity =>

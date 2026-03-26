@@ -8,6 +8,7 @@ using ProRental.Domain.Enums;
 using ProRental.Domain.Module2.P2_3.Controls;
 using ProRental.Domain.Module2.P2_3.Mappers;
 using ProRental.Domain.Module3.P2_5.Controls;
+using ProRental.Domain.Module3.P2_5.Strategies;
 using ProRental.Domain.Entities;
 using ProRental.Interfaces.Module2.P2_3;
 using ProRental.Interfaces.Module3.P2_5;
@@ -170,6 +171,7 @@ builder.Services.AddScoped<IStaffFootprintGateway, StaffFootprintGateway>();
 
 // Domain
 builder.Services.AddScoped<ICarbonChartService, CarbonChartControl>();
+builder.Services.AddScoped<ICalculateCarbonStrategy<ProductFootprintInput>, ProductFootprintStrategy>();
 builder.Services.AddScoped<IProductFootprintCalculatorService, ProductFootprintCalculatorControl>();
 
 // Presentation/Controllers
@@ -205,6 +207,8 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
+
+
 
 
 

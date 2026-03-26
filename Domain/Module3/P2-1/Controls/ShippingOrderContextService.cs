@@ -26,6 +26,9 @@ public sealed class ShippingOrderContextService : IOrderService
     {
         var order = await _context.Orders
             .Include(entity => entity.Customer)
+            .Include(entity => entity.Orderitems)
+                .ThenInclude(item => item.Product)
+                    .ThenInclude(product => product.Productdetail)
             .AsNoTracking()
             .FirstOrDefaultAsync(entity => EF.Property<int>(entity, "Orderid") == orderId, cancellationToken);
 
@@ -41,17 +44,26 @@ public sealed class ShippingOrderContextService : IOrderService
         }
 
         var orderContext = order.GetOrderContext();
+        var firstItem = order.Orderitems.FirstOrDefault();
+        var productId = firstItem?.GetProductId() ?? 1;
+        var quantity = order.Orderitems.Sum(item => item.GetQuantity());
+        var weightKg = firstItem?.Product.Productdetail?.GetWeightKg() ?? 1d;
+
+        // HubId: no direct order→warehouse FK exists yet. Falls back to the first
+        // warehouse hub in the database until Module 2 provides the stored-at hub.
+        var hubId = await _context.TransportationHubs
+            .AsNoTracking()
+            .Select(hub => (int?)EF.Property<int>(hub, "HubId"))
+            .FirstOrDefaultAsync(cancellationToken) ?? 1;
 
         return new OrderShippingContext(
             orderContext.OrderId,
             orderContext.CustomerId,
             orderContext.CheckoutId,
             destinationAddress,
-            ProductId: 1,
-            HubId: 1,
-            // Placeholder values: the final cross-module contract is expected to source
-            // product, hub, weight, and quantity from Module 1 / Module 2 instead of hardcoding them here.
-            WeightKg: 1d,
-            Quantity: 1); //hardcoded as 1 for both
+            ProductId: productId,
+            HubId: hubId,
+            WeightKg: weightKg,
+            Quantity: quantity > 0 ? quantity : 1);
     }
 }

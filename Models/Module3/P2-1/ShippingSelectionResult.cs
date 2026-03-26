@@ -13,4 +13,5 @@ public sealed record ShippingSelectionResult(
     decimal Cost,
     double CarbonFootprintKg,
     int DeliveryDays,
-    string TransportModeLabel);
+    string TransportModeLabel,
+    double DistanceKm = 0);

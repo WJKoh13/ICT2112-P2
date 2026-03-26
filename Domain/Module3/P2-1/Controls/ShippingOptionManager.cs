@@ -90,6 +90,7 @@ public sealed class ShippingOptionManager : IShippingOptionService
 
         var route = _routingService.CreateMultiModalRoute(DefaultOrigin, context.DestinationAddress, [.. allowedModes]);
         var routeId = route.GetRouteId();
+        var distanceKm = route.GetTotalDistanceKm() ?? 0d;
         var quote = _transportCarbonService.CalculateRouteQuote(
             route,
             Math.Max(context.Quantity, 1),
@@ -125,7 +126,7 @@ public sealed class ShippingOptionManager : IShippingOptionService
         await _shippingOptionMapper.SetCheckoutSelectedOptionAsync(checkoutId, optionId, cancellationToken);
         await _shippingOptionMapper.SaveChangesAsync(cancellationToken);
 
-        return option.GetSelectionResult() with { OrderId = request.OrderId };
+        return option.GetSelectionResult() with { OrderId = request.OrderId, DistanceKm = distanceKm };
     }
 
     private static PreferenceProfile GetPreferenceProfile(PreferenceType preferenceType)

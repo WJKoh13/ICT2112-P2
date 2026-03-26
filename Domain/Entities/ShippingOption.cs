@@ -29,4 +29,6 @@ public partial class ShippingOption
     public virtual ICollection<Checkout> Checkouts { get; private set; } = new List<Checkout>();
 
     public virtual Order? Order { get; private set; }
+
+    public virtual DeliveryRoute? Route { get; private set; }
 }

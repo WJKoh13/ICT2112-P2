@@ -27,10 +27,10 @@ public class DummyInventoryService : IInventoryService
             .FirstOrDefault(p => EF.Property<int>(p, "Productid") == productId);
     }
 
-    public List<ProductDropdownItem> GetAllProductDropdownItems()
+    public List<InventoryProductDropdownItem> GetAllProductDropdownItems()
     {
         return _context.Set<Productdetail>()
-            .Select(pd => new ProductDropdownItem
+            .Select(pd => new InventoryProductDropdownItem
             {
                 ProductId = EF.Property<int>(pd, "Productid"),
                 Name = EF.Property<string>(pd, "Name")

@@ -6,7 +6,7 @@
     var productId = ViewData["ProductId"] is int pVal ? pVal : 0;
     var productName = ViewData["ProductName"] as string ?? "Unknown";
     var hub = ViewData["Hub"] as TransportationHub;
-    var allProducts = ViewData["AllProducts"] as List<ProductDropdownItem> ?? new List<ProductDropdownItem>();
+    var allProducts = ViewData["AllProducts"] as List<InventoryProductDropdownItem> ?? new List<InventoryProductDropdownItem>();
     var itemBreakdown = ViewData["ItemBreakdown"] as List<ItemCarbonInfo> ?? new List<ItemCarbonInfo>();
     var productCarbon = ViewData["ProductCarbon"] is double pc ? pc : 0;
     var totalAllCarbon = ViewData["TotalAllCarbon"] is double tac ? tac : 0;

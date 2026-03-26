@@ -72,7 +72,7 @@ public sealed class TransportCarbonManager : ITransportCarbonService
             ? routeLegs.Select(routeLeg => new QuoteLeg(
                 routeLeg.GetDistanceKm() ?? 0d,
                 routeLeg.GetTransportMode() ?? TransportMode.TRUCK))
-            : [new QuoteLeg(route.GetTotalDistanceKm(), TransportMode.TRUCK)];
+            : [new QuoteLeg(route.GetTotalDistanceKm() ?? 0d, TransportMode.TRUCK)];
 
         var quoteLegList = quoteLegs.ToList();
         var totalShipmentWeightKg = quoteInput.Items.Sum(item => item.Quantity * item.UnitWeightKg);

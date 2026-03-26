@@ -91,7 +91,7 @@ public sealed class RouteManager : IRoutingService, IRouteQueryService
         return route;
     }
 
-    public RouteLeg RetrieveFirstMileLeg(int routeId)
+    public RouteLeg retrieveFirstMileLeg(int routeId)
     {
         if (routeId <= 0)
         {

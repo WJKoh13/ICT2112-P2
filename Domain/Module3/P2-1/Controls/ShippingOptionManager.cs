@@ -165,7 +165,11 @@ public sealed class ShippingOptionManager : IShippingOptionService
         await _shippingOptionMapper.SetCheckoutSelectedOptionAsync(checkoutId, optionId, cancellationToken);
         await _shippingOptionMapper.SaveChangesAsync(cancellationToken);
 
-        return option.GetSelectionResult(route.GetTotalDistanceKm()) with { OrderId = request.OrderId };
+        return option.GetSelectionResult() with
+        {
+            OrderId = request.OrderId,
+            DistanceKm = route.GetTotalDistanceKm() ?? 0d
+        };
     }
 
     private static TransportMode ResolveSelectedTransportMode(DeliveryRoute route, TransportMode fallback)

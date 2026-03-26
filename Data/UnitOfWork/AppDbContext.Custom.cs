@@ -107,7 +107,7 @@ public partial class AppDbContext
         modelBuilder.Entity<DeliveryBatch>(entity =>
         {
             entity.Property("DeliveryBatchStatus").HasField("_deliveryBatchStatus").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("deliverybatchstatus").HasColumnType("batch_status");
+                          .HasColumnName("delivery_batch_status").HasColumnType("batch_status");
         });
 
         modelBuilder.Entity<Inventoryitem>(entity =>
@@ -288,6 +288,41 @@ public partial class AppDbContext
         {
             entity.Property("HubType").HasField("_hubType").UsePropertyAccessMode(PropertyAccessMode.Field)
                   .HasColumnName("hub_type").HasColumnType("hub_type");
+        });
+
+        // The initial schema for Feature 1 keeps these values out of the scaffolded tables.
+        // Ignore the scaffold-only relationships/shadow keys here instead of editing generated files.
+        modelBuilder.Entity<Checkout>(entity =>
+        {
+            entity.Ignore(nameof(Checkout.Delivery));
+            entity.Ignore("Deliveryid");
+        });
+
+        modelBuilder.Entity<Deliverymethod>(entity =>
+        {
+            entity.Ignore(nameof(Deliverymethod.Checkouts));
+        });
+
+        modelBuilder.Entity<Transport>(entity =>
+        {
+            entity.Ignore(nameof(Transport.RouteLegs));
+        });
+
+        modelBuilder.Entity<TransportationHub>(entity =>
+        {
+            entity.Ignore(nameof(TransportationHub.DeliveryRouteOriginHubs));
+            entity.Ignore(nameof(TransportationHub.DeliveryRouteDestinationHubs));
+        });
+
+        modelBuilder.Entity<DeliveryRoute>(entity =>
+        {
+            entity.Ignore("OriginHubId");
+            entity.Ignore("DestinationHubId");
+        });
+
+        modelBuilder.Entity<RouteLeg>(entity =>
+        {
+            entity.Ignore("TransportId");
         });
 
         modelBuilder.Entity<User>(entity =>

@@ -1,0 +1,67 @@
+@model List<ProRental.Domain.Entities.DeliveryBatch>
+@{
+    ViewData["Title"] = "Batch Delivery & Consolidation";
+    var message = ViewData["Message"] as string;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="mb-1">BatchDeliveryView</h2>
+        <p class="text-muted mb-0">Available delivery batches and first-leg carbon savings.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-controller="BatchDelivery" asp-action="RefreshBatchView" class="btn btn-outline-secondary">Refresh</a>
+        <a asp-controller="BatchAdmin" asp-action="BatchOrderAdmin" class="btn btn-primary">Go to Order Creation / Shipping Admin</a>
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(message))
+{
+    <div class="alert alert-info">@message</div>
+}
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover mb-0 align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Batch ID</th>
+                        <th>Hub ID</th>
+                        <th>Destination</th>
+                        <th>Status</th>
+                        <th>Total Orders</th>
+                        <th>Batch Weight (kg)</th>
+                        <th>Carbon Savings (kg)</th>
+                        <th>Orders</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (Model.Count == 0)
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">No batches found yet.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var batch in Model)
+                    {
+                        var batchId = batch.GetDeliveryBatchIdentifier();
+                        <tr>
+                            <td>@batchId</td>
+                            <td>@batch.GetSourceHub()</td>
+                            <td>@batch.GetDestinationAddress()</td>
+                            <td>@(batch.GetDeliveryBatchStatus()?.ToString() ?? "N/A")</td>
+                            <td>@batch.GetTotalOrders()</td>
+                            <td>@batch.GetBatchWeightKG().ToString("0.##")</td>
+                            <td class="fw-semibold text-success">@batch.GetCarbonSavings().ToString("0.##") kg</td>
+                            <td>-</td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

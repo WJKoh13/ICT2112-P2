@@ -16,4 +16,6 @@ public abstract partial class Transport
 
     private bool? _isAvailable;
     private bool? IsAvailable { get => _isAvailable; set => _isAvailable = value; }
+
+    public virtual ICollection<RouteLeg> RouteLegs { get; private set; } = new List<RouteLeg>();
 }

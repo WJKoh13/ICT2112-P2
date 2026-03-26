@@ -16,5 +16,5 @@ public interface IHubInfoService
     /// <summary>
     /// Gets all products as lightweight dropdown items for UI selection.
     /// </summary>
-    List<ProductDropdownItem> GetAllProductDropdownItems();
+    List<InventoryProductDropdownItem> GetAllProductDropdownItems();
 }

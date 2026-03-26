@@ -255,7 +255,7 @@ public class TransportationHubManager : IHubCarbonService, IHubInfoService
     /// Gets all products as lightweight dropdown items for UI selection.
     /// Delegates to InventoryService so the controller doesn't need to depend on it directly.
     /// </summary>
-    public List<ProductDropdownItem> GetAllProductDropdownItems()
+    public List<InventoryProductDropdownItem> GetAllProductDropdownItems()
     {
         return _inventoryService.GetAllProductDropdownItems();
     }

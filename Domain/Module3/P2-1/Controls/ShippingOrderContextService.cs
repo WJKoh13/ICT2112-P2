@@ -36,6 +36,9 @@ public sealed class ShippingOrderContextService : IOrderService
     {
         var order = await _context.Orders
             .Include(entity => entity.Customer)
+            .Include(entity => entity.Orderitems)
+                .ThenInclude(item => item.Product)
+                    .ThenInclude(product => product.Productdetail)
             .AsNoTracking()
             .FirstOrDefaultAsync(entity => EF.Property<int>(entity, "Orderid") == orderId, cancellationToken);
 

@@ -10,7 +10,7 @@ public interface IInventoryService
 {
     Product? GetProductById(int productId);
     decimal GetProductWeight(int productId);
-    List<ProductDropdownItem> GetAllProductDropdownItems();
+    List<InventoryProductDropdownItem> GetAllProductDropdownItems();
     ProductStorageInfo? GetProductStorageInfo(int productId);
     List<ProductStorageInfo> GetAllProductStorageInfo();
 }
@@ -18,7 +18,7 @@ public interface IInventoryService
 /// <summary>
 /// Lightweight DTO for product dropdowns (avoids needing public getters on Product entity).
 /// </summary>
-public class ProductDropdownItem
+public class InventoryProductDropdownItem
 {
     public int ProductId { get; set; }
     public string Name { get; set; } = string.Empty;

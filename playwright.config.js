@@ -24,6 +24,7 @@ module.exports = defineConfig({
     reuseExistingServer: true,
     timeout: 120000,
     env: {
+      ASPNETCORE_ENVIRONMENT: 'Development',
       ASPNETCORE_URLS: baseURL,
       ConnectionStrings__Default: connectionString,
     },

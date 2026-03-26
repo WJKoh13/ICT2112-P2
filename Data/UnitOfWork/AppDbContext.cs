@@ -173,7 +173,7 @@ public partial class AppDbContext : DbContext
             .HasPostgresEnum("delivery_duration_enum", new[] { "NextDay", "ThreeDays", "OneWeek" })
             .HasPostgresEnum("delivery_type_enum", new[] { "STANDARD", "EXPRESS", "SELF_PICKUP" })
             .HasPostgresEnum("file_format_enum", new[] { "CSV", "XLSX", "PDF", "PNG" })
-            .HasPostgresEnum("hub_type", new[] { "WAREHOUSE", "SHIPPING_PORT", "AIRPORT" })
+            .HasPostgresEnum("hub_type", new[] { "WAREHOUSE", "SHIPPING_PORT", "AIRPORT", "TRAIN_STATION" })
             .HasPostgresEnum("inventory_status", new[] { "AVAILABLE", "RETIRED", "CLEARANCE", "SOLD", "MAINTENANCE", "RESERVED", "ON_LOAN", "BROKEN" })
             .HasPostgresEnum("loan_status", new[] { "OPEN", "ON_LOAN", "RETURNED" })
             .HasPostgresEnum("loan_status_enum", new[] { "ONGOING", "RETURNED", "OVERDUE", "CANCELLED" })
@@ -2587,6 +2587,28 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("train_type");
+        });
+
+        modelBuilder.Entity<TrainStation>(entity =>
+        {
+            entity.ToTable("train_station");
+
+            entity.Property("Platform")
+                .HasField("_platform")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("platform");
+            entity.Property("TrainSize")
+                .HasField("_trainSize")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("train_size");
+            entity.Property("TrainstationCode")
+                .HasField("_trainstationCode")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasMaxLength(10)
+                .HasColumnName("trainstation_code");
+            entity.Property("TrainstationName")
+                .HasField("_trainstationName")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasMaxLength(255)
+                .HasColumnName("trainstation_name");
         });
 
         modelBuilder.Entity<Transaction>(entity =>

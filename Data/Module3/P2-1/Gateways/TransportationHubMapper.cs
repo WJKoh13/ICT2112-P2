@@ -16,12 +16,14 @@ public class TransportationHubMapper : AbstractTransportationHubMapper
     private readonly WarehouseMapper _warehouseMapper;
     private readonly AirportMapper _airportMapper;
     private readonly ShippingPortMapper _shippingPortMapper;
+    private readonly TrainStationMapper _trainStationMapper;
 
     public TransportationHubMapper(AppDbContext context) : base(context)
     {
         _warehouseMapper = new WarehouseMapper(context);
         _airportMapper = new AirportMapper(context);
         _shippingPortMapper = new ShippingPortMapper(context);
+        _trainStationMapper = new TrainStationMapper(context);
     }
 
     public override TransportationHub? FindById(int hubId)

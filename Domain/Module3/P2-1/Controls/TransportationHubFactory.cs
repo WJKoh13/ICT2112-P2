@@ -40,6 +40,11 @@ public class TransportationHubFactory
         return _hubMapper.FindById(hubId) as ShippingPort;
     }
 
+    public TrainStation? CreateTrainStation(int hubId)
+    {
+        return _hubMapper.FindById(hubId) as TrainStation;
+    }
+
     /// <summary>
     /// Loads all hubs of a specific type.
     /// </summary>

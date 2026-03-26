@@ -26,7 +26,7 @@
     var code = services.GetRequiredService<ICSharpHelper>();
 
     // --- TPT Inheritance: TransportationHub hierarchy ---
-    var hubSubtypes = new HashSet<string> { "Airport", "ShippingPort", "Warehouse" };
+    var hubSubtypes = new HashSet<string> { "Airport", "ShippingPort", "Warehouse", "TrainStation" };
     // --- TPT Inheritance: Transport hierarchy ---
     var transportSubtypes = new HashSet<string> { "Truck", "Ship", "Plane", "Train" };
     // --- Combined ---

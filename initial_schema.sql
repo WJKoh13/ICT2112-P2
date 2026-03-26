@@ -34,7 +34,7 @@ CREATE TYPE carbon_stage_type AS ENUM (
 );
 
 CREATE TYPE hub_type AS ENUM (
-    'WAREHOUSE', 'SHIPPING_PORT', 'AIRPORT'
+    'WAREHOUSE', 'SHIPPING_PORT', 'AIRPORT', 'TRAIN_STATION'
 );
 
 -- TEAM 2
@@ -124,6 +124,16 @@ CREATE TABLE airport (
     terminal     INT,
     aircraft_size INT,
     CONSTRAINT fk_airport_hub FOREIGN KEY (hub_id)
+        REFERENCES transportation_hub(hub_id) ON DELETE CASCADE
+);
+
+CREATE TABLE train_station (
+    hub_id             INT PRIMARY KEY,
+    trainstation_code  VARCHAR(10)  NOT NULL,
+    trainstation_name  VARCHAR(255) NOT NULL,
+    platform           INT,
+    train_size         INT,
+    CONSTRAINT fk_train_station_hub FOREIGN KEY (hub_id)
         REFERENCES transportation_hub(hub_id) ON DELETE CASCADE
 );
 

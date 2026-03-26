@@ -2,7 +2,7 @@
 TRUNCATE 
     Category, "User", Customer, Staff,
     Product, ProductDetails, InventoryItem,
-    transportation_hub, warehouse, shipping_port, airport,
+    transportation_hub, warehouse, shipping_port, airport, train_station,
     transport, truck, ship, plane, train,
     pricing_rule, delivery_batch, product_return,
     Analytics, AnalyticsList, ReportExport,
@@ -89,6 +89,11 @@ INSERT INTO InventoryItem (ProductId, SerialNumber) VALUES
 (7,'RVP-0009'),
 (7,'RVP-0010');
 
+INSERT INTO inventoryitem (productid, serialnumber, createdat, updatedat)
+VALUES
+(1, 'R5-OLD-001', '2024-06-01 00:00:00+08', '2024-06-01 00:00:00+08'),
+(3, '2470GM-OLD-001', '2024-03-15 00:00:00+08', '2024-03-15 00:00:00+08');
+
 -- Team 2-4 Seed Data
 
 INSERT INTO "User" (name, userRole, email, passwordHash, phoneCountry, phoneNumber)
@@ -151,7 +156,8 @@ VALUES ('WAREHOUSE', 103.8198, 1.3521, 'SG', '1 Marina Boulevard, Singapore', 'O
        ('WAREHOUSE', 114.1694, 22.3193, 'HK', '123 Industrial Road, Hong Kong', 'OPERATIONAL', '8AM-8PM'),
        ('SHIPPING_PORT', -118.2655, 33.7361, 'US', 'Port of Los Angeles, San Pedro, CA 90731, USA', 'OPERATIONAL', '24/7'),
        ('SHIPPING_PORT', 139.7798, 35.6167, 'JP', 'Tokyo International Container Terminal, Aomi, Koto City, Tokyo 135-0064, Japan', 'OPERATIONAL', '6AM-10PM'),
-       ('AIRPORT', 140.3929, 35.7720, 'JP', '1 Furugome, Narita, Chiba 282-0004, Japan', 'OPERATIONAL', '24/7');
+       ('AIRPORT', 140.3929, 35.7720, 'JP', '1 Furugome, Narita, Chiba 282-0004, Japan', 'OPERATIONAL', '24/7'),
+       ('TRAIN_STATION', 103.8454, 1.2966, 'SG', '10 Keppel Road, Tanjong Pagar, Singapore', 'OPERATIONAL', '6AM-11PM');
 
 -- Insert transport modes
 INSERT INTO transport (transport_mode, max_load_kg, vehicle_size_m2, is_available)
@@ -192,6 +198,10 @@ VALUES (2, 'SG-PORT', 'Port of Singapore', 'CONTAINER_PORT', 5000),
 INSERT INTO airport (hub_id, airport_code, airport_name, terminal, aircraft_size)
 VALUES (3, 'SIN', 'Singapore Changi Airport', 3, 400),
        (7, 'NRT', 'Narita International Airport', 2, 450);
+
+-- Insert train station subtype
+INSERT INTO train_station (hub_id, trainstation_code, trainstation_name, platform, train_size)
+VALUES (8, 'TPG', 'Tanjong Pagar Railway Station', 5, 200);
 
 -- Insert transport subtypes
 INSERT INTO truck (transport_id, truck_id, truck_type, license_plate)

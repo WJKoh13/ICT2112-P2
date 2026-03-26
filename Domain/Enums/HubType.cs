@@ -4,5 +4,6 @@ public enum HubType
 {
     WAREHOUSE,
     SHIPPING_PORT,
-    AIRPORT
+    AIRPORT,
+    TRAIN_STATION
 }

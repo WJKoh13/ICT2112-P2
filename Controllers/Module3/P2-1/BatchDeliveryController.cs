@@ -21,6 +21,11 @@ public sealed class BatchDeliveryController : Controller
     {
         ViewData["Message"] = TempData["BatchMessage"]?.ToString();
         var batches = _batchDisplayManager.GetBatchesForDisplay();
+
+        var orderIdsByBatch = _batchDisplayManager.GetOrderIdsByBatchForDisplay(batches);
+
+        ViewData["OrderIdsByBatch"] = orderIdsByBatch;
+
         return View($"{ViewRoot}BatchDeliveryView.cshtml", batches);
     }
 

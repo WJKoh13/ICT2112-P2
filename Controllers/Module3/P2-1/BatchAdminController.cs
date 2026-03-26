@@ -64,4 +64,16 @@ public sealed class BatchAdminController : Controller
 
         return RedirectToAction(nameof(BatchOrderAdmin));
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult ResetOrdersFromBatches()
+    {
+        var success = _batchDelivery.resetOrderBatchAssignments();
+        TempData["BatchMessage"] = success
+            ? "Demo reset completed: all orders were unassociated from batches."
+            : "Demo reset failed.";
+
+        return RedirectToAction(nameof(BatchOrderAdmin));
+    }
 }

@@ -1,6 +1,5 @@
 using ProRental.Data.Module3.P2_5.Interfaces;
 using ProRental.Domain.Module3.P2_5.Entities;
-using ProRental.Domain.Module3.P2_5.Strategies;
 using ProRental.Interfaces.Module2.P2_3;
 using ProRental.Interfaces.Module3.P2_5;
 
@@ -8,24 +7,30 @@ namespace ProRental.Domain.Module3.P2_5.Controls;
 
 public sealed class ProductFootprintCalculatorControl : IProductFootprintCalculatorService
 {
-    private readonly ICalculateCarbonStrategy<ProductFootprintInput> _productFootprintStrategy;
     private readonly IProductCatalogService _productCatalogService;
     private readonly IProductFootprintGateway _productFootprintGateway;
 
     public ProductFootprintCalculatorControl(
-        ICalculateCarbonStrategy<ProductFootprintInput> productFootprintStrategy,
         IProductCatalogService productCatalogService,
         IProductFootprintGateway productFootprintGateway)
     {
-        _productFootprintStrategy = productFootprintStrategy;
         _productCatalogService = productCatalogService;
         _productFootprintGateway = productFootprintGateway;
     }
 
     public double CalculateProductFootprint(double productMass, double toxicPercentage)
     {
-        var input = new ProductFootprintInput(productMass, toxicPercentage);
-        return _productFootprintStrategy.CalculateFootprint(input);
+        if (productMass < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(productMass), "Product mass cannot be negative.");
+        }
+
+        if (toxicPercentage < 0 || toxicPercentage > 100)
+        {
+            throw new ArgumentOutOfRangeException(nameof(toxicPercentage), "Toxic percentage must be between 0 and 100.");
+        }
+
+        return Math.Round(productMass * 0.5 * (1 + (toxicPercentage / 100.0)), 2);
     }
 
     public List<ProductDropdownItem> GetProductDropdownItems()

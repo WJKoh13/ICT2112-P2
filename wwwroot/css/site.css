@@ -162,7 +162,60 @@ html {
 
 
 /* =============================================================================
-   6. LAYOUT — Sticky footer
+   6. MODULE 3 P2-1 — Return Carbon Tracker (StageBreakdown view)
+      Custom rules required because Bootstrap utilities cannot express:
+        - multi-stop gradients on hero banners
+        - per-stage-type colour pairs (background + text) on badge elements
+        - a gradient progress bar fill
+        - a left-border accent on a table row's first child
+        - a translateY hover lift on cards
+   ============================================================================= */
+
+/* Hero banner — teal-to-dark gradient (Module 3 brand colour: #0a9396) */
+.carbon-hero {
+    background: linear-gradient(135deg, #0a3d2e 0%, #0a9396 100%);
+    border-radius: 0.75rem;
+    color: #fff;
+}
+
+/* Stat card hover lift — Bootstrap .card has no built-in translateY utility */
+.carbon-stat-card {
+    transition: transform 0.15s ease;
+}
+.carbon-stat-card:hover {
+    transform: translateY(-2px);
+}
+
+/* Stage type badges — each stage needs a distinct background/text pair */
+.stage-badge {
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    padding: 0.3em 0.75em;
+    border-radius: 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    display: inline-block;
+}
+.stage-DAMAGE_INSPECTION { background-color: #fff3cd; color: #856404; }
+.stage-REPAIRING         { background-color: #cfe2ff; color: #084298; }
+.stage-SERVICING         { background-color: #d1ecf1; color: #0c5460; }
+.stage-CLEANING          { background-color: #d4edda; color: #155724; }
+.stage-RETURN            { background-color: #e2d9f3; color: #432874; }
+
+/* Carbon progress bar — two-colour gradient not achievable with bg-* utilities */
+.carbon-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #0a9396, #0d6efd);
+}
+
+/* High-carbon row accent — left border on td:first-child requires a pseudo-selector */
+.high-carbon-row { background-color: #fff5f5 !important; }
+.high-carbon-row td:first-child { border-left: 3px solid var(--bs-danger); }
+
+
+/* =============================================================================
+   7. LAYOUT — Sticky footer
       Keeps the <footer> pinned to the bottom of the viewport on short pages.
       Footer markup lives in Views/Shared/_Layout.cshtml.
    ============================================================================= */

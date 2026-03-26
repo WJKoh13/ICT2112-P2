@@ -107,7 +107,7 @@ public partial class AppDbContext
         modelBuilder.Entity<DeliveryBatch>(entity =>
         {
             entity.Property("DeliveryBatchStatus").HasField("_deliveryBatchStatus").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("deliverybatchstatus").HasColumnType("batch_status");
+                          .HasColumnName("delivery_batch_status").HasColumnType("batch_status");
         });
 
         modelBuilder.Entity<Inventoryitem>(entity =>
@@ -115,7 +115,6 @@ public partial class AppDbContext
             entity.Property("Status").HasField("_status").UsePropertyAccessMode(PropertyAccessMode.Field)
                   .HasColumnName("status").HasColumnType("inventory_status");
         });
-
 
         modelBuilder.Entity<Lineitem>(entity =>
         {
@@ -168,7 +167,7 @@ public partial class AppDbContext
         modelBuilder.Entity<PricingRule>(entity =>
         {
             entity.Property("TransportMode").HasField("_transportMode").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("transportmode").HasColumnType("transport_mode");
+                  .HasColumnName("transport_mode").HasColumnType("transport_mode");
         });
 
         modelBuilder.Entity<Product>(entity =>
@@ -222,16 +221,16 @@ public partial class AppDbContext
         modelBuilder.Entity<ReturnStage>(entity =>
         {
             entity.Property("StageType").HasField("_stageType").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("stagetype").HasColumnType("carbon_stage_type");
+                  .HasColumnName("stage_type").HasColumnType("carbon_stage_type");
 
             entity.Property("StageTypeAlt").HasField("_stageTypeAlt").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("stagetypealt").HasColumnType("stagetype");
+                  .HasColumnName("stagetype").HasColumnType("stagetype");
         });
 
         modelBuilder.Entity<RouteLeg>(entity =>
         {
             entity.Property("TransportMode").HasField("_transportMode").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("transportmode").HasColumnType("transport_mode");
+                  .HasColumnName("transport_mode").HasColumnType("transport_mode");
         });
 
         // ==========================================
@@ -240,10 +239,10 @@ public partial class AppDbContext
         modelBuilder.Entity<ShippingOption>(entity =>
         {
             entity.Property("PreferenceType").HasField("_preferenceType").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("preferencetype").HasColumnType("preference_type");
+                  .HasColumnName("preference_type").HasColumnType("preference_type");
 
             entity.Property("TransportMode").HasField("_transportMode").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("transportmode").HasColumnType("transport_mode");
+                  .HasColumnName("transport_mode").HasColumnType("transport_mode");
         });
 
         modelBuilder.Entity<Staffaccesslog>(entity =>
@@ -282,13 +281,13 @@ public partial class AppDbContext
         modelBuilder.Entity<Transport>(entity =>
         {
             entity.Property("TransportMode").HasField("_transportMode").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("transportmode").HasColumnType("transport_mode");
+                  .HasColumnName("transport_mode").HasColumnType("transport_mode");
         });
 
         modelBuilder.Entity<TransportationHub>(entity =>
         {
             entity.Property("HubType").HasField("_hubType").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("hubtype").HasColumnType("hub_type");
+                  .HasColumnName("hub_type").HasColumnType("hub_type");
         });
 
         modelBuilder.Entity<User>(entity =>

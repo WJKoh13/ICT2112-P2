@@ -191,10 +191,17 @@ INSERT INTO train (transport_id, train_id, train_type, train_number)
 VALUES (5, 4001, 'FREIGHT', 'TRAIN-001');
 
 -- Insert delivery batches
-INSERT INTO delivery_batch (batch_weight_kg, destination_address, delivery_batch_status, total_orders, carbon_savings, hub_id)
-VALUES (1500.0, 'Port of Singapore', 'PENDING', 5, 25.50, 1),
-       (2000.0, 'Changi Airport', 'SHIPPEDOUT', 8, 35.75, 2),
-       (800.0, 'Hong Kong Industrial', 'PENDING', 3, 12.30, 4);
+INSERT INTO delivery_batch
+(batch_weight_kg, destination_address, delivery_batch_status, total_orders, carbon_savings, hub_id)
+VALUES
+-- TRUCK-oriented local batch
+(0.0, '456 Marina Bay, Singapore 018972', 'PENDING', 0, 0.0, 1),
+
+-- SHIP-oriented outbound batch
+(0.0, 'Port of Singapore, Pasir Ris, Singapore', 'PENDING', 0, 0.0, 2),
+
+-- PLANE-oriented outbound batch
+(0.0, 'Changi Airport Terminal 3, Singapore', 'PENDING', 0, 0.0, 3);
 -- ============================================================
 -- TEAM 1 SEED DATA - END
 -- ============================================================

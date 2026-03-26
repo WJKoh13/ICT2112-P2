@@ -6,7 +6,9 @@
     var carbonRecords = ViewBag.CarbonRecords as List<Ordercarbondatum> ?? new();
     var rewards       = ViewBag.Rewards as List<Customerreward> ?? new();
 
-    var carbonByOrderId = carbonRecords.ToDictionary(c => c.GetOrderid());
+    var carbonByOrderId = carbonRecords
+        .GroupBy(c => c.GetOrderid())
+        .ToDictionary(g => g.Key, g => g.OrderByDescending(c => c.GetCalculatedat()).First());
     var rewardByCarbon  = rewards.GroupBy(r => r.GetOrdercarbondataid())
                                  .ToDictionary(g => g.Key, g => g.First());
 }

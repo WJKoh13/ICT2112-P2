@@ -140,7 +140,7 @@ public sealed class StaffFootprintGateway : IStaffFootprintGateway
     {
         var footprint = new Stafffootprint();
         WriteMember(footprint, "Staffid", "_staffid", staffId);
-        WriteMember(footprint, "Time", "_time", time);
+        WriteMember(footprint, "Time", "_time", NormalizeTimestamp(time));
         WriteMember(footprint, "Hoursworked", "_hoursworked", hoursWorked);
         WriteMember(footprint, "Totalstaffco2", "_totalstaffco2", totalStaffCo2);
 
@@ -160,7 +160,7 @@ public sealed class StaffFootprintGateway : IStaffFootprintGateway
         }
 
         WriteMember(footprint, "Staffid", "_staffid", staffId);
-        WriteMember(footprint, "Time", "_time", time);
+        WriteMember(footprint, "Time", "_time", NormalizeTimestamp(time));
         WriteMember(footprint, "Hoursworked", "_hoursworked", hoursWorked);
         WriteMember(footprint, "Totalstaffco2", "_totalstaffco2", totalStaffCo2);
 
@@ -236,5 +236,12 @@ public sealed class StaffFootprintGateway : IStaffFootprintGateway
         }
 
         throw new InvalidOperationException($"Unable to write '{propertyName}' on {type.Name}.");
+    }
+
+    private static DateTime NormalizeTimestamp(DateTime value)
+    {
+        return value.Kind == DateTimeKind.Utc
+            ? DateTime.SpecifyKind(value, DateTimeKind.Unspecified)
+            : value;
     }
 }

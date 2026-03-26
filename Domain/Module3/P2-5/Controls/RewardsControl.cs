@@ -60,7 +60,7 @@ public class RewardsControl : IRewardsControl
 
         var record = Ordercarbondatum.Create(orderId, productCarbon, packagingCarbon,
             staffCarbon, buildingCarbon, total,
-            ClassifyImpact(total), DateTime.UtcNow);
+            ClassifyImpact(total), DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified));
 
         _carbonGateway.Save(record);
         return record;
@@ -96,12 +96,12 @@ public Customerreward? DetermineReward(int orderId)
     var order = _orderGateway.FindById(orderId);
     if (order is null) return null;
 
-    var reward = Customerreward.Create(
+        var reward = Customerreward.Create(
         order.GetCustomerid(),
         data.GetOrdercarbondataid(),
         rewardInfo.Value.type,
         rewardInfo.Value.value,
-        DateTime.UtcNow);
+        DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified));
 
     _rewardGateway.Save(reward);
     return reward;

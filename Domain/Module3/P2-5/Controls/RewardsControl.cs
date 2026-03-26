@@ -52,7 +52,7 @@ public class RewardsControl : IRewardsControl
         double staffCarbon = totalOrders > 0 ? totalStaffCo2 / totalOrders : 0.0;
 
         double totalBuildingCo2 = _db.Buildingfootprints.Any()
-            ? _db.Buildingfootprints.Sum(b => b.ReadTotalroomco2())
+            ? _db.Buildingfootprints.ToList().Sum(b => b.ReadTotalroomco2())
             : 0.0;
         double buildingCarbon = totalOrders > 0 ? totalBuildingCo2 / totalOrders : 0.0;
 

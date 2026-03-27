@@ -26,11 +26,26 @@ public sealed class ShippingOptionMapper : IShippingOptionMapper
             .FirstOrDefaultAsync(order => EF.Property<int>(order, "Orderid") == orderId, cancellationToken);
     }
 
+    public async Task<int?> FindSelectedRouteIdByOrderIdAsync(int orderId, CancellationToken cancellationToken = default)
+    {
+        var order = await _context.Orders
+            .AsNoTracking()
+            .Include(entity => entity.Checkout)
+                .ThenInclude(checkout => checkout.Option)
+            .FirstOrDefaultAsync(entity => EF.Property<int>(entity, "Orderid") == orderId, cancellationToken);
+
+        if (order is null)
+        {
+            return null;
+        }
+
+        return order.Checkout.Option?.GetSummary().RouteId;
+    }
+
     public async Task<IReadOnlyList<ShippingOption>> FindByOrderIdAsync(int orderId, CancellationToken cancellationToken = default)
     {
         // Options are returned in insertion order so checkout presents a stable FAST/CHEAP/GREEN set.
         var options = await _context.ShippingOptions
-            .Include(option => option.Route)
             .AsNoTracking()
             .Where(option => EF.Property<int?>(option, "OrderId") == orderId)
             .OrderBy(option => EF.Property<int?>(option, "OptionId"))
@@ -42,7 +57,6 @@ public sealed class ShippingOptionMapper : IShippingOptionMapper
     public Task<ShippingOption?> FindByIdAsync(int optionId, CancellationToken cancellationToken = default)
     {
         return _context.ShippingOptions
-            .Include(option => option.Route)
             .FirstOrDefaultAsync(option => EF.Property<int>(option, "OptionId") == optionId, cancellationToken);
     }
 

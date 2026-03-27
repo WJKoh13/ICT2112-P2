@@ -1,4 +1,3 @@
-using ProRental.Domain.Controls;
 using ProRental.Domain.Enums;
 using ProRental.Interfaces.Module3.P2_1;
 
@@ -6,14 +5,14 @@ namespace ProRental.Domain.Module3.P2_1.Controls;
 
 public sealed class RouteDistanceCalculator : IRouteDistanceCalculator
 {
-    private readonly IGoogleMapsApi _googleMapsApi;
+    private readonly IGoogleMapsAPI _googleMapsApi;
 
-    public RouteDistanceCalculator(IGoogleMapsApi googleMapsApi)
+    public RouteDistanceCalculator(IGoogleMapsAPI googleMapsApi)
     {
         _googleMapsApi = googleMapsApi;
     }
 
-    public async Task<double> CalculateDistanceKmAsync(
+    public async Task<double> CalculateLegDistanceKmAsync(
         TransportMode transportMode,
         RouteDistancePoint startPoint,
         RouteDistancePoint endPoint)

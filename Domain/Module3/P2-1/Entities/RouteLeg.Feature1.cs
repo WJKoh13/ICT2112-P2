@@ -61,4 +61,6 @@ public partial class RouteLeg
             isMainTransport: false,
             isLastMile);
     }
+
+    public void SetSequence(int sequence) => _sequence = sequence;
 }

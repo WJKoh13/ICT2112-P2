@@ -1,6 +1,6 @@
 using ProRental.Domain.Entities;
 
-namespace ProRental.Domain.Controls;
+namespace ProRental.Domain.Module3.P2_1.Controls;
 
 internal static class RouteCountryCodeResolver
 {

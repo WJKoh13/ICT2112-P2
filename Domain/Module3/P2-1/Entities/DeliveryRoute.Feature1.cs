@@ -7,6 +7,12 @@ namespace ProRental.Domain.Entities;
 /// </summary>
 public partial class DeliveryRoute
 {
+    public void addLeg(RouteLeg leg)
+    {
+        ArgumentNullException.ThrowIfNull(leg);
+        RouteLegs.Add(leg);
+    }
+
     public int GetRouteId() => _routeId;
     public string GetOriginAddress() => _originAddress;
     public string GetDestinationAddress() => _destinationAddress;

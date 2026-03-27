@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using ProRental.Domain.Controls;
+using ProRental.Domain.Module3.P2_1.Controls;
 using ProRental.Domain.Enums;
 using ProRental.Interfaces.Module3.P2_1;
 using ProRental.Models.Module3.P2_1;

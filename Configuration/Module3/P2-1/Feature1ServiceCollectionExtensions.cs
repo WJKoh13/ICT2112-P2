@@ -4,6 +4,8 @@ using ProRental.Data.Module3.P2_1;
 using ProRental.Data.Module3.P2_1.Gateways;
 using ProRental.Data.Interfaces;
 using ProRental.Data.Module3.P2_1.Interfaces;
+using ProRental.Data.Module3.P2_1.Mappers;
+using ProRental.Data.Module3.P2_1.Services;
 using ProRental.Domain.Control;
 using ProRental.Domain.Controls;
 using ProRental.Domain.Module3.P2_1.Controls;
@@ -20,7 +22,7 @@ public static class Feature1ServiceCollectionExtensions
 {
     public static IServiceCollection AddFeature1Services(this IServiceCollection services)
     {
-        services.AddHttpClient<IGoogleMapsApi, GoogleMapsAPI>(client =>
+        services.AddHttpClient<IGoogleMapsAPI, GoogleMapsAPI>(client =>
         {
             client.BaseAddress = new Uri("https://routes.googleapis.com/");
         });
@@ -28,6 +30,7 @@ public static class Feature1ServiceCollectionExtensions
         services.AddScoped<IInventoryService, DummyInventoryService>();
         services.AddScoped<IShippingOptionMapper, ShippingOptionMapper>();
         services.AddScoped<IOrderService, ShippingOrderContextService>();
+        services.AddScoped<IRouteMapper, RouteMapper>();
         services.AddScoped<IRouteDistanceCalculator, RouteDistanceCalculator>();
         services.AddScoped<IRouteQueryService, RouteManager>();
         services.AddScoped<IRouteLegBuilder, RouteLegBuilder>();

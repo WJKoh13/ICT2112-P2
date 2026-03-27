@@ -18,6 +18,7 @@ public sealed class BatchConsolidationManager : IBatchDelivery
     private readonly IHubInfoService _hubInfoService;
     private readonly IDeliveryBatchMapper _deliveryBatchMapper;
     private readonly IBatchOrderMapper _batchOrderMapper;
+    private readonly IShippingOptionMapper _shippingOptionMapper;
     private readonly AppDbContext _context;
 
     public BatchConsolidationManager(
@@ -28,6 +29,7 @@ public sealed class BatchConsolidationManager : IBatchDelivery
         IHubInfoService hubInfoService,
         IDeliveryBatchMapper deliveryBatchMapper,
         IBatchOrderMapper batchOrderMapper,
+        IShippingOptionMapper shippingOptionMapper,
         AppDbContext context)
     {
         _batchValidator = batchValidator;
@@ -37,6 +39,7 @@ public sealed class BatchConsolidationManager : IBatchDelivery
         _hubInfoService = hubInfoService;
         _deliveryBatchMapper = deliveryBatchMapper;
         _batchOrderMapper = batchOrderMapper;
+        _shippingOptionMapper = shippingOptionMapper;
         _context = context;
     }
 
@@ -58,10 +61,11 @@ public sealed class BatchConsolidationManager : IBatchDelivery
             handleConsolidationFailure(orderId, "Order does not have a valid delivery address.");
         }
 
-        var firstLeg = _routeQueryService.retrieveFirstMileLeg(1)
-            ?? throw new InvalidOperationException("No first-mile route leg was found for route ID 1.");
+        var routeId = ResolveRouteIdForOrder(int.Parse(orderId));
+        var mainTransportLeg = _routeQueryService.retrieveMainTransportLeg(routeId)
+            ?? throw new InvalidOperationException($"No main transport route leg was found for route ID '{routeId}'.");
 
-        var destinationHubId = firstLeg.GetEndPoint();
+        var destinationHubId = mainTransportLeg.GetEndPoint();
 
         if (!batchOrderConsolidator(orderId, destinationHubId))
         {
@@ -117,7 +121,7 @@ public sealed class BatchConsolidationManager : IBatchDelivery
             return 0d;
         }
 
-        var distanceKm = _routeQueryService.retrieveFirstMileLeg(1)?.GetDistanceKm() ?? 0d;
+        var distanceKm = ResolveMainTransportLegDistance(consOrderIds);
         var batchWeightKg = CalculateBatchWeight(consOrderIds);
 
         var consolidatedLegCost = _transportCarbonService.CalculateLegCarbon(
@@ -213,7 +217,7 @@ public sealed class BatchConsolidationManager : IBatchDelivery
 
         var orderIds = _batchOrderMapper.getOrderIdsByBatch(batchId);
         var totalOrders = _batchOrderMapper.countOrdersInBatch(batchId);
-        var distanceKm = _routeQueryService.retrieveFirstMileLeg(1)?.GetDistanceKm() ?? 0d;
+        var distanceKm = ResolveMainTransportLegDistance(orderIds);
 
         var batchWeightKg = CalculateBatchWeight(orderIds);
         var unconsolidatedCost = CalculateUnconsolidatedFirstLegCost(orderIds, distanceKm);
@@ -236,5 +240,42 @@ public sealed class BatchConsolidationManager : IBatchDelivery
             .Sum() ?? 0d;
 
         return orderWeightKg > 0d ? orderWeightKg : 1d;
+    }
+
+    private int ResolveRouteIdForOrder(int orderId)
+    {
+        var routeId = _shippingOptionMapper
+            .FindSelectedRouteIdByOrderIdAsync(orderId)
+            .GetAwaiter()
+            .GetResult();
+
+        if (!routeId.HasValue || routeId.Value <= 0)
+        {
+            throw new InvalidOperationException($"Order '{orderId}' does not have a selected shipping route.");
+        }
+
+        return routeId.Value;
+    }
+
+    private double ResolveMainTransportLegDistance(IEnumerable<string> orderIds)
+    {
+        var routeIds = orderIds
+            .Select(orderId => int.TryParse(orderId, out var parsedOrderId) ? parsedOrderId : (int?)null)
+            .Where(parsedOrderId => parsedOrderId.HasValue)
+            .Select(parsedOrderId => ResolveRouteIdForOrder(parsedOrderId!.Value))
+            .Distinct()
+            .ToList();
+
+        if (routeIds.Count == 0)
+        {
+            return 0d;
+        }
+
+        if (routeIds.Count > 1)
+        {
+            throw new InvalidOperationException("Batch contains orders mapped to different delivery routes.");
+        }
+
+        return _routeQueryService.retrieveMainTransportLeg(routeIds[0])?.GetDistanceKm() ?? 0d;
     }
 }

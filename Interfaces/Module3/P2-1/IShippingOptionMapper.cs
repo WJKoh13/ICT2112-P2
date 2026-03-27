@@ -9,6 +9,7 @@ namespace ProRental.Interfaces.Module3.P2_1;
 public interface IShippingOptionMapper
 {
     Task<Order?> FindOrderWithCheckoutAsync(int orderId, CancellationToken cancellationToken = default);
+    Task<int?> FindSelectedRouteIdByOrderIdAsync(int orderId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<ShippingOption>> FindByOrderIdAsync(int orderId, CancellationToken cancellationToken = default);
     Task<ShippingOption?> FindByIdAsync(int optionId, CancellationToken cancellationToken = default);
     Task AddAsync(ShippingOption option, CancellationToken cancellationToken = default);

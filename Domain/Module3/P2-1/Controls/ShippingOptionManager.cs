@@ -4,6 +4,7 @@ using ProRental.Domain.Enums;
 using ProRental.Data.Interfaces;
 using ProRental.Interfaces.Module3.P2_1;
 using ProRental.Models.Module3.P2_1;
+using ProRental.Domain.Module3.P2_1.Controls;
 
 namespace ProRental.Domain.Controls;
 
@@ -123,11 +124,12 @@ public sealed class ShippingOptionManager : IShippingOptionService
         }
 
         var profile = GetPreferenceProfile(request.PreferenceType);
-        var allowedModes = PreferenceTypeModes.ResolveAllowedModes(request.PreferenceType, IsSameCountryRoute(context)).ToList();
+        var routeModeProfile = PreferenceTypeModes.ResolveRouteProfile(request.PreferenceType, IsSameCountryRoute(context));
+        var routeModes = routeModeProfile.ToModeList();
 
-        var route = await _routingService.CreateMultiModalRouteAsync(DefaultOrigin, context.DestinationAddress, [.. allowedModes]);
+        var route = await _routingService.CreateMultiModalRouteAsync(DefaultOrigin, context.DestinationAddress, routeModes);
         var routeId = route.GetRouteId();
-        var selectedTransportMode = ResolveSelectedTransportMode(route, allowedModes.FirstOrDefault());
+        var selectedTransportMode = ResolveSelectedTransportMode(route, routeModeProfile.MainTransportMode);
         var quoteInput = new RouteQuoteInput(
             context.HubId,
             context.Items

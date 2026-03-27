@@ -178,7 +178,6 @@ builder.Services.AddScoped<IPricingRuleGateway, PricingRuleGateway>();
 builder.Services.AddScoped<ProRental.Data.Module3.P2_1.Interfaces.IReturnStageGateway, ProRental.Data.Module3.P2_1.Gateways.ReturnStageGateway>();
 
 // Domain
-builder.Services.AddScoped<IRouteDistanceCalculator, RouteDistanceCalculator>();
 builder.Services.AddScoped<ITransportService, TransportationManager>();
 builder.Services.AddScoped<TransportationFactory>();
 builder.Services.AddScoped<ReturnStageCalculator>();
@@ -194,7 +193,6 @@ builder.Services.AddScoped<IDeliveryBatchMapper, DeliveryBatchMapper>();
 builder.Services.AddScoped<IBatchValidator, BatchValidator>();
 builder.Services.AddScoped<IBatchQueryManager, BatchQueryManager>();
 builder.Services.AddScoped<IBatchDisplayManager, BatchQueryManager>();
-builder.Services.AddScoped<IRouteQueryService, RouteQueryService>();
 builder.Services.AddScoped<IBatchDelivery, BatchConsolidationManager>();
 
 
@@ -325,7 +323,6 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
-
 
 
 

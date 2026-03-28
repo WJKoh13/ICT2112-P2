@@ -8,6 +8,10 @@ namespace ProRental.Data.UnitOfWork;
 
 public partial class AppDbContext : DbContext
 {
+    public AppDbContext()
+    {
+    }
+
     public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options)
     {
@@ -22,6 +26,8 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<Buildingfootprint> Buildingfootprints { get; set; }
 
     public virtual DbSet<CarbonEmission> CarbonEmissions { get; set; }
+
+    public virtual DbSet<CarbonResult> CarbonResults { get; set; }
 
     public virtual DbSet<Cart> Carts { get; set; }
 
@@ -39,6 +45,8 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Customer> Customers { get; set; }
 
+    public virtual DbSet<CustomerChoice> CustomerChoices { get; set; }
+
     public virtual DbSet<Customerreward> Customerrewards { get; set; }
 
     public virtual DbSet<Damagereport> Damagereports { get; set; }
@@ -52,6 +60,8 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<Ecobadge> Ecobadges { get; set; }
 
     public virtual DbSet<Inventoryitem> Inventoryitems { get; set; }
+
+    public virtual DbSet<LegCarbon> LegCarbons { get; set; }
 
     public virtual DbSet<Lineitem> Lineitems { get; set; }
 
@@ -157,6 +167,10 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Vettingrecord> Vettingrecords { get; set; }
 
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=pro_rental;Username=devuser;Password=devpassword");
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder
@@ -173,7 +187,7 @@ public partial class AppDbContext : DbContext
             .HasPostgresEnum("delivery_duration_enum", new[] { "NextDay", "ThreeDays", "OneWeek" })
             .HasPostgresEnum("delivery_type_enum", new[] { "STANDARD", "EXPRESS", "SELF_PICKUP" })
             .HasPostgresEnum("file_format_enum", new[] { "CSV", "XLSX", "PDF", "PNG" })
-            .HasPostgresEnum("hub_type", new[] { "WAREHOUSE", "SHIPPING_PORT", "AIRPORT", "TRAIN_STATION" })
+            .HasPostgresEnum("hub_type", new[] { "WAREHOUSE", "SHIPPING_PORT", "AIRPORT" })
             .HasPostgresEnum("inventory_status", new[] { "AVAILABLE", "RETIRED", "CLEARANCE", "SOLD", "MAINTENANCE", "RESERVED", "ON_LOAN", "BROKEN" })
             .HasPostgresEnum("loan_status", new[] { "OPEN", "ON_LOAN", "RETURNED" })
             .HasPostgresEnum("loan_status_enum", new[] { "ONGOING", "RETURNED", "OVERDUE", "CANCELLED" })
@@ -418,6 +432,32 @@ public partial class AppDbContext : DbContext
                 .HasForeignKey("StageId")
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_carbon_emission_stage");
+        });
+
+        modelBuilder.Entity<CarbonResult>(entity =>
+        {
+            entity.HasKey("CarbonResultId").HasName("carbon_result_pkey");
+
+            entity.ToTable("carbon_result");
+
+            entity.Property("CarbonResultId")
+                .HasField("_carbonResultId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .UseIdentityAlwaysColumn()
+                .HasColumnName("carbon_result_id");
+            entity.Property("CreatedAt")
+                .HasField("_createdAt")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasDefaultValueSql("now()")
+                .HasColumnName("created_at");
+            entity.Property("TotalCarbonKg")
+                .HasField("_totalCarbonKg")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("total_carbon_kg");
+            entity.Property("ValidationPassed")
+                .HasField("_validationPassed")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasDefaultValue(false)
+                .HasColumnName("validation_passed");
         });
 
         modelBuilder.Entity<Cart>(entity =>
@@ -701,6 +741,33 @@ public partial class AppDbContext : DbContext
                 .HasConstraintName("fk_customer_user");
         });
 
+        modelBuilder.Entity<CustomerChoice>(entity =>
+        {
+            entity.HasKey("CustomerId", "OrderId").HasName("customer_choice_pkey");
+
+            entity.ToTable("customer_choice");
+
+            entity.Property("CustomerId")
+                .HasField("_customerId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("customer_id");
+            entity.Property("OrderId")
+                .HasField("_orderId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("order_id");
+            entity.Property("CreatedAt")
+                .HasField("_createdAt")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasDefaultValueSql("now()")
+                .HasColumnName("created_at");
+
+            entity.HasOne(d => d.Customer).WithMany(p => p.CustomerChoices)
+                .HasForeignKey("CustomerId")
+                .HasConstraintName("fk_customerchoice_customer");
+
+            entity.HasOne(d => d.Order).WithMany(p => p.CustomerChoices)
+                .HasForeignKey("OrderId")
+                .HasConstraintName("fk_customerchoice_order");
+        });
+
         modelBuilder.Entity<Customerreward>(entity =>
         {
             entity.HasKey("Rewardid").HasName("customerrewards_pkey");
@@ -834,6 +901,9 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("destination_address");
+            entity.Property("DestinationHubId")
+                .HasField("_destinationHubId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("destination_hub_id");
             entity.Property("IsValid")
                 .HasField("_isValid")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
@@ -844,9 +914,20 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("origin_address");
+            entity.Property("OriginHubId")
+                .HasField("_originHubId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("origin_hub_id");
             entity.Property("TotalDistanceKm")
                 .HasField("_totalDistanceKm")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("total_distance_km");
+
+            entity.HasOne(d => d.DestinationHub).WithMany(p => p.DeliveryRouteDestinationHubs)
+                .HasForeignKey("DestinationHubId")
+                .HasConstraintName("fk_route_destination_hub");
+
+            entity.HasOne(d => d.OriginHub).WithMany(p => p.DeliveryRouteOriginHubs)
+                .HasForeignKey("OriginHubId")
+                .HasConstraintName("fk_route_origin_hub");
         });
 
         modelBuilder.Entity<Deposit>(entity =>
@@ -966,6 +1047,45 @@ public partial class AppDbContext : DbContext
             entity.HasOne(d => d.Product).WithMany(p => p.Inventoryitems)
                 .HasForeignKey("Productid")
                 .HasConstraintName("fk_inventory_product");
+        });
+
+        modelBuilder.Entity<LegCarbon>(entity =>
+        {
+            entity.HasKey("LegId").HasName("leg_carbon_pkey");
+
+            entity.ToTable("leg_carbon");
+
+            entity.Property("LegId")
+                .HasField("_legId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .UseIdentityAlwaysColumn()
+                .HasColumnName("leg_id");
+            entity.Property("CarbonKg")
+                .HasField("_carbonKg")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("carbon_kg");
+            entity.Property("CarbonRate")
+                .HasField("_carbonRate")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("carbon_rate");
+            entity.Property("CarbonResultId")
+                .HasField("_carbonResultId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("carbon_result_id");
+            entity.Property("DistanceKm")
+                .HasField("_distanceKm")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("distance_km");
+            entity.Property("RouteLegId")
+                .HasField("_routeLegId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("route_leg_id");
+            entity.Property("WeightKg")
+                .HasField("_weightKg")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("weight_kg");
+
+            entity.HasOne(d => d.CarbonResult).WithMany(p => p.LegCarbons)
+                .HasForeignKey("CarbonResultId")
+                .HasConstraintName("fk_leg_carbon_result");
+
+            entity.HasOne(d => d.RouteLeg).WithMany(p => p.LegCarbons)
+                .HasForeignKey("RouteLegId")
+                .HasConstraintName("fk_leg_carbon_leg");
         });
 
         modelBuilder.Entity<Lineitem>(entity =>
@@ -2190,9 +2310,6 @@ public partial class AppDbContext : DbContext
 
             entity.ToTable("route_leg");
 
-            // entity.HasIndex("RouteId", "Sequence", "uq_route_leg_route_sequence").IsUnique();
-            entity.HasIndex("RouteId", "Sequence").HasDatabaseName("uq_route_leg_route_sequence").IsUnique();
-
             entity.Property("LegId")
                 .HasField("_legId")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
@@ -2216,11 +2333,6 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValue(false)
                 .HasColumnName("is_last_mile");
-            entity.Property("IsMainTransport")
-                .HasField("_isMainTransport")
-                .UsePropertyAccessMode(PropertyAccessMode.Field)
-                .HasDefaultValue(false)
-                .HasColumnName("is_main_transport");
             entity.Property("RouteId")
                 .HasField("_routeId")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("route_id");
@@ -2232,10 +2344,18 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("start_point");
+            entity.Property("TransportId")
+                .HasField("_transportId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("transport_id");
 
             entity.HasOne(d => d.Route).WithMany(p => p.RouteLegs)
                 .HasForeignKey("RouteId")
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_route_leg_route");
+
+            entity.HasOne(d => d.Transport).WithMany(p => p.RouteLegs)
+                .HasForeignKey("TransportId")
+                .HasConstraintName("fk_route_leg_transport");
         });
 
         modelBuilder.Entity<Session>(entity =>
@@ -2587,28 +2707,6 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("train_type");
-        });
-
-        modelBuilder.Entity<TrainStation>(entity =>
-        {
-            entity.ToTable("train_station");
-
-            entity.Property("Platform")
-                .HasField("_platform")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("platform");
-            entity.Property("TrainSize")
-                .HasField("_trainSize")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("train_size");
-            entity.Property("TrainstationCode")
-                .HasField("_trainstationCode")
-                .UsePropertyAccessMode(PropertyAccessMode.Field)
-                .HasMaxLength(10)
-                .HasColumnName("trainstation_code");
-            entity.Property("TrainstationName")
-                .HasField("_trainstationName")
-                .UsePropertyAccessMode(PropertyAccessMode.Field)
-                .HasMaxLength(255)
-                .HasColumnName("trainstation_name");
         });
 
         modelBuilder.Entity<Transaction>(entity =>

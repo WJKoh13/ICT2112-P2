@@ -9,8 +9,6 @@ namespace ProRental.Domain.Module3.P2_1.Controls;
 
 public sealed class BatchConsolidationManager : IBatchDelivery
 {
-    private const int ShowcaseFallbackRouteId = 2;
-
     private readonly IBatchValidator _batchValidator;
     private readonly IOrderService _orderService;
     private readonly IRouteQueryService _routeQueryService;
@@ -58,7 +56,7 @@ public sealed class BatchConsolidationManager : IBatchDelivery
             handleConsolidationFailure(orderId, "Order does not have a valid delivery address.");
         }
 
-        var routeId = ShowcaseFallbackRouteId;
+        var routeId = 2; // FR assumption: fixed first-leg/main transport route ID.
         var mainTransportLeg = _routeQueryService.retrieveMainTransportLeg(routeId)
             ?? throw new InvalidOperationException($"No main transport route leg was found for route ID '{routeId}'.");
 
@@ -113,7 +111,7 @@ public sealed class BatchConsolidationManager : IBatchDelivery
             return 0d;
         }
 
-        var distanceKm = ResolveMainTransportLegDistance(consOrderIds);
+        var distanceKm = _routeQueryService.retrieveMainTransportLeg(2)?.GetDistanceKm() ?? 0d; // FR assumption: fixed first-leg/main transport route ID.
         var batchWeightKg = CalculateBatchWeight(consOrderIds);
 
         var consolidatedLegCost = _transportCarbonService.CalculateLegCarbon(
@@ -161,6 +159,7 @@ public sealed class BatchConsolidationManager : IBatchDelivery
 
     public bool resetOrderBatchAssignments()
     {
+        // Admin/demo utility kept for existing controller + interface flow; not part of core consolidation operations in the design diagram.
         var links = _context.BatchOrders.ToList();
         if (links.Count > 0)
         {
@@ -228,7 +227,7 @@ public sealed class BatchConsolidationManager : IBatchDelivery
 
         var orderIds = _batchOrderMapper.getOrderIdsByBatch(batchId);
         var totalOrders = _batchOrderMapper.countOrdersInBatch(batchId);
-        var distanceKm = ResolveMainTransportLegDistance(orderIds);
+        var distanceKm = _routeQueryService.retrieveMainTransportLeg(2)?.GetDistanceKm() ?? 0d; // FR assumption: fixed first-leg/main transport route ID.
 
         var batchWeightKg = CalculateBatchWeight(orderIds);
         var unconsolidatedCost = CalculateUnconsolidatedFirstLegCost(orderIds, distanceKm);
@@ -251,15 +250,5 @@ public sealed class BatchConsolidationManager : IBatchDelivery
             .Sum() ?? 0d;
 
         return orderWeightKg > 0d ? orderWeightKg : 1d;
-    }
-
-    private double ResolveMainTransportLegDistance(IEnumerable<string> orderIds)
-    {
-        if (orderIds is null || !orderIds.Any())
-        {
-            return 0d;
-        }
-
-        return _routeQueryService.retrieveMainTransportLeg(ShowcaseFallbackRouteId)?.GetDistanceKm() ?? 0d;
     }
 }

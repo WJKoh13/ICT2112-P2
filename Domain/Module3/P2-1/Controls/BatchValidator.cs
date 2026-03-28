@@ -1,18 +1,16 @@
-using Microsoft.EntityFrameworkCore;
 using ProRental.Data.Module3.P2_1.Interfaces;
-using ProRental.Data.UnitOfWork;
 using ProRental.Interfaces.Module3.P2_1;
 
 namespace ProRental.Domain.Module3.P2_1.Controls;
 
 public sealed class BatchValidator : IBatchValidator
 {
-    private readonly AppDbContext _context;
+    private readonly IOrderService _orderService;
     private readonly IDeliveryBatchMapper _deliveryBatchMapper;
 
-    public BatchValidator(AppDbContext context, IDeliveryBatchMapper deliveryBatchMapper)
+    public BatchValidator(IOrderService orderService, IDeliveryBatchMapper deliveryBatchMapper)
     {
-        _context = context;
+        _orderService = orderService;
         _deliveryBatchMapper = deliveryBatchMapper;
     }
 
@@ -23,7 +21,14 @@ public sealed class BatchValidator : IBatchValidator
             return false;
         }
 
-        return _context.Orders.Any(entity => EF.Property<int>(entity, "Orderid") == parsedOrderId);
+        try
+        {
+            return _orderService.GetShippingContextAsync(parsedOrderId).GetAwaiter().GetResult() is not null;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public bool validateBatchExists(int batchId)

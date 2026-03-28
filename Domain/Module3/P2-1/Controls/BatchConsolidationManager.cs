@@ -1,6 +1,4 @@
-using Microsoft.EntityFrameworkCore;
 using ProRental.Data.Module3.P2_1.Interfaces;
-using ProRental.Data.UnitOfWork;
 using ProRental.Domain.Entities;
 using ProRental.Domain.Enums;
 using ProRental.Interfaces.Module3.P2_1;
@@ -16,7 +14,6 @@ public sealed class BatchConsolidationManager : IBatchDelivery
     private readonly IHubInfoService _hubInfoService;
     private readonly IDeliveryBatchMapper _deliveryBatchMapper;
     private readonly IBatchOrderMapper _batchOrderMapper;
-    private readonly AppDbContext _context;
 
     public BatchConsolidationManager(
         IBatchValidator batchValidator,
@@ -25,8 +22,7 @@ public sealed class BatchConsolidationManager : IBatchDelivery
         ITransportCarbonService transportCarbonService,
         IHubInfoService hubInfoService,
         IDeliveryBatchMapper deliveryBatchMapper,
-        IBatchOrderMapper batchOrderMapper,
-        AppDbContext context)
+        IBatchOrderMapper batchOrderMapper)
     {
         _batchValidator = batchValidator;
         _orderService = orderService;
@@ -35,7 +31,6 @@ public sealed class BatchConsolidationManager : IBatchDelivery
         _hubInfoService = hubInfoService;
         _deliveryBatchMapper = deliveryBatchMapper;
         _batchOrderMapper = batchOrderMapper;
-        _context = context;
     }
 
     public void consolidateOrderToBatch(string orderId)
@@ -60,9 +55,19 @@ public sealed class BatchConsolidationManager : IBatchDelivery
         var mainTransportLeg = _routeQueryService.retrieveMainTransportLeg(routeId)
             ?? throw new InvalidOperationException($"No main transport route leg was found for route ID '{routeId}'.");
 
-        var destinationHubId = mainTransportLeg.GetEndPoint();
+        var destinationHubEndpoint = mainTransportLeg.GetEndPoint();
+        var destinationHubId = int.TryParse(destinationHubEndpoint, out var parsedDestinationHubId)
+            ? parsedDestinationHubId
+            : _hubInfoService.GetAllHubs()
+                .FirstOrDefault(hub => string.Equals(hub.GetAddress(), destinationHubEndpoint, StringComparison.OrdinalIgnoreCase))
+                ?.GetHubId() ?? 0;
 
-        if (!batchOrderConsolidator(orderId, destinationHubId))
+        if (destinationHubId <= 0)
+        {
+            handleConsolidationFailure(orderId, "Destination hub is invalid.");
+        }
+
+        if (!batchOrderConsolidator(orderId, destinationHubId.ToString()))
         {
             handleConsolidationFailure(orderId, "Unable to add order to pending batch.");
         }
@@ -160,10 +165,10 @@ public sealed class BatchConsolidationManager : IBatchDelivery
     public bool resetOrderBatchAssignments()
     {
         // Admin/demo utility kept for existing controller + interface flow; not part of core consolidation operations in the design diagram.
-        var links = _context.BatchOrders.ToList();
-        if (links.Count > 0)
+        var wasCleared = _batchOrderMapper.clearAllOrderBatchLinks();
+        if (!wasCleared)
         {
-            _context.BatchOrders.RemoveRange(links);
+            return false;
         }
 
         var batches = _deliveryBatchMapper.findAll();
@@ -172,10 +177,10 @@ public sealed class BatchConsolidationManager : IBatchDelivery
             batch.SetTotalOrders(0);
             batch.updateBatchWeight(0d);
             batch.updateCarbonSavings(0d);
-            _context.DeliveryBatches.Update(batch);
+            _deliveryBatchMapper.update(batch);
         }
 
-        return _context.SaveChanges() >= 0;
+        return true;
     }
 
     public double CalculateUnconsolidatedFirstLegCost(IEnumerable<string> orderIds, double distanceKm)
@@ -241,14 +246,6 @@ public sealed class BatchConsolidationManager : IBatchDelivery
 
     public double GetOrderWeightKg(int orderId)
     {
-        var orderWeightKg = (from orderItem in _context.Orderitems
-                             join productDetail in _context.Productdetails
-                                 on EF.Property<int>(orderItem, "Productid") equals EF.Property<int>(productDetail, "Productid")
-                             where EF.Property<int>(orderItem, "Orderid") == orderId
-                             select (double?)EF.Property<int>(orderItem, "Quantity") *
-                                    (double?)(EF.Property<decimal?>(productDetail, "Weight") ?? 1m))
-            .Sum() ?? 0d;
-
-        return orderWeightKg > 0d ? orderWeightKg : 1d;
+        return _batchOrderMapper.getOrderWeightKg(orderId);
     }
 }

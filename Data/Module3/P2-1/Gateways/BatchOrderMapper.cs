@@ -57,6 +57,20 @@ public sealed class BatchOrderMapper : IBatchOrderMapper
         return _context.SaveChanges() > 0;
     }
 
+    // Clears all batch-order link records for admin/demo reset flows.
+    // Utility function not exposed in domain layer as part of main requirements, but added to support easier testing and demoing.
+    public bool clearAllOrderBatchLinks()
+    {
+        var links = _context.BatchOrders.ToList();
+        if (links.Count == 0)
+        {
+            return true;
+        }
+
+        _context.BatchOrders.RemoveRange(links);
+        return _context.SaveChanges() >= 0;
+    }
+
     public List<string> getOrderIdsByBatch(int batchId)
     {
         return _context.BatchOrders
@@ -93,5 +107,18 @@ public sealed class BatchOrderMapper : IBatchOrderMapper
     public int countOrdersInBatch(int batchId)
     {
         return _context.BatchOrders.Count(entity => EF.Property<int>(entity, "BatchId") == batchId);
+    }
+
+    public double getOrderWeightKg(int orderId)
+    {
+        var orderWeightKg = (from orderItem in _context.Orderitems
+                             join productDetail in _context.Productdetails
+                                 on EF.Property<int>(orderItem, "Productid") equals EF.Property<int>(productDetail, "Productid")
+                             where EF.Property<int>(orderItem, "Orderid") == orderId
+                             select (double?)EF.Property<int>(orderItem, "Quantity") *
+                                    (double?)(EF.Property<decimal?>(productDetail, "Weight") ?? 1m))
+            .Sum() ?? 0d;
+
+        return orderWeightKg > 0d ? orderWeightKg : 1d;
     }
 }

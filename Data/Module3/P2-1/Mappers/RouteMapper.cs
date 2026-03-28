@@ -30,6 +30,7 @@ public sealed class RouteMapper : IRouteMapper
             .AsNoTracking()
             .FirstOrDefault(routeLeg =>
                 EF.Property<int>(routeLeg, "RouteId") == routeId &&
-                routeLeg.GetIsMainTransport() == true);
+                EF.Property<bool?>(routeLeg, "IsFirstMile") != true &&
+                EF.Property<bool?>(routeLeg, "IsLastMile") != true);
     }
 }

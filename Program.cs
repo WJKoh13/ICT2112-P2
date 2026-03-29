@@ -160,7 +160,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 //Services builder(add your mappers/gateways, controllers, control and interface classes here)
 //Team P2-1
 // Data source
-builder.Services.AddScoped<ProRental.Data.Interfaces.ITransportationHubMapper, ProRental.Data.Gateways.TransportationHubMapper>();
+builder.Services.AddScoped<ProRental.Data.Interfaces.ITransportationHubMapper, ProRental.Data.Mappers.TransportationHubMapper>();
 
 // Domain
 builder.Services.AddScoped<ProRental.Domain.Control.TransportationHubFactory>();

@@ -9,7 +9,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using ProRental.Configuration.Module3.P2_1;
 using ProRental.Controllers;
-using ProRental.Data.Gateways;
+using ProRental.Data.Mappers;
 using ProRental.Data.Interfaces;
 using ProRental.Data.UnitOfWork;
 using ProRental.Data.Module3.P2_1;

@@ -3,42 +3,34 @@ using ProRental.Data.UnitOfWork;
 using ProRental.Domain.Entities;
 using ProRental.Domain.Enums;
 
-namespace ProRental.Data.Gateways;
+namespace ProRental.Data.Mappers;
 
 /// <summary>
-/// Handles Airport-specific persistence operations.
+/// Handles Warehouse-specific persistence operations.
 /// Inherits template methods from AbstractTransportationHubMapper.
 /// </summary>
-public class AirportMapper : AbstractTransportationHubMapper
+public class WarehouseMapper : AbstractTransportationHubMapper
 {
-    public AirportMapper(AppDbContext context) : base(context) { }
+    public WarehouseMapper(AppDbContext context) : base(context) { }
 
     public override TransportationHub? FindById(int hubId)
     {
         return _context.TransportationHubs
-            .OfType<Airport>()
+            .OfType<Warehouse>()
             .FirstOrDefault(h => EF.Property<int>(h, "HubId") == hubId);
     }
 
-    public Airport? FindByAirportCode(string airportCode)
+    public Warehouse? FindByWarehouseCode(string warehouseCode)
     {
         return _context.TransportationHubs
-            .OfType<Airport>()
-            .FirstOrDefault(a => EF.Property<string>(a, "AirportCode") == airportCode);
-    }
-
-    public List<Airport> FindByAirportName(string airportName)
-    {
-        return _context.TransportationHubs
-            .OfType<Airport>()
-            .Where(a => EF.Property<string>(a, "AirportName") == airportName)
-            .ToList();
+            .OfType<Warehouse>()
+            .FirstOrDefault(w => EF.Property<string>(w, "WarehouseCode") == warehouseCode);
     }
 
     public override List<TransportationHub> FindByType(HubType hubType)
     {
         return _context.TransportationHubs
-            .OfType<Airport>()
+            .OfType<Warehouse>()
             .Where(h => EF.Property<HubType?>(h, "HubType") == hubType)
             .Cast<TransportationHub>()
             .ToList();
@@ -47,7 +39,7 @@ public class AirportMapper : AbstractTransportationHubMapper
     public override List<TransportationHub> FindAll()
     {
         return _context.TransportationHubs
-            .OfType<Airport>()
+            .OfType<Warehouse>()
             .Cast<TransportationHub>()
             .ToList();
     }
@@ -72,26 +64,26 @@ public class AirportMapper : AbstractTransportationHubMapper
 
     protected override void InsertSubtypeRow(TransportationHub hub, int hubId)
     {
-        if (hub is not Airport airport) return;
-        _context.TransportationHubs.Add(airport);
+        if (hub is not Warehouse warehouse) return;
+        _context.TransportationHubs.Add(warehouse);
         _context.SaveChanges();
     }
 
     protected override void UpdateSubtypeRow(TransportationHub hub)
     {
-        if (hub is not Airport airport) return;
-        _context.TransportationHubs.Update(airport);
+        if (hub is not Warehouse warehouse) return;
+        _context.TransportationHubs.Update(warehouse);
         _context.SaveChanges();
     }
 
     protected override void DeleteSubtypeRow(int hubId)
     {
-        var airport = _context.TransportationHubs
-            .OfType<Airport>()
-            .FirstOrDefault(a => EF.Property<int>(a, "HubId") == hubId);
-        if (airport != null)
+        var warehouse = _context.TransportationHubs
+            .OfType<Warehouse>()
+            .FirstOrDefault(w => EF.Property<int>(w, "HubId") == hubId);
+        if (warehouse != null)
         {
-            _context.TransportationHubs.Remove(airport);
+            _context.TransportationHubs.Remove(warehouse);
             _context.SaveChanges();
         }
     }
@@ -99,7 +91,7 @@ public class AirportMapper : AbstractTransportationHubMapper
     protected override TransportationHub? LoadSubtypeRow(int hubId)
     {
         return _context.TransportationHubs
-            .OfType<Airport>()
+            .OfType<Warehouse>()
             .FirstOrDefault(h => EF.Property<int>(h, "HubId") == hubId);
     }
 }

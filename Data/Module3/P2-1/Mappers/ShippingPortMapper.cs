@@ -3,7 +3,7 @@ using ProRental.Data.UnitOfWork;
 using ProRental.Domain.Entities;
 using ProRental.Domain.Enums;
 
-namespace ProRental.Data.Gateways;
+namespace ProRental.Data.Mappers;
 
 /// <summary>
 /// Handles ShippingPort-specific persistence operations.

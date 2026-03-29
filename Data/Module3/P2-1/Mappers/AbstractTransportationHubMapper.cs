@@ -4,7 +4,7 @@ using ProRental.Data.UnitOfWork;
 using ProRental.Domain.Entities;
 using ProRental.Domain.Enums;
 
-namespace ProRental.Data.Gateways;
+namespace ProRental.Data.Mappers;
 
 /// <summary>
 /// Abstract base class implementing ITransportationHubMapper with template methods.

@@ -16,15 +16,9 @@ public sealed class ShippingOptionManager : IShippingOptionService
 {
     private const string DefaultOrigin = "ProRental Warehouse";
 
-    private static readonly PreferenceType[] PreferenceOrder =
-    [
-        PreferenceType.FAST,
-        PreferenceType.CHEAP,
-        PreferenceType.GREEN
-    ];
-
     private readonly IShippingOptionMapper _shippingOptionMapper;
     private readonly ICheckoutShippingContextService _checkoutShippingContextService;
+    private readonly IShippingPreferenceService _shippingPreferenceService;
     private readonly IRoutingService _routingService;
     private readonly ITransportCarbonService _transportCarbonService;
     private readonly ITransportationHubMapper? _transportationHubMapper;
@@ -33,6 +27,7 @@ public sealed class ShippingOptionManager : IShippingOptionService
     public ShippingOptionManager(
         IShippingOptionMapper shippingOptionMapper,
         ICheckoutShippingContextService checkoutShippingContextService,
+        IShippingPreferenceService shippingPreferenceService,
         IRoutingService routingService,
         ITransportationHubMapper transportationHubMapper,
         ITransportCarbonService transportCarbonService,
@@ -40,6 +35,7 @@ public sealed class ShippingOptionManager : IShippingOptionService
     {
         _shippingOptionMapper = shippingOptionMapper;
         _checkoutShippingContextService = checkoutShippingContextService;
+        _shippingPreferenceService = shippingPreferenceService;
         _routingService = routingService;
         _transportationHubMapper = transportationHubMapper;
         _transportCarbonService = transportCarbonService;
@@ -49,12 +45,14 @@ public sealed class ShippingOptionManager : IShippingOptionService
     internal ShippingOptionManager(
         IShippingOptionMapper shippingOptionMapper,
         ICheckoutShippingContextService checkoutShippingContextService,
+        IShippingPreferenceService shippingPreferenceService,
         IRoutingService routingService,
         ITransportationHubMapper? transportationHubMapper,
         ITransportCarbonService transportCarbonService)
     {
         _shippingOptionMapper = shippingOptionMapper;
         _checkoutShippingContextService = checkoutShippingContextService;
+        _shippingPreferenceService = shippingPreferenceService;
         _routingService = routingService;
         _transportationHubMapper = transportationHubMapper;
         _transportCarbonService = transportCarbonService;
@@ -67,21 +65,8 @@ public sealed class ShippingOptionManager : IShippingOptionService
     {
         var context = await _checkoutShippingContextService.GetShippingContextAsync(checkoutId, cancellationToken)
             ?? throw new InvalidOperationException($"Checkout '{checkoutId}' was not found.");
-        var isSameCountry = IsSameCountryRoute(context);
 
-        return PreferenceOrder
-            .Select(preferenceType =>
-            {
-                var profile = GetPreferenceProfile(preferenceType);
-
-                return new ShippingPreferenceCard(
-                    context.CheckoutId,
-                    preferenceType,
-                    profile.DisplayName,
-                    profile.Description,
-                    PreferenceTypeModes.GetAllowedModesLabel(preferenceType, isSameCountry));
-            })
-            .ToArray();
+        return _shippingPreferenceService.BuildPreferenceCards(context, IsSameCountryRoute(context));
     }
 
     public async Task<ShippingSelectionResult> ConfirmPreferenceSelectionAsync(
@@ -112,13 +97,11 @@ public sealed class ShippingOptionManager : IShippingOptionService
     {
         var context = await _checkoutShippingContextService.GetShippingContextAsync(request.CheckoutId, cancellationToken)
             ?? throw new InvalidOperationException($"Checkout '{request.CheckoutId}' was not found.");
+        var preference = _shippingPreferenceService.ResolvePreference(request.PreferenceType, IsSameCountryRoute(context));
 
-        var profile = GetPreferenceProfile(request.PreferenceType);
-        var allowedModes = PreferenceTypeModes.ResolveAllowedModes(request.PreferenceType, IsSameCountryRoute(context)).ToList();
-
-        var route = await _routingService.CreateMultiModalRouteAsync(DefaultOrigin, context.DestinationAddress, [.. allowedModes]);
+        var route = await _routingService.CreateMultiModalRouteAsync(DefaultOrigin, context.DestinationAddress, [.. preference.AllowedModes]);
         var routeId = route.GetRouteId();
-        var selectedTransportMode = ResolveSelectedTransportMode(route, allowedModes.FirstOrDefault());
+        var selectedTransportMode = ResolveSelectedTransportMode(route, preference.AllowedModes.First());
         var quoteInput = new RouteQuoteInput(
             context.HubId,
             context.Items
@@ -134,11 +117,11 @@ public sealed class ShippingOptionManager : IShippingOptionService
         option.ConfigureGeneratedOption(
             request.CheckoutId,
             routeId > 0 ? routeId : null,
-            request.PreferenceType,
-            profile.DisplayName,
+            preference.PreferenceType,
+            preference.DisplayName,
             quote.Cost,
             quote.CarbonFootprintKg,
-            profile.DeliveryDays,
+            preference.DeliveryDays,
             selectedTransportMode);
 
         if (existingOptions.Count > 0)
@@ -194,32 +177,4 @@ public sealed class ShippingOptionManager : IShippingOptionService
                RouteCountryCodeResolver.TryResolveAddressCountryCode(context.DestinationAddress, out var destinationCountryCode) &&
                string.Equals(warehouseCountryCode, destinationCountryCode, StringComparison.OrdinalIgnoreCase);
     }
-
-    private static PreferenceProfile GetPreferenceProfile(PreferenceType preferenceType)
-    {
-        return preferenceType switch
-        {
-            PreferenceType.FAST => new PreferenceProfile(
-                "Fastest",
-                "Best for time-sensitive deliveries when you want the quickest available route.",
-                1,
-                TransportMode.PLANE),
-            PreferenceType.CHEAP => new PreferenceProfile(
-                "Cheapest",
-                "Best value when keeping delivery costs low matters more than speed.",
-                5,
-                TransportMode.SHIP),
-            _ => new PreferenceProfile(
-                "Greenest",
-                "A balanced delivery choice that keeps the journey efficient while reducing transport impact.",
-                4,
-                TransportMode.TRAIN)
-        };
-    }
-
-    private sealed record PreferenceProfile(
-        string DisplayName,
-        string Description,
-        int DeliveryDays,
-        TransportMode PrimaryTransportMode);
 }

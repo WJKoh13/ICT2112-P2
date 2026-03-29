@@ -3,7 +3,7 @@ using ProRental.Domain.Enums;
 namespace ProRental.Models.Module3.P2_1;
 
 /// <summary>
-/// Read model shown in the checkout UI and reused by ranking strategies.
+/// Read model returned from the persisted checkout shipping option.
 /// by: ernest
 /// </summary>
 public sealed record ShippingOptionSummary(

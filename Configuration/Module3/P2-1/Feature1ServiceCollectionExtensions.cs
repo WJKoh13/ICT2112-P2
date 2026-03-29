@@ -28,18 +28,17 @@ public static class Feature1ServiceCollectionExtensions
         services.AddScoped<IInventoryService, DummyInventoryService>();
         services.AddScoped<IShippingOptionMapper, ShippingOptionMapper>();
         services.AddScoped<ICheckoutShippingContextService, ShippingCheckoutContextService>();
-        services.AddScoped<IOrderService, ShippingOrderContextService>();
         services.AddScoped<IRouteDistanceCalculator, RouteDistanceCalculator>();
         services.AddScoped<IRouteQueryService, RouteManager>();
         services.AddScoped<IRouteLegBuilder, RouteLegBuilder>();
         services.AddScoped<IRoutingService, RouteManager>();
         services.AddScoped<IPricingRuleGateway, PricingRuleGateway>();
         services.AddScoped<ITransportCarbonService, ProRental.Domain.Module3.P2_1.Controls.TransportCarbonManager>();
+        services.AddScoped<IShippingPreferenceStrategy, FastShippingPreferenceStrategy>();
+        services.AddScoped<IShippingPreferenceStrategy, CheapShippingPreferenceStrategy>();
+        services.AddScoped<IShippingPreferenceStrategy, GreenShippingPreferenceStrategy>();
+        services.AddScoped<IShippingPreferenceService, PreferenceManager>();
         services.AddScoped<IShippingOptionService, ShippingOptionManager>();
-        services.AddScoped<IRankingService, RankingManager>();
-        services.AddScoped<IRankingStrategy, FastestStrategy>();
-        services.AddScoped<IRankingStrategy, CheapestStrategy>();
-        services.AddScoped<IRankingStrategy, EcoFriendlyStrategy>();
 
         return services;
     }

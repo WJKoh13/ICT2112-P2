@@ -8,7 +8,7 @@ namespace ProRental.Controllers;
 
 /// <summary>
 /// HTTP boundary for Feature 1. It coordinates the shipping-option flow and keeps
-/// ranking, persistence, routing, and carbon logic behind service contracts.
+/// persistence, routing, and carbon logic behind service contracts.
 /// by: ernest
 /// </summary>
 public sealed class ShippingOptionsController : Controller

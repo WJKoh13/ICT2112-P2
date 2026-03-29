@@ -217,7 +217,8 @@ internal static class Phase1Tests
     [
         new("Shipping option summary carries the full checkout payload", ShippingOptionSummaryCarriesFullCheckoutPayload),
         new("Feature1 service contract exposes the expected async operations", ShippingOptionServiceContractIsStable),
-        new("Ranking contract is keyed to shipping-option summary models", RankingContractsUseShippingOptionSummary),
+        new("Shipping preference strategy contract exposes the expected algorithm boundary", ShippingPreferenceStrategyContractIsStable),
+        new("Shipping preference service contract exposes the expected context operations", ShippingPreferenceServiceContractIsStable),
         new("Repository and dependency contracts expose the next-phase entry points", RepositoryAndDependencyContractsArePresent)
     ];
 
@@ -255,20 +256,21 @@ internal static class Phase1Tests
         AssertMethod(contract, "ConfirmPreferenceSelectionAsync", typeof(Task<ShippingSelectionResult>), typeof(SelectShippingPreferenceRequest), typeof(CancellationToken));
     }
 
-    private static void RankingContractsUseShippingOptionSummary()
+    private static void ShippingPreferenceStrategyContractIsStable()
     {
-        var rankingService = typeof(IRankingService);
-        var rankingStrategy = typeof(IRankingStrategy);
-
-        AssertMethod(rankingService, "RankBySpeed", typeof(IReadOnlyList<ShippingOptionSummary>), typeof(IEnumerable<ShippingOptionSummary>));
-        AssertMethod(rankingService, "RankByCost", typeof(IReadOnlyList<ShippingOptionSummary>), typeof(IEnumerable<ShippingOptionSummary>));
-        AssertMethod(rankingService, "RankByCarbon", typeof(IReadOnlyList<ShippingOptionSummary>), typeof(IEnumerable<ShippingOptionSummary>));
-
-        var preferenceProperty = rankingStrategy.GetProperty(nameof(IRankingStrategy.PreferenceType))
-            ?? throw new InvalidOperationException("IRankingStrategy.PreferenceType was not found.");
+        var strategyContract = typeof(IShippingPreferenceStrategy);
+        var preferenceProperty = strategyContract.GetProperty(nameof(IShippingPreferenceStrategy.PreferenceType))
+            ?? throw new InvalidOperationException("IShippingPreferenceStrategy.PreferenceType was not found.");
         TestAssertions.AssertEqual(typeof(PreferenceType), preferenceProperty.PropertyType);
+        AssertMethod(strategyContract, "ResolveAllowedModes", typeof(IReadOnlyList<TransportMode>), typeof(bool));
+    }
 
-        AssertMethod(rankingStrategy, "Rank", typeof(IReadOnlyList<ShippingOptionSummary>), typeof(IEnumerable<ShippingOptionSummary>));
+    private static void ShippingPreferenceServiceContractIsStable()
+    {
+        var contract = typeof(IShippingPreferenceService);
+
+        AssertMethod(contract, "BuildPreferenceCards", typeof(IReadOnlyList<ShippingPreferenceCard>), typeof(CheckoutShippingContext), typeof(bool));
+        AssertMethod(contract, "ResolvePreference", typeof(ResolvedShippingPreference), typeof(PreferenceType), typeof(bool));
     }
 
     private static void RepositoryAndDependencyContractsArePresent()
@@ -309,81 +311,39 @@ internal static class Phase1Tests
     }
 }
 
-// Phase 2 covers the ranking subsystem in isolation so strategy behavior stays deterministic.
+// Phase 2 covers the checkout preference strategies in isolation.
 internal static class Phase2Tests
 {
     public static IReadOnlyList<PhaseTest> All { get; } =
     [
-        new("Fastest strategy ranks by delivery days with deterministic tie-breakers", FastestStrategyUsesDeterministicOrdering),
-        new("Cheapest strategy ranks by cost with deterministic tie-breakers", CheapestStrategyUsesDeterministicOrdering),
-        new("Eco-friendly strategy ranks by carbon with deterministic tie-breakers", EcoFriendlyStrategyUsesDeterministicOrdering),
-        new("Ranking manager routes each criterion to the matching strategy", RankingManagerUsesRegisteredStrategies),
-        new("Ranking manager rejects missing strategies", RankingManagerRejectsMissingStrategies)
+        new("FAST preference strategy resolves the expected transport modes", FastShippingPreferenceStrategyResolvesExpectedModes),
+        new("CHEAP preference strategy resolves the expected transport modes", CheapShippingPreferenceStrategyResolvesExpectedModes),
+        new("GREEN preference strategy resolves the expected transport modes", GreenShippingPreferenceStrategyResolvesExpectedModes)
     ];
 
-    private static void FastestStrategyUsesDeterministicOrdering()
+    private static void FastShippingPreferenceStrategyResolvesExpectedModes()
     {
-        var strategy = new FastestStrategy();
-        var ranked = strategy.Rank(CreateSampleOptions());
+        var strategy = new FastShippingPreferenceStrategy();
 
-        TestAssertions.AssertSequence(new[] { 4, 2, 1, 3 }, ranked.Select(option => option.OptionId));
+        TestAssertions.AssertSequence(new[] { TransportMode.TRAIN }, strategy.ResolveAllowedModes(isSameCountry: true));
+        TestAssertions.AssertSequence(new[] { TransportMode.PLANE }, strategy.ResolveAllowedModes(isSameCountry: false));
     }
 
-    private static void CheapestStrategyUsesDeterministicOrdering()
+    private static void CheapShippingPreferenceStrategyResolvesExpectedModes()
     {
-        var strategy = new CheapestStrategy();
-        var ranked = strategy.Rank(CreateSampleOptions());
+        var strategy = new CheapShippingPreferenceStrategy();
 
-        TestAssertions.AssertSequence(new[] { 4, 3, 2, 1 }, ranked.Select(option => option.OptionId));
+        TestAssertions.AssertSequence(new[] { TransportMode.TRUCK }, strategy.ResolveAllowedModes(isSameCountry: true));
+        TestAssertions.AssertSequence(new[] { TransportMode.SHIP }, strategy.ResolveAllowedModes(isSameCountry: false));
     }
 
-    private static void EcoFriendlyStrategyUsesDeterministicOrdering()
+    private static void GreenShippingPreferenceStrategyResolvesExpectedModes()
     {
-        var strategy = new EcoFriendlyStrategy();
-        var ranked = strategy.Rank(CreateSampleOptions());
+        var strategy = new GreenShippingPreferenceStrategy();
 
-        TestAssertions.AssertSequence(new[] { 4, 3, 1, 2 }, ranked.Select(option => option.OptionId));
+        TestAssertions.AssertSequence(new[] { TransportMode.TRAIN }, strategy.ResolveAllowedModes(isSameCountry: true));
+        TestAssertions.AssertSequence(new[] { TransportMode.TRAIN, TransportMode.SHIP }, strategy.ResolveAllowedModes(isSameCountry: false));
     }
-
-    private static void RankingManagerUsesRegisteredStrategies()
-    {
-        var manager = new RankingManager(
-        [
-            new FastestStrategy(),
-            new CheapestStrategy(),
-            new EcoFriendlyStrategy()
-        ]);
-
-        TestAssertions.AssertSequence(new[] { 4, 2, 1, 3 }, manager.RankBySpeed(CreateSampleOptions()).Select(option => option.OptionId));
-        TestAssertions.AssertSequence(new[] { 4, 3, 2, 1 }, manager.RankByCost(CreateSampleOptions()).Select(option => option.OptionId));
-        TestAssertions.AssertSequence(new[] { 4, 3, 1, 2 }, manager.RankByCarbon(CreateSampleOptions()).Select(option => option.OptionId));
-    }
-
-    private static void RankingManagerRejectsMissingStrategies()
-    {
-        var manager = new RankingManager([new FastestStrategy()]);
-
-        try
-        {
-            _ = manager.RankByCarbon(CreateSampleOptions());
-            throw new InvalidOperationException("Expected RankByCarbon to reject a missing GREEN strategy.");
-        }
-        catch (InvalidOperationException ex)
-        {
-            if (!ex.Message.Contains("GREEN", StringComparison.Ordinal))
-            {
-                throw;
-            }
-        }
-    }
-
-    private static IReadOnlyList<ShippingOptionSummary> CreateSampleOptions() =>
-    [
-        new ShippingOptionSummary(1, 10, PreferenceType.FAST, "Option 1", 20.00m, 9.0, 3, 100, TransportMode.TRUCK, "Truck"),
-        new ShippingOptionSummary(2, 10, PreferenceType.CHEAP, "Option 2", 18.00m, 12.0, 2, 101, TransportMode.PLANE, "Plane"),
-        new ShippingOptionSummary(3, 10, PreferenceType.GREEN, "Option 3", 15.00m, 8.0, 4, 102, TransportMode.SHIP, "Ship"),
-        new ShippingOptionSummary(4, 10, PreferenceType.GREEN, "Option 4", 15.00m, 6.0, 2, 103, TransportMode.TRAIN, "Train")
-    ];
 }
 
 // Phase 3 verifies the EF-backed mapper against a real PostgreSQL test fixture.
@@ -775,11 +735,14 @@ internal static class Phase4Tests
         new("RouteDistanceCalculator fails when route endpoints are blank", RouteDistanceCalculatorThrowsWhenRouteEndpointsAreBlank),
         new("RouteDistanceCalculator fails when PLANE main-leg coordinates are missing", RouteDistanceCalculatorThrowsWhenPlaneCoordinatesAreMissing),
         new("RouteDistanceCalculator fails when SHIP main-leg coordinates are invalid", RouteDistanceCalculatorThrowsWhenShipCoordinatesAreInvalid),
-        new("ShippingOptionManager returns same-country preference cards without routing or carbon calls", ShippingOptionManagerReturnsPreferenceCardsWithoutRouting),
-        new("ShippingOptionManager returns cross-country preference cards with PLANE and SHIP labels", ShippingOptionManagerReturnsCrossCountryPreferenceCards),
+        new("PreferenceManager returns same-country preference cards", PreferenceManagerReturnsPreferenceCardsWithoutRouting),
+        new("PreferenceManager returns cross-country preference cards with PLANE and SHIP labels", PreferenceManagerReturnsCrossCountryPreferenceCards),
+        new("PreferenceManager rejects duplicate shipping preference strategies", PreferenceManagerRejectsDuplicateStrategies),
+        new("PreferenceManager rejects missing shipping preference strategies", PreferenceManagerRejectsMissingStrategies),
+        new("PreferenceManager resolves one selected preference with metadata and modes", PreferenceManagerResolvesSelectedPreference),
+        new("ShippingOptionManager delegates card construction to the preference service", ShippingOptionManagerDelegatesCardConstruction),
         new("ShippingOptionManager confirms one preference with one route and one quote call", ShippingOptionManagerConfirmsPreferenceAndPersistsSingleOption),
-        new("ShippingOptionManager uses TRAIN for same-country FAST selection", ShippingOptionManagerUsesTrainForSameCountryFastSelection),
-        new("ShippingOptionManager uses TRUCK for same-country CHEAP selection", ShippingOptionManagerUsesTruckForSameCountryCheapSelection),
+        new("ShippingOptionManager uses the resolved preference modes and metadata", ShippingOptionManagerUsesResolvedPreferenceModesAndMetadata),
         new("ShippingOptionManager reuses an existing persisted option on reselection", ShippingOptionManagerReusesPersistedOptionOnReselection)
     ];
 
@@ -992,41 +955,110 @@ internal static class Phase4Tests
     private static RouteDistancePoint CreatePoint(string address, double? latitude = null, double? longitude = null) =>
         new(address, latitude, longitude);
 
-    private static void ShippingOptionManagerReturnsPreferenceCardsWithoutRouting()
+    private static void PreferenceManagerReturnsPreferenceCardsWithoutRouting()
     {
-        var repository = new InMemoryShippingOptionMapper();
-        var checkoutShippingContextService = new StubCheckoutShippingContextService(CreateCheckoutShippingContext());
-        var routingService = new StubRoutingService();
-        var transportCarbonService = new StubTransportCarbonService();
-        var manager = new ShippingOptionManager(repository, checkoutShippingContextService, routingService, CreatePhase4HubMapper(), transportCarbonService);
+        var manager = CreatePreferenceService();
+        var context = CreateCheckoutShippingContext();
 
-        var result = manager.GetPreferenceChoicesForCheckoutAsync(checkoutShippingContextService.Context.CheckoutId).GetAwaiter().GetResult();
+        var result = manager.BuildPreferenceCards(context, isSameCountry: true);
 
         TestAssertions.AssertEqual(3, result.Count);
         TestAssertions.AssertSequence(
             new[] { PreferenceType.FAST, PreferenceType.CHEAP, PreferenceType.GREEN },
             result.Select(option => option.PreferenceType));
+        TestAssertions.AssertEqual("Fastest", result.Single(option => option.PreferenceType == PreferenceType.FAST).DisplayName);
+        TestAssertions.AssertEqual("Cheapest", result.Single(option => option.PreferenceType == PreferenceType.CHEAP).DisplayName);
+        TestAssertions.AssertEqual("Greenest", result.Single(option => option.PreferenceType == PreferenceType.GREEN).DisplayName);
+        TestAssertions.AssertTrue(
+            result.Single(option => option.PreferenceType == PreferenceType.FAST).Description.Contains("time-sensitive", StringComparison.Ordinal),
+            "Expected FAST card description to come from preference metadata.");
         TestAssertions.AssertEqual("TRAIN", result.Single(option => option.PreferenceType == PreferenceType.FAST).AllowedModesLabel);
         TestAssertions.AssertEqual("TRUCK", result.Single(option => option.PreferenceType == PreferenceType.CHEAP).AllowedModesLabel);
         TestAssertions.AssertEqual("TRAIN", result.Single(option => option.PreferenceType == PreferenceType.GREEN).AllowedModesLabel);
-        TestAssertions.AssertEqual(0, repository.StoredOptions.Count);
-        TestAssertions.AssertEqual(0, routingService.Requests.Count);
-        TestAssertions.AssertEqual(0, transportCarbonService.RouteQuoteRequests.Count);
     }
 
-    private static void ShippingOptionManagerReturnsCrossCountryPreferenceCards()
+    private static void PreferenceManagerReturnsCrossCountryPreferenceCards()
     {
-        var repository = new InMemoryShippingOptionMapper();
-        var checkoutShippingContextService = new StubCheckoutShippingContextService(CreateCheckoutShippingContext(Phase3Tests.JapanCustomerAddress));
-        var routingService = new StubRoutingService();
-        var transportCarbonService = new StubTransportCarbonService();
-        var manager = new ShippingOptionManager(repository, checkoutShippingContextService, routingService, CreatePhase4HubMapper(), transportCarbonService);
+        var manager = CreatePreferenceService();
+        var context = CreateCheckoutShippingContext(Phase3Tests.JapanCustomerAddress);
 
-        var result = manager.GetPreferenceChoicesForCheckoutAsync(checkoutShippingContextService.Context.CheckoutId).GetAwaiter().GetResult();
+        var result = manager.BuildPreferenceCards(context, isSameCountry: false);
 
         TestAssertions.AssertEqual("PLANE", result.Single(option => option.PreferenceType == PreferenceType.FAST).AllowedModesLabel);
         TestAssertions.AssertEqual("SHIP", result.Single(option => option.PreferenceType == PreferenceType.CHEAP).AllowedModesLabel);
         TestAssertions.AssertEqual("TRAIN + SHIP", result.Single(option => option.PreferenceType == PreferenceType.GREEN).AllowedModesLabel);
+    }
+
+    private static void PreferenceManagerRejectsDuplicateStrategies()
+    {
+        var exception = TestAssertions.AssertThrows<InvalidOperationException>(
+            () => new PreferenceManager(
+                [new FastShippingPreferenceStrategy(), new FastShippingPreferenceStrategy(), new GreenShippingPreferenceStrategy()]),
+            "Expected duplicate preference strategies to be rejected.");
+
+        TestAssertions.AssertTrue(
+            exception.Message.Contains("Duplicate shipping preference strategy registration", StringComparison.Ordinal),
+            "Expected duplicate strategy registration message.");
+    }
+
+    private static void PreferenceManagerRejectsMissingStrategies()
+    {
+        var exception = TestAssertions.AssertThrows<InvalidOperationException>(
+            () => new PreferenceManager(
+                [new FastShippingPreferenceStrategy(), new CheapShippingPreferenceStrategy()]),
+            "Expected missing preference strategies to be rejected.");
+
+        TestAssertions.AssertTrue(
+            exception.Message.Contains("Missing shipping preference strategies", StringComparison.Ordinal),
+            "Expected missing strategy registration message.");
+    }
+
+    private static void PreferenceManagerResolvesSelectedPreference()
+    {
+        var manager = CreatePreferenceService();
+
+        var result = manager.ResolvePreference(PreferenceType.GREEN, isSameCountry: false);
+
+        TestAssertions.AssertEqual(PreferenceType.GREEN, result.PreferenceType);
+        TestAssertions.AssertEqual(3, result.DisplayPreference);
+        TestAssertions.AssertEqual("Greenest", result.DisplayName);
+        TestAssertions.AssertTrue(
+            result.Description.Contains("balanced", StringComparison.OrdinalIgnoreCase),
+            "Expected the GREEN preference description to be carried in the resolved preference.");
+        TestAssertions.AssertEqual(4, result.DeliveryDays);
+        TestAssertions.AssertSequence(new[] { TransportMode.TRAIN, TransportMode.SHIP }, result.AllowedModes);
+    }
+
+    private static void ShippingOptionManagerDelegatesCardConstruction()
+    {
+        var repository = new InMemoryShippingOptionMapper();
+        var checkoutShippingContextService = new StubCheckoutShippingContextService(CreateCheckoutShippingContext());
+        var preferenceService = new StubShippingPreferenceService(
+            cards:
+            [
+                new ShippingPreferenceCard(30, PreferenceType.FAST, "Priority", "Delegated card", "PLANE"),
+                new ShippingPreferenceCard(30, PreferenceType.CHEAP, "Saver", "Delegated card", "SHIP"),
+                new ShippingPreferenceCard(30, PreferenceType.GREEN, "Eco", "Delegated card", "TRAIN")
+            ],
+            resolvedPreference: CreateResolvedPreference(PreferenceType.GREEN, "Eco", 4, [TransportMode.TRAIN]));
+        var routingService = new StubRoutingService();
+        var transportCarbonService = new StubTransportCarbonService();
+        var manager = new ShippingOptionManager(
+            repository,
+            checkoutShippingContextService,
+            preferenceService,
+            routingService,
+            CreatePhase4HubMapper(),
+            transportCarbonService);
+
+        var result = manager.GetPreferenceChoicesForCheckoutAsync(checkoutShippingContextService.Context.CheckoutId).GetAwaiter().GetResult();
+
+        TestAssertions.AssertEqual(30, preferenceService.LastBuildContext?.CheckoutId);
+        TestAssertions.AssertEqual(true, preferenceService.LastBuildIsSameCountry);
+        TestAssertions.AssertSequence(new[] { "Priority", "Saver", "Eco" }, result.Select(option => option.DisplayName));
+        TestAssertions.AssertEqual(0, repository.StoredOptions.Count);
+        TestAssertions.AssertEqual(0, routingService.Requests.Count);
+        TestAssertions.AssertEqual(0, transportCarbonService.RouteQuoteRequests.Count);
     }
 
     private static void ShippingOptionManagerConfirmsPreferenceAndPersistsSingleOption()
@@ -1034,9 +1066,16 @@ internal static class Phase4Tests
         var repository = new InMemoryShippingOptionMapper();
         repository.Checkout = CreateCheckout(30, 20);
         var checkoutShippingContextService = new StubCheckoutShippingContextService(CreateCheckoutShippingContext());
+        var preferenceService = CreatePreferenceService();
         var routingService = new StubRoutingService();
         var transportCarbonService = new StubTransportCarbonService();
-        var manager = new ShippingOptionManager(repository, checkoutShippingContextService, routingService, CreatePhase4HubMapper(), transportCarbonService);
+        var manager = new ShippingOptionManager(
+            repository,
+            checkoutShippingContextService,
+            preferenceService,
+            routingService,
+            CreatePhase4HubMapper(),
+            transportCarbonService);
 
         var result = manager.ConfirmPreferenceSelectionAsync(
             new SelectShippingPreferenceRequest(30, PreferenceType.GREEN)).GetAwaiter().GetResult();
@@ -1056,38 +1095,35 @@ internal static class Phase4Tests
         TestAssertions.AssertEqual(16.5d, quoteRequest.QuoteInput.Items.Sum(item => item.Quantity * item.UnitWeightKg));
     }
 
-    private static void ShippingOptionManagerUsesTrainForSameCountryFastSelection()
+    private static void ShippingOptionManagerUsesResolvedPreferenceModesAndMetadata()
     {
         var repository = new InMemoryShippingOptionMapper();
         repository.Checkout = CreateCheckout(30, 20);
         var checkoutShippingContextService = new StubCheckoutShippingContextService(CreateCheckoutShippingContext());
+        var preferenceService = new StubShippingPreferenceService(
+            cards: Array.Empty<ShippingPreferenceCard>(),
+            resolvedPreference: CreateResolvedPreference(PreferenceType.FAST, "Priority Air", 9, [TransportMode.PLANE]));
         var routingService = new StubRoutingService();
         var transportCarbonService = new StubTransportCarbonService();
-        var manager = new ShippingOptionManager(repository, checkoutShippingContextService, routingService, CreatePhase4HubMapper(), transportCarbonService);
+        var manager = new ShippingOptionManager(
+            repository,
+            checkoutShippingContextService,
+            preferenceService,
+            routingService,
+            CreatePhase4HubMapper(),
+            transportCarbonService);
 
         var result = manager.ConfirmPreferenceSelectionAsync(
             new SelectShippingPreferenceRequest(30, PreferenceType.FAST)).GetAwaiter().GetResult();
 
-        TestAssertions.AssertSequence(new[] { TransportMode.TRAIN }, routingService.Requests.Single().Modes);
-        TestAssertions.AssertEqual("TRAIN", result.TransportModeLabel);
-        TestAssertions.AssertEqual(TransportMode.TRAIN, repository.StoredOptions.Single().GetSummary().TransportMode);
-    }
-
-    private static void ShippingOptionManagerUsesTruckForSameCountryCheapSelection()
-    {
-        var repository = new InMemoryShippingOptionMapper();
-        repository.Checkout = CreateCheckout(30, 20);
-        var checkoutShippingContextService = new StubCheckoutShippingContextService(CreateCheckoutShippingContext());
-        var routingService = new StubRoutingService();
-        var transportCarbonService = new StubTransportCarbonService();
-        var manager = new ShippingOptionManager(repository, checkoutShippingContextService, routingService, CreatePhase4HubMapper(), transportCarbonService);
-
-        var result = manager.ConfirmPreferenceSelectionAsync(
-            new SelectShippingPreferenceRequest(30, PreferenceType.CHEAP)).GetAwaiter().GetResult();
-
-        TestAssertions.AssertSequence(new[] { TransportMode.TRUCK }, routingService.Requests.Single().Modes);
-        TestAssertions.AssertEqual("TRUCK", result.TransportModeLabel);
-        TestAssertions.AssertEqual(TransportMode.TRUCK, repository.StoredOptions.Single().GetSummary().TransportMode);
+        TestAssertions.AssertEqual(PreferenceType.FAST, preferenceService.LastResolvedPreferenceType);
+        TestAssertions.AssertEqual(true, preferenceService.LastResolveIsSameCountry);
+        TestAssertions.AssertSequence(new[] { TransportMode.PLANE }, routingService.Requests.Single().Modes);
+        TestAssertions.AssertEqual("PLANE", result.TransportModeLabel);
+        var summary = repository.StoredOptions.Single().GetSummary();
+        TestAssertions.AssertEqual("Priority Air", summary.DisplayName);
+        TestAssertions.AssertEqual(TransportMode.PLANE, summary.TransportMode);
+        TestAssertions.AssertEqual(9, summary.DeliveryDays);
     }
 
     private static void ShippingOptionManagerReusesPersistedOptionOnReselection()
@@ -1098,9 +1134,11 @@ internal static class Phase4Tests
 
         var routingService = new StubRoutingService();
         var transportCarbonService = new StubTransportCarbonService();
+        var preferenceService = CreatePreferenceService();
         var manager = new ShippingOptionManager(
             repository,
             new StubCheckoutShippingContextService(CreateCheckoutShippingContext(Phase3Tests.JapanCustomerAddress)),
+            preferenceService,
             routingService,
             CreatePhase4HubMapper(),
             transportCarbonService);
@@ -1127,6 +1165,34 @@ internal static class Phase4Tests
 
         return new CheckoutShippingContext(30, 20, destinationAddress, 202, items, 16.5d);
     }
+
+    internal static IReadOnlyList<IShippingPreferenceStrategy> CreatePreferenceStrategies() =>
+    [
+        new FastShippingPreferenceStrategy(),
+        new CheapShippingPreferenceStrategy(),
+        new GreenShippingPreferenceStrategy()
+    ];
+
+    internal static IShippingPreferenceService CreatePreferenceService() =>
+        new PreferenceManager(CreatePreferenceStrategies());
+
+    private static ResolvedShippingPreference CreateResolvedPreference(
+        PreferenceType preferenceType,
+        string displayName,
+        int deliveryDays,
+        IReadOnlyList<TransportMode> allowedModes) =>
+        new(
+            preferenceType,
+            preferenceType switch
+            {
+                PreferenceType.FAST => 1,
+                PreferenceType.CHEAP => 2,
+                _ => 3
+            },
+            displayName,
+            $"{displayName} description",
+            deliveryDays,
+            allowedModes);
 
     private static ITransportationHubMapper CreatePhase4HubMapper()
     {
@@ -1264,6 +1330,40 @@ internal static class Phase4Tests
         {
             CallCount++;
             return Task.FromResult<CheckoutShippingContext?>(Context.CheckoutId == checkoutId ? Context : null);
+        }
+    }
+
+    // Stub preference context used to isolate ShippingOptionManager orchestration from preference resolution.
+    private sealed class StubShippingPreferenceService : IShippingPreferenceService
+    {
+        private readonly IReadOnlyList<ShippingPreferenceCard> _cards;
+        private readonly ResolvedShippingPreference _resolvedPreference;
+
+        public StubShippingPreferenceService(
+            IReadOnlyList<ShippingPreferenceCard> cards,
+            ResolvedShippingPreference resolvedPreference)
+        {
+            _cards = cards;
+            _resolvedPreference = resolvedPreference;
+        }
+
+        public CheckoutShippingContext? LastBuildContext { get; private set; }
+        public bool? LastBuildIsSameCountry { get; private set; }
+        public PreferenceType? LastResolvedPreferenceType { get; private set; }
+        public bool? LastResolveIsSameCountry { get; private set; }
+
+        public IReadOnlyList<ShippingPreferenceCard> BuildPreferenceCards(CheckoutShippingContext context, bool isSameCountry)
+        {
+            LastBuildContext = context;
+            LastBuildIsSameCountry = isSameCountry;
+            return _cards;
+        }
+
+        public ResolvedShippingPreference ResolvePreference(PreferenceType preferenceType, bool isSameCountry)
+        {
+            LastResolvedPreferenceType = preferenceType;
+            LastResolveIsSameCountry = isSameCountry;
+            return _resolvedPreference;
         }
     }
 
@@ -1608,10 +1708,9 @@ internal static class Phase6Tests
         TestAssertions.AssertTrue(scopedProvider.GetService<IRoutingService>() is RouteManager, "Expected routing service registration.");
         TestAssertions.AssertTrue(scopedProvider.GetService<IGoogleMapsApi>() is GoogleMapsAPI, "Expected Google Maps API registration.");
         TestAssertions.AssertTrue(scopedProvider.GetService<ITransportCarbonService>() is ProRental.Domain.Module3.P2_1.Controls.TransportCarbonManager, "Expected transport carbon service registration.");
+        TestAssertions.AssertTrue(scopedProvider.GetService<IShippingPreferenceService>() is PreferenceManager, "Expected preference manager registration.");
         TestAssertions.AssertTrue(scopedProvider.GetService<IShippingOptionService>() is ShippingOptionManager, "Expected shipping option manager registration.");
-        TestAssertions.AssertTrue(scopedProvider.GetService<IRankingService>() is RankingManager, "Expected ranking manager registration.");
-
-        var strategies = scopedProvider.GetServices<IRankingStrategy>().Select(strategy => strategy.PreferenceType).OrderBy(value => value).ToArray();
+        var strategies = scopedProvider.GetServices<IShippingPreferenceStrategy>().Select(strategy => strategy.PreferenceType).OrderBy(value => value).ToArray();
         TestAssertions.AssertSequence(new[] { PreferenceType.FAST, PreferenceType.CHEAP, PreferenceType.GREEN }.OrderBy(value => value), strategies);
     }
 
@@ -1840,6 +1939,7 @@ internal static class Phase7Tests
         var manager = new ShippingOptionManager(
             new ShippingOptionMapper(context),
             new ShippingCheckoutContextService(context, new StubInventoryService(), new TransportationHubMapper(context)),
+            Phase4Tests.CreatePreferenceService(),
             CreateRouteManager(
                 context,
                 new StubTransportationHubMapper(
@@ -2299,6 +2399,7 @@ internal static class Phase7Tests
         return new ShippingOptionManager(
             mapper ?? new ShippingOptionMapper(context),
             new ShippingCheckoutContextService(context, new StubInventoryService(), hubMapper),
+            Phase4Tests.CreatePreferenceService(),
             CreateRouteManager(context, hubMapper, googleMapsApi ?? new StubGoogleMapsApi(new Dictionary<(string Origin, string Destination), double>
             {
                 [(warehouseAddress, Phase3Tests.CustomerAddress)] = 24d

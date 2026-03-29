@@ -182,6 +182,7 @@ builder.Services.AddScoped<ProRental.Interfaces.Module3.P2_1.IHubCarbonService, 
 builder.Services.AddScoped<ProRental.Interfaces.Module3.P2_1.IHubInfoService, ProRental.Domain.Control.TransportationHubManager>();
 builder.Services.AddScoped<ProRental.Interfaces.IInventoryService, ProRental.Domain.Control.DummyInventoryService>(); // TODO: Replace with Module 2's real implementation
 builder.Services.AddFeature1Services();
+builder.Services.AddScoped<ProRental.Interfaces.Module3.P2_1.IOrderService, ProRental.Domain.Controls.ShippingOrderContextService>();
 //TODO: ADD THIS INTO A REGISTRATION
 builder.Services.AddScoped<ITransportMapper, TransportMapper>();
 builder.Services.AddScoped<TruckMapper>();
@@ -262,18 +263,10 @@ builder.Services.AddScoped<IPackagingFootprintControl, PackagingFootprintControl
 // Presentation/Controllers
 
 
-//Team P2-6
-// Data source
-// builder.Services.AddScoped<IOrderMapper, OrderMapper>();
-// builder.Services.AddScoped<IOrderService, OrderManagementControl>();
-// builder.Services.AddScoped<IInventoryService, FakeInventoryService>();
-// // Domain
 
 // Module 1 order service — provides order + product data for packaging profile creation
 builder.Services.AddScoped<ProRental.Data.Module1.Interfaces.IOrderService, ProRental.Data.Module1.Gateways.OrderService>();
 
-// // Presentation/Controllers
-// builder.Services.AddScoped<IOrderService, OrderManagementControl>();
 
 // Data source (mappers / DB-backed service implementations)
 builder.Services.AddScoped<ISessionMapper, SessionMapper>();

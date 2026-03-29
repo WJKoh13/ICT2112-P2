@@ -60,17 +60,6 @@
     </div>
 
     <div class="card border-0 shadow-sm mt-4">
-        <div class="card-header bg-light"><strong>Demo Reset</strong></div>
-        <div class="card-body">
-            <form asp-controller="BatchAdmin" asp-action="ResetOrdersFromBatches" method="post">
-                @Html.AntiForgeryToken()
-                <p class="text-muted mb-3">Unassociate all orders from batches and reset batch totals for demo reruns.</p>
-                <button class="btn btn-outline-danger" type="submit">Reset Orders from Batches</button>
-            </form>
-        </div>
-    </div>
-
-    <div class="card border-0 shadow-sm mt-4">
         <div class="card-header bg-light"><strong>Current Batches</strong></div>
         <div class="card-body p-0">
             <div class="table-responsive">

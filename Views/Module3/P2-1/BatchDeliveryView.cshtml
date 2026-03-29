@@ -2,7 +2,6 @@
 @{
     ViewData["Title"] = "Batch Delivery & Consolidation";
     var message = ViewData["Message"] as string;
-    var orderIdsByBatch = ViewData["OrderIdsByBatch"] as Dictionary<int, List<string>>;
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -49,9 +48,6 @@
                     @foreach (var batch in Model)
                     {
                         var batchId = batch.GetDeliveryBatchIdentifier();
-                        var orderIds = (orderIdsByBatch is not null && orderIdsByBatch.TryGetValue(batchId, out var ids))
-                            ? ids
-                            : new List<string>();
                         <tr>
                             <td>@batchId</td>
                             <td>@batch.GetSourceHub()</td>
@@ -60,7 +56,7 @@
                             <td>@batch.GetTotalOrders()</td>
                             <td>@batch.GetBatchWeightKG().ToString("0.##")</td>
                             <td class="fw-semibold text-success">@batch.GetCarbonSavings().ToString("0.##") kg</td>
-                            <td>@(orderIds.Count > 0 ? string.Join(", ", orderIds) : "-")</td>
+                            <td>-</td>
                         </tr>
                     }
                 }

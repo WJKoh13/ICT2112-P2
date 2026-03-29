@@ -1,4 +1,6 @@
+using Microsoft.EntityFrameworkCore;
 using ProRental.Data.Module3.P2_1.Interfaces;
+using ProRental.Data.UnitOfWork;
 using ProRental.Domain.Entities;
 using ProRental.Domain.Enums;
 using ProRental.Interfaces.Module3.P2_1;
@@ -7,6 +9,8 @@ namespace ProRental.Domain.Module3.P2_1.Controls;
 
 public sealed class BatchConsolidationManager : IBatchDelivery
 {
+    private const double ConsolidationEfficiencyFactor = 0.75d;
+
     private readonly IBatchValidator _batchValidator;
     private readonly IOrderService _orderService;
     private readonly IRouteQueryService _routeQueryService;
@@ -14,6 +18,8 @@ public sealed class BatchConsolidationManager : IBatchDelivery
     private readonly IHubInfoService _hubInfoService;
     private readonly IDeliveryBatchMapper _deliveryBatchMapper;
     private readonly IBatchOrderMapper _batchOrderMapper;
+    private readonly IShippingOptionMapper _shippingOptionMapper;
+    private readonly AppDbContext _context;
 
     public BatchConsolidationManager(
         IBatchValidator batchValidator,
@@ -22,7 +28,9 @@ public sealed class BatchConsolidationManager : IBatchDelivery
         ITransportCarbonService transportCarbonService,
         IHubInfoService hubInfoService,
         IDeliveryBatchMapper deliveryBatchMapper,
-        IBatchOrderMapper batchOrderMapper)
+        IBatchOrderMapper batchOrderMapper,
+        IShippingOptionMapper shippingOptionMapper,
+        AppDbContext context)
     {
         _batchValidator = batchValidator;
         _orderService = orderService;
@@ -31,6 +39,8 @@ public sealed class BatchConsolidationManager : IBatchDelivery
         _hubInfoService = hubInfoService;
         _deliveryBatchMapper = deliveryBatchMapper;
         _batchOrderMapper = batchOrderMapper;
+        _shippingOptionMapper = shippingOptionMapper;
+        _context = context;
     }
 
     public void consolidateOrderToBatch(string orderId)
@@ -51,23 +61,13 @@ public sealed class BatchConsolidationManager : IBatchDelivery
             handleConsolidationFailure(orderId, "Order does not have a valid delivery address.");
         }
 
-        var routeId = 2; // FR assumption: fixed first-leg/main transport route ID.
+        var routeId = ResolveRouteIdForOrder(int.Parse(orderId));
         var mainTransportLeg = _routeQueryService.retrieveMainTransportLeg(routeId)
             ?? throw new InvalidOperationException($"No main transport route leg was found for route ID '{routeId}'.");
 
-        var destinationHubEndpoint = mainTransportLeg.GetEndPoint();
-        var destinationHubId = int.TryParse(destinationHubEndpoint, out var parsedDestinationHubId)
-            ? parsedDestinationHubId
-            : _hubInfoService.GetAllHubs()
-                .FirstOrDefault(hub => string.Equals(hub.GetAddress(), destinationHubEndpoint, StringComparison.OrdinalIgnoreCase))
-                ?.GetHubId() ?? 0;
+        var destinationHubId = mainTransportLeg.GetEndPoint();
 
-        if (destinationHubId <= 0)
-        {
-            handleConsolidationFailure(orderId, "Destination hub is invalid.");
-        }
-
-        if (!batchOrderConsolidator(orderId, destinationHubId.ToString()))
+        if (!batchOrderConsolidator(orderId, destinationHubId))
         {
             handleConsolidationFailure(orderId, "Unable to add order to pending batch.");
         }
@@ -86,9 +86,14 @@ public sealed class BatchConsolidationManager : IBatchDelivery
             }
 
             var hub = _hubInfoService.GetHubInfo(destinationHubId);
+            if (hub is null || hub.GetHubType() != HubType.WAREHOUSE)
+            {
+                handleConsolidationFailure(orderId, "Destination hub is not a warehouse.");
+            }
+
             if (hub is null)
             {
-                throw new InvalidOperationException($"Consolidation failed for order '{orderId}': destination hub could not be resolved.");
+                throw new InvalidOperationException("Warehouse lookup returned null.");
             }
 
             targetBatch = createNewBatch(destinationHubId, hub.GetAddress());
@@ -116,7 +121,7 @@ public sealed class BatchConsolidationManager : IBatchDelivery
             return 0d;
         }
 
-        var distanceKm = _routeQueryService.retrieveMainTransportLeg(2)?.GetDistanceKm() ?? 0d; // FR assumption: fixed first-leg/main transport route ID.
+        var distanceKm = ResolveMainTransportLegDistance(consOrderIds);
         var batchWeightKg = CalculateBatchWeight(consOrderIds);
 
         var consolidatedLegCost = _transportCarbonService.CalculateLegCarbon(
@@ -125,7 +130,8 @@ public sealed class BatchConsolidationManager : IBatchDelivery
             distanceKm: distanceKm,
             storageCo2: 0d);
 
-        return Math.Max(0d, unconsolidatedCost - consolidatedLegCost);
+        var adjustedConsolidatedCost = consolidatedLegCost * ConsolidationEfficiencyFactor;
+        return Math.Max(0d, unconsolidatedCost - adjustedConsolidatedCost);
     }
 
     public DeliveryBatch createNewBatch(int destHubID, string destinationAddress)
@@ -156,27 +162,6 @@ public sealed class BatchConsolidationManager : IBatchDelivery
             }
 
             batch.markAsShipped();
-            _deliveryBatchMapper.update(batch);
-        }
-
-        return true;
-    }
-
-    public bool resetOrderBatchAssignments()
-    {
-        // Admin/demo utility kept for existing controller + interface flow; not part of core consolidation operations in the design diagram.
-        var wasCleared = _batchOrderMapper.clearAllOrderBatchLinks();
-        if (!wasCleared)
-        {
-            return false;
-        }
-
-        var batches = _deliveryBatchMapper.findAll();
-        foreach (var batch in batches)
-        {
-            batch.SetTotalOrders(0);
-            batch.updateBatchWeight(0d);
-            batch.updateCarbonSavings(0d);
             _deliveryBatchMapper.update(batch);
         }
 
@@ -232,7 +217,7 @@ public sealed class BatchConsolidationManager : IBatchDelivery
 
         var orderIds = _batchOrderMapper.getOrderIdsByBatch(batchId);
         var totalOrders = _batchOrderMapper.countOrdersInBatch(batchId);
-        var distanceKm = _routeQueryService.retrieveMainTransportLeg(2)?.GetDistanceKm() ?? 0d; // FR assumption: fixed first-leg/main transport route ID.
+        var distanceKm = ResolveMainTransportLegDistance(orderIds);
 
         var batchWeightKg = CalculateBatchWeight(orderIds);
         var unconsolidatedCost = CalculateUnconsolidatedFirstLegCost(orderIds, distanceKm);
@@ -246,6 +231,51 @@ public sealed class BatchConsolidationManager : IBatchDelivery
 
     public double GetOrderWeightKg(int orderId)
     {
-        return _batchOrderMapper.getOrderWeightKg(orderId);
+        var orderWeightKg = (from orderItem in _context.Orderitems
+                             join productDetail in _context.Productdetails
+                                 on EF.Property<int>(orderItem, "Productid") equals EF.Property<int>(productDetail, "Productid")
+                             where EF.Property<int>(orderItem, "Orderid") == orderId
+                             select (double?)EF.Property<int>(orderItem, "Quantity") *
+                                    (double?)(EF.Property<decimal?>(productDetail, "Weight") ?? 1m))
+            .Sum() ?? 0d;
+
+        return orderWeightKg > 0d ? orderWeightKg : 1d;
+    }
+
+    private int ResolveRouteIdForOrder(int orderId)
+    {
+        var routeId = _shippingOptionMapper
+            .FindSelectedRouteIdByOrderIdAsync(orderId)
+            .GetAwaiter()
+            .GetResult();
+
+        if (!routeId.HasValue || routeId.Value <= 0)
+        {
+            throw new InvalidOperationException($"Order '{orderId}' does not have a selected shipping route.");
+        }
+
+        return routeId.Value;
+    }
+
+    private double ResolveMainTransportLegDistance(IEnumerable<string> orderIds)
+    {
+        var routeIds = orderIds
+            .Select(orderId => int.TryParse(orderId, out var parsedOrderId) ? parsedOrderId : (int?)null)
+            .Where(parsedOrderId => parsedOrderId.HasValue)
+            .Select(parsedOrderId => ResolveRouteIdForOrder(parsedOrderId!.Value))
+            .Distinct()
+            .ToList();
+
+        if (routeIds.Count == 0)
+        {
+            return 0d;
+        }
+
+        if (routeIds.Count > 1)
+        {
+            throw new InvalidOperationException("Batch contains orders mapped to different delivery routes.");
+        }
+
+        return _routeQueryService.retrieveMainTransportLeg(routeIds[0])?.GetDistanceKm() ?? 0d;
     }
 }

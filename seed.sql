@@ -186,7 +186,7 @@ VALUES ('PENDING', 45.25, CURRENT_DATE, CURRENT_DATE),
 -- Insert warehouse subtypes
 INSERT INTO warehouse (hub_id, warehouse_code, max_product_capacity, total_warehouse_volume, climate_control_emission_rate, lighting_emission_rate, security_system_emission_rate)
 VALUES (1, 'WH-SG-001', 10000, 5000.0, 2.5, 1.8, 0.5),
-    (4, 'WH-HK-001', 8000, 4000.0, 2.2, 1.6, 0.4);
+       (4, 'WH-HK-001', 8000, 4000.0, 2.2, 1.6, 0.4);
 
 -- Insert shipping port subtype
 INSERT INTO shipping_port (hub_id, port_code, port_name, port_type, vessel_size)

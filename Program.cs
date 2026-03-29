@@ -235,7 +235,9 @@ builder.Services.AddScoped<IPackagingConfigurationGateway, PackagingConfiguratio
 
 // Domain
 builder.Services.AddScoped<ICarbonChartControl, CarbonChartControl>();
+builder.Services.AddScoped<IBuildingFootprintControl, BuildingFootprintControl>();
 builder.Services.AddScoped<IProductFootprintCalculatorService, ProductFootprintCalculatorControl>();
+builder.Services.AddScoped<IStaffFootprintControl, StaffFootprintControl>();
 builder.Services.AddScoped<IProductFootprintService, ProductFootprintService>();
 builder.Services.AddScoped<IRewardsControl, RewardsControl>();
 builder.Services.AddScoped<IPackagingProfilerControl, PackagingProfilerControl>();
@@ -248,28 +250,6 @@ builder.Services.AddScoped<IPackagingFootprintControl, PackagingFootprintControl
 // Module 1 order service — provides order + product data for packaging profile creation
 builder.Services.AddScoped<ProRental.Data.Module1.Interfaces.IOrderService, ProRental.Data.Module1.Gateways.OrderService>();
 
-
-// Data source (mappers / DB-backed service implementations)
-builder.Services.AddScoped<ISessionMapper, SessionMapper>();
-builder.Services.AddScoped<IAuthenticationService, ProRentalAuthenticationService>();
-builder.Services.AddScoped<ICustomerValidationService, CustomerValidationService>();
-
-// Domain (controls — pure business logic, no DB dependency)
-builder.Services.AddScoped<ISessionService, SessionControl>();
-builder.Services.AddScoped<AuthenticationControl>();
-builder.Services.AddScoped<CustomerIDValidationControl>();
-
-// HTTP context accessor (required for session access in Razor layouts)
-builder.Services.AddHttpContextAccessor();
-
-// Session middleware (required for HttpContext.Session)
-builder.Services.AddSession(options =>
-{
-    options.IdleTimeout = TimeSpan.FromHours(2);
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
-    options.Cookie.SameSite = SameSiteMode.Lax;
-});
 
 // Data source (mappers / DB-backed service implementations)
 builder.Services.AddScoped<ISessionMapper, SessionMapper>();

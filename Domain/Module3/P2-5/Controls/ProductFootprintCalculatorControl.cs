@@ -1,4 +1,5 @@
 using ProRental.Data.Module3.P2_5.Interfaces;
+using ProRental.Domain.Entities.Module3;
 using ProRental.Domain.Module3.P2_5.Entities;
 using ProRental.Interfaces.Module2.P2_3;
 using ProRental.Interfaces.Module3.P2_5;
@@ -9,6 +10,7 @@ public sealed class ProductFootprintCalculatorControl : IProductFootprintCalcula
 {
     private readonly IProductCatalogService _productCatalogService;
     private readonly IProductFootprintGateway _productFootprintGateway;
+    private readonly ProductFootprintStrategy _productFootprintStrategy;
 
     public ProductFootprintCalculatorControl(
         IProductCatalogService productCatalogService,
@@ -16,21 +18,12 @@ public sealed class ProductFootprintCalculatorControl : IProductFootprintCalcula
     {
         _productCatalogService = productCatalogService;
         _productFootprintGateway = productFootprintGateway;
+        _productFootprintStrategy = new ProductFootprintStrategy();
     }
 
     public double CalculateProductFootprint(double productMass, double toxicPercentage)
     {
-        if (productMass < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(productMass), "Product mass cannot be negative.");
-        }
-
-        if (toxicPercentage < 0 || toxicPercentage > 100)
-        {
-            throw new ArgumentOutOfRangeException(nameof(toxicPercentage), "Toxic percentage must be between 0 and 100.");
-        }
-
-        return Math.Round(productMass * 0.5 * (1 + (toxicPercentage / 100.0)), 2);
+        return _productFootprintStrategy.CalculateFootprint(productMass, toxicPercentage);
     }
 
     public List<ProductDropdownItem> GetProductDropdownItems()

@@ -2,5 +2,5 @@ namespace ProRental.Interfaces.Module3;
 
 public interface ICalculateCarbonStrategy
 {
-    float CalculateFootprint(float data);
+    double CalculateFootprint(params double[] values);
 }

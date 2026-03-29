@@ -57,7 +57,7 @@ public sealed class TransportCarbonManager : ITransportCarbonService
         ArgumentNullException.ThrowIfNull(route);
         ArgumentNullException.ThrowIfNull(quoteInput);
 
-        if (route.GetIsValid() is false)
+        if (route.IsValidRoute() is false)
         {
             throw new InvalidOperationException("A quote cannot be calculated for an invalid route.");
         }
@@ -67,12 +67,12 @@ public sealed class TransportCarbonManager : ITransportCarbonService
             throw new InvalidOperationException("A route quote requires at least one order item.");
         }
 
-        var routeLegs = route.GetOrderedRouteLegs();
+        var routeLegs = route.ReadOrderedRouteLegs();
         var quoteLegs = routeLegs.Count > 0
             ? routeLegs.Select(routeLeg => new QuoteLeg(
-                routeLeg.GetDistanceKm() ?? 0d,
-                routeLeg.GetTransportMode() ?? TransportMode.TRUCK))
-            : [new QuoteLeg(route.GetTotalDistanceKm() ?? 0d, TransportMode.TRUCK)];
+                routeLeg.ReadDistanceKm() ?? 0d,
+                routeLeg.ReadTransportMode() ?? TransportMode.TRUCK))
+            : [new QuoteLeg(route.ReadTotalDistanceKm() ?? 0d, TransportMode.TRUCK)];
 
         var quoteLegList = quoteLegs.ToList();
         var totalShipmentWeightKg = quoteInput.Items.Sum(item => item.Quantity * item.UnitWeightKg);

@@ -179,15 +179,14 @@ internal static class Phase0Tests
     {
         var route = new DeliveryRoute();
 
-        route.SetOriginAddress("Warehouse A");
-        route.SetDestinationAddress("Customer B");
-        route.SetTotalDistanceKm(128.5);
-        route.SetIsValid(true);
+        route.InitializeRoute("Warehouse A", "Customer B");
+        route.UpdateTotalDistanceKm(128.5);
+        route.MarkAsValid();
 
-        TestAssertions.AssertEqual("Warehouse A", route.GetOriginAddress());
-        TestAssertions.AssertEqual("Customer B", route.GetDestinationAddress());
-        TestAssertions.AssertEqual(128.5, route.GetTotalDistanceKm());
-        TestAssertions.AssertEqual(true, route.GetIsValid());
+        TestAssertions.AssertEqual("Warehouse A", route.ReadOriginAddress());
+        TestAssertions.AssertEqual("Customer B", route.ReadDestinationAddress());
+        TestAssertions.AssertEqual(128.5, route.ReadTotalDistanceKm());
+        TestAssertions.AssertEqual(true, route.IsValidRoute());
     }
 
     private static void Feature1EnumMappingsUseSnakeCase()
@@ -437,7 +436,7 @@ internal static class Phase3Tests
         var route = CreateRoute(context);
 
         var option = new ShippingOption();
-        option.ConfigureGeneratedOption(snapshot.OrderId, route.GetRouteId(), PreferenceType.GREEN, "Phase 3 Test Option", 31.25m, 7.5, 4, TransportMode.TRAIN);
+        option.ConfigureGeneratedOption(snapshot.OrderId, route.ReadRouteId(), PreferenceType.GREEN, "Phase 3 Test Option", 31.25m, 7.5, 4, TransportMode.TRAIN);
 
         repository.AddAsync(option).GetAwaiter().GetResult();
         repository.SaveChangesAsync().GetAwaiter().GetResult();
@@ -467,7 +466,7 @@ internal static class Phase3Tests
         var snapshot = CreateOrderFixture(context);
         var repository = new ShippingOptionMapper(context);
         var route = CreateRoute(context);
-        var option = CreateShippingOption(snapshot.OrderId, route.GetRouteId(), PreferenceType.CHEAP, TransportMode.TRUCK, "Selected Option");
+        var option = CreateShippingOption(snapshot.OrderId, route.ReadRouteId(), PreferenceType.CHEAP, TransportMode.TRUCK, "Selected Option");
 
         repository.AddAsync(option).GetAwaiter().GetResult();
         repository.SaveChangesAsync().GetAwaiter().GetResult();
@@ -736,10 +735,9 @@ internal static class Phase3Tests
     private static DeliveryRoute CreateRoute(AppDbContext context)
     {
         var route = new DeliveryRoute();
-        route.SetOriginAddress("Phase 3 Warehouse");
-        route.SetDestinationAddress("Phase 3 Destination");
-        route.SetTotalDistanceKm(12.5);
-        route.SetIsValid(true);
+        route.InitializeRoute("Phase 3 Warehouse", "Phase 3 Destination");
+        route.UpdateTotalDistanceKm(12.5);
+        route.MarkAsValid();
 
         context.DeliveryRoutes.Add(route);
         context.SaveChanges();
@@ -1301,10 +1299,9 @@ internal static class Phase4Tests
         {
             Requests.Add((origin, destination, modes.ToArray()));
             var route = new DeliveryRoute();
-            route.SetOriginAddress(origin);
-            route.SetDestinationAddress(destination);
-            route.SetIsValid(true);
-            route.SetTotalDistanceKm(24d);
+            route.InitializeRoute(origin, destination);
+            route.MarkAsValid();
+            route.UpdateTotalDistanceKm(24d);
 
             var primaryMode = modes.FirstOrDefault();
             if (primaryMode is TransportMode.TRAIN or TransportMode.TRUCK)
@@ -1760,12 +1757,12 @@ internal static class Phase7Tests
         var route = context.DeliveryRoutes
             .Include(entity => entity.RouteLegs)
             .First(entity => EF.Property<int>(entity, "RouteId") == routeId);
-        var routeLegs = route.GetOrderedRouteLegs();
+        var routeLegs = route.ReadOrderedRouteLegs();
 
         TestAssertions.AssertEqual("TRAIN", result.TransportModeLabel);
         TestAssertions.AssertEqual(TransportMode.TRAIN, persistedOption.GetSummary().TransportMode);
         TestAssertions.AssertEqual(1, routeLegs.Count);
-        TestAssertions.AssertEqual(TransportMode.TRAIN, routeLegs[0].GetTransportMode() ?? throw new InvalidOperationException("Expected TRAIN main leg."));
+        TestAssertions.AssertEqual(TransportMode.TRAIN, routeLegs[0].ReadTransportMode() ?? throw new InvalidOperationException("Expected TRAIN main leg."));
 
         transaction.Rollback();
     }
@@ -1793,12 +1790,12 @@ internal static class Phase7Tests
         var route = context.DeliveryRoutes
             .Include(entity => entity.RouteLegs)
             .First(entity => EF.Property<int>(entity, "RouteId") == routeId);
-        var routeLegs = route.GetOrderedRouteLegs();
+        var routeLegs = route.ReadOrderedRouteLegs();
 
         TestAssertions.AssertEqual("TRUCK", result.TransportModeLabel);
         TestAssertions.AssertEqual(TransportMode.TRUCK, persistedOption.GetSummary().TransportMode);
         TestAssertions.AssertEqual(1, routeLegs.Count);
-        TestAssertions.AssertEqual(TransportMode.TRUCK, routeLegs[0].GetTransportMode() ?? throw new InvalidOperationException("Expected TRUCK main leg."));
+        TestAssertions.AssertEqual(TransportMode.TRUCK, routeLegs[0].ReadTransportMode() ?? throw new InvalidOperationException("Expected TRUCK main leg."));
 
         transaction.Rollback();
     }
@@ -1830,8 +1827,8 @@ internal static class Phase7Tests
         var route = context.DeliveryRoutes
             .Include(entity => entity.RouteLegs)
             .First(entity => EF.Property<int>(entity, "RouteId") == routeId);
-        var routeLegs = route.GetOrderedRouteLegs();
-        var resolvedWarehouseAddress = route.GetOriginAddress();
+        var routeLegs = route.ReadOrderedRouteLegs();
+        var resolvedWarehouseAddress = route.ReadOriginAddress();
 
         TestAssertions.AssertEqual(1, persistedOptions.Count);
         TestAssertions.AssertEqual(result.OptionId, checkout.GetSelectionState().SelectedOptionId);
@@ -1839,10 +1836,10 @@ internal static class Phase7Tests
         TestAssertions.AssertTrue(result.OptionId > 0, "Expected a persisted shipping option id.");
         TestAssertions.AssertEqual("TRAIN", result.TransportModeLabel);
         TestAssertions.AssertEqual(1, routeLegs.Count);
-        TestAssertions.AssertTrue(routeLegs[0].GetIsMainTransport() == true, "Expected the TRAIN leg to be marked as the main transport leg.");
-        TestAssertions.AssertEqual(TransportMode.TRAIN, routeLegs[0].GetTransportMode() ?? throw new InvalidOperationException("Expected main leg transport mode."));
-        TestAssertions.AssertEqual(resolvedWarehouseAddress, routeLegs[0].GetStartPoint());
-        TestAssertions.AssertEqual(Phase3Tests.CustomerAddress, routeLegs[0].GetEndPoint());
+        TestAssertions.AssertTrue(routeLegs[0].ReadIsMainTransport() == true, "Expected the TRAIN leg to be marked as the main transport leg.");
+        TestAssertions.AssertEqual(TransportMode.TRAIN, routeLegs[0].ReadTransportMode() ?? throw new InvalidOperationException("Expected main leg transport mode."));
+        TestAssertions.AssertEqual(resolvedWarehouseAddress, routeLegs[0].ReadStartPoint());
+        TestAssertions.AssertEqual(Phase3Tests.CustomerAddress, routeLegs[0].ReadEndPoint());
 
         transaction.Rollback();
     }
@@ -1899,7 +1896,7 @@ internal static class Phase7Tests
         var route = context.DeliveryRoutes
             .Include(entity => entity.RouteLegs)
             .First(entity => EF.Property<int>(entity, "RouteId") == routeId);
-        var routeLegs = route.GetOrderedRouteLegs();
+        var routeLegs = route.ReadOrderedRouteLegs();
         var newRouteIds = context.DeliveryRoutes
             .Select(entity => EF.Property<int>(entity, "RouteId"))
             .Where(id => !routeIdsBefore.Contains(id))
@@ -1909,8 +1906,8 @@ internal static class Phase7Tests
         TestAssertions.AssertEqual("SHIP", result.TransportModeLabel);
         TestAssertions.AssertEqual(TransportMode.SHIP, persistedOption.GetSummary().TransportMode);
         TestAssertions.AssertEqual(3, routeLegs.Count);
-        TestAssertions.AssertEqual(TransportMode.SHIP, routeLegs[1].GetTransportMode() ?? throw new InvalidOperationException("Expected SHIP main leg."));
-        TestAssertions.AssertEqual(131.2d, route.GetTotalDistanceKm());
+        TestAssertions.AssertEqual(TransportMode.SHIP, routeLegs[1].ReadTransportMode() ?? throw new InvalidOperationException("Expected SHIP main leg."));
+        TestAssertions.AssertEqual(131.2d, route.ReadTotalDistanceKm());
         TestAssertions.AssertEqual(1, newRouteIds.Length);
 
         transaction.Rollback();
@@ -1937,16 +1934,16 @@ internal static class Phase7Tests
             googleMapsApi);
 
         var route = routeManager.CreateMultiModalRouteAsync("ProRental Warehouse", Phase3Tests.JapanCustomerAddress, [TransportMode.PLANE]).GetAwaiter().GetResult();
-        var routeLegs = route.GetOrderedRouteLegs();
+        var routeLegs = route.ReadOrderedRouteLegs();
 
         TestAssertions.AssertEqual(3, routeLegs.Count);
-        TestAssertions.AssertEqual(Phase3Tests.WarehouseAddress, routeLegs[0].GetStartPoint());
-        TestAssertions.AssertEqual(Phase3Tests.AirportAddressOne, routeLegs[0].GetEndPoint());
-        TestAssertions.AssertEqual(Phase3Tests.AirportAddressOne, routeLegs[1].GetStartPoint());
-        TestAssertions.AssertEqual(Phase3Tests.AirportAddressTwo, routeLegs[1].GetEndPoint());
-        TestAssertions.AssertEqual(Phase3Tests.AirportAddressTwo, routeLegs[2].GetStartPoint());
-        TestAssertions.AssertEqual(Phase3Tests.JapanCustomerAddress, routeLegs[2].GetEndPoint());
-        TestAssertions.AssertEqual(143.2d, route.GetTotalDistanceKm());
+        TestAssertions.AssertEqual(Phase3Tests.WarehouseAddress, routeLegs[0].ReadStartPoint());
+        TestAssertions.AssertEqual(Phase3Tests.AirportAddressOne, routeLegs[0].ReadEndPoint());
+        TestAssertions.AssertEqual(Phase3Tests.AirportAddressOne, routeLegs[1].ReadStartPoint());
+        TestAssertions.AssertEqual(Phase3Tests.AirportAddressTwo, routeLegs[1].ReadEndPoint());
+        TestAssertions.AssertEqual(Phase3Tests.AirportAddressTwo, routeLegs[2].ReadStartPoint());
+        TestAssertions.AssertEqual(Phase3Tests.JapanCustomerAddress, routeLegs[2].ReadEndPoint());
+        TestAssertions.AssertEqual(143.2d, route.ReadTotalDistanceKm());
         TestAssertions.AssertSequence(
             new[]
             {
@@ -1979,16 +1976,16 @@ internal static class Phase7Tests
             googleMapsApi);
 
         var route = routeManager.CreateMultiModalRouteAsync("ProRental Warehouse", Phase3Tests.UnitedStatesCustomerAddress, [TransportMode.SHIP]).GetAwaiter().GetResult();
-        var routeLegs = route.GetOrderedRouteLegs();
+        var routeLegs = route.ReadOrderedRouteLegs();
 
         TestAssertions.AssertEqual(3, routeLegs.Count);
-        TestAssertions.AssertEqual(Phase3Tests.WarehouseAddress, routeLegs[0].GetStartPoint());
-        TestAssertions.AssertEqual(Phase3Tests.ShippingPortAddressOne, routeLegs[0].GetEndPoint());
-        TestAssertions.AssertEqual(Phase3Tests.ShippingPortAddressOne, routeLegs[1].GetStartPoint());
-        TestAssertions.AssertEqual(Phase3Tests.UnitedStatesShippingPortAddress, routeLegs[1].GetEndPoint());
-        TestAssertions.AssertEqual(Phase3Tests.UnitedStatesShippingPortAddress, routeLegs[2].GetStartPoint());
-        TestAssertions.AssertEqual(Phase3Tests.UnitedStatesCustomerAddress, routeLegs[2].GetEndPoint());
-        TestAssertions.AssertEqual(131.2d, route.GetTotalDistanceKm());
+        TestAssertions.AssertEqual(Phase3Tests.WarehouseAddress, routeLegs[0].ReadStartPoint());
+        TestAssertions.AssertEqual(Phase3Tests.ShippingPortAddressOne, routeLegs[0].ReadEndPoint());
+        TestAssertions.AssertEqual(Phase3Tests.ShippingPortAddressOne, routeLegs[1].ReadStartPoint());
+        TestAssertions.AssertEqual(Phase3Tests.UnitedStatesShippingPortAddress, routeLegs[1].ReadEndPoint());
+        TestAssertions.AssertEqual(Phase3Tests.UnitedStatesShippingPortAddress, routeLegs[2].ReadStartPoint());
+        TestAssertions.AssertEqual(Phase3Tests.UnitedStatesCustomerAddress, routeLegs[2].ReadEndPoint());
+        TestAssertions.AssertEqual(131.2d, route.ReadTotalDistanceKm());
         TestAssertions.AssertSequence(
             new[]
             {
@@ -2014,13 +2011,13 @@ internal static class Phase7Tests
             }));
 
         var route = routeManager.CreateMultiModalRouteAsync("ProRental Warehouse", Phase3Tests.CustomerAddress, [TransportMode.TRAIN]).GetAwaiter().GetResult();
-        var routeLegs = route.GetOrderedRouteLegs();
+        var routeLegs = route.ReadOrderedRouteLegs();
 
         TestAssertions.AssertEqual(1, routeLegs.Count);
-        TestAssertions.AssertEqual(Phase3Tests.WarehouseAddress, routeLegs[0].GetStartPoint());
-        TestAssertions.AssertEqual(Phase3Tests.CustomerAddress, routeLegs[0].GetEndPoint());
-        TestAssertions.AssertTrue(routeLegs[0].GetIsMainTransport() == true, "Expected the TRAIN leg to be marked as main transport.");
-        TestAssertions.AssertEqual(24d, route.GetTotalDistanceKm());
+        TestAssertions.AssertEqual(Phase3Tests.WarehouseAddress, routeLegs[0].ReadStartPoint());
+        TestAssertions.AssertEqual(Phase3Tests.CustomerAddress, routeLegs[0].ReadEndPoint());
+        TestAssertions.AssertTrue(routeLegs[0].ReadIsMainTransport() == true, "Expected the TRAIN leg to be marked as main transport.");
+        TestAssertions.AssertEqual(24d, route.ReadTotalDistanceKm());
 
         transaction.Rollback();
     }
@@ -2051,11 +2048,11 @@ internal static class Phase7Tests
                 }));
 
         var route = routeManager.CreateMultiModalRouteAsync("ProRental Warehouse", Phase3Tests.UnitedStatesCustomerAddress, [TransportMode.TRAIN, TransportMode.SHIP]).GetAwaiter().GetResult();
-        var routeLegs = route.GetOrderedRouteLegs();
+        var routeLegs = route.ReadOrderedRouteLegs();
 
         TestAssertions.AssertEqual(3, routeLegs.Count);
-        TestAssertions.AssertEqual(TransportMode.SHIP, routeLegs[1].GetTransportMode() ?? throw new InvalidOperationException("Expected SHIP main leg."));
-        TestAssertions.AssertEqual(131.2d, route.GetTotalDistanceKm());
+        TestAssertions.AssertEqual(TransportMode.SHIP, routeLegs[1].ReadTransportMode() ?? throw new InvalidOperationException("Expected SHIP main leg."));
+        TestAssertions.AssertEqual(131.2d, route.ReadTotalDistanceKm());
 
         transaction.Rollback();
     }

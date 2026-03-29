@@ -30,6 +30,6 @@ public sealed class RouteMapper : IRouteMapper
             .AsNoTracking()
             .FirstOrDefault(routeLeg =>
                 EF.Property<int>(routeLeg, "RouteId") == routeId &&
-                routeLeg.GetIsMainTransport() == true);
+                routeLeg.ReadIsMainTransport() == true);
     }
 }

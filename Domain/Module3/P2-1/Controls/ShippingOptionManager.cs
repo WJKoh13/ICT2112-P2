@@ -128,7 +128,7 @@ public sealed class ShippingOptionManager : IShippingOptionService
         var routeModes = routeModeProfile.ToModeList();
 
         var route = await _routingService.CreateMultiModalRouteAsync(DefaultOrigin, context.DestinationAddress, routeModes);
-        var routeId = route.GetRouteId();
+        var routeId = route.ReadRouteId();
         var selectedTransportMode = ResolveSelectedTransportMode(route, routeModeProfile.MainTransportMode);
         var quoteInput = new RouteQuoteInput(
             context.HubId,
@@ -170,16 +170,16 @@ public sealed class ShippingOptionManager : IShippingOptionService
         return option.GetSelectionResult() with
         {
             OrderId = request.OrderId,
-            DistanceKm = route.GetTotalDistanceKm() ?? 0d
+            DistanceKm = route.ReadTotalDistanceKm() ?? 0d
         };
     }
 
     private static TransportMode ResolveSelectedTransportMode(DeliveryRoute route, TransportMode fallback)
     {
-        var routeLegs = route.GetOrderedRouteLegs();
+        var routeLegs = route.ReadOrderedRouteLegs();
         var mainLegTransportMode = routeLegs
-            .FirstOrDefault(routeLeg => routeLeg.GetIsMainTransport() == true)
-            ?.GetTransportMode();
+            .FirstOrDefault(routeLeg => routeLeg.ReadIsMainTransport() == true)
+            ?.ReadTransportMode();
 
         if (mainLegTransportMode.HasValue)
         {
@@ -187,7 +187,7 @@ public sealed class ShippingOptionManager : IShippingOptionService
         }
 
         var firstNonTruckTransportMode = routeLegs
-            .Select(routeLeg => routeLeg.GetTransportMode())
+            .Select(routeLeg => routeLeg.ReadTransportMode())
             .FirstOrDefault(transportMode => transportMode.HasValue && transportMode.Value != TransportMode.TRUCK);
 
         return firstNonTruckTransportMode ?? fallback;

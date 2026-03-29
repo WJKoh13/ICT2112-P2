@@ -79,9 +79,8 @@ internal static class TransportCarbonManagerTests
     {
         var manager = CreateManager();
         var route = new DeliveryRoute();
-        route.SetOriginAddress("Warehouse");
-        route.SetDestinationAddress("Customer");
-        route.SetIsValid(true);
+        route.InitializeRoute("Warehouse", "Customer");
+        route.MarkAsValid();
 
         var planeLeg = new RouteLeg();
         planeLeg.ConfigureLeg(1, "Warehouse", "Airport Hub", 18d, TransportMode.PLANE, true, false);

@@ -56,9 +56,8 @@ public sealed class RouteManager : IRoutingService, IRouteQueryService
         var routeContext = ResolveRouteContext(origin, destination, routeModeProfile);
 
         var route = new DeliveryRoute();
-        route.SetOriginAddress(routeContext.WarehouseAddress);
-        route.SetDestinationAddress(routeContext.DestinationAddress);
-        route.SetIsValid(true);
+        route.InitializeRoute(routeContext.WarehouseAddress, routeContext.DestinationAddress);
+        route.MarkAsValid();
 
         var routeLegs = await BuildRouteLegsAsync(routeContext);
         foreach (var routeLeg in routeLegs)
@@ -66,8 +65,8 @@ public sealed class RouteManager : IRoutingService, IRouteQueryService
             route.addLeg(routeLeg);
         }
 
-        route.SetTotalDistanceKm((double)Math.Round(
-            (decimal)routeLegs.Sum(routeLeg => routeLeg.GetDistanceKm() ?? 0d),
+        route.UpdateTotalDistanceKm((double)Math.Round(
+            (decimal)routeLegs.Sum(routeLeg => routeLeg.ReadDistanceKm() ?? 0d),
             2,
             MidpointRounding.AwayFromZero));
 
@@ -119,12 +118,10 @@ public sealed class RouteManager : IRoutingService, IRouteQueryService
 
     private async Task<RouteLeg> BuildDirectMainLegAsync(RouteContext routeContext)
     {
-        var routeLeg = await BuildDirectLegAsync(
+        return await BuildDirectLegAsync(
             routeContext.WarehouseAddress,
             routeContext.DestinationAddress,
             routeContext.MainTransportMode);
-        routeLeg.SetSequence(1);
-        return routeLeg;
     }
 
     private RouteContext ResolveRouteContext(string origin, string destination, RouteModeProfile routeModeProfile)
@@ -279,7 +276,7 @@ public sealed class RouteManager : IRoutingService, IRouteQueryService
 
         var routeLeg = new RouteLeg();
         routeLeg.ConfigureLeg(
-            sequence: 2,
+            sequence: 1,
             originPoint.Address,
             destinationPoint.Address,
             distanceKm,

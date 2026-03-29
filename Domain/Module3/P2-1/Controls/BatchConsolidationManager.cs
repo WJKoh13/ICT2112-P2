@@ -65,7 +65,7 @@ public sealed class BatchConsolidationManager : IBatchDelivery
         var mainTransportLeg = _routeQueryService.retrieveMainTransportLeg(routeId)
             ?? throw new InvalidOperationException($"No main transport route leg was found for route ID '{routeId}'.");
 
-        var destinationHubId = mainTransportLeg.GetEndPoint();
+        var destinationHubId = mainTransportLeg.ReadEndPoint();
 
         if (!batchOrderConsolidator(orderId, destinationHubId))
         {
@@ -276,6 +276,6 @@ public sealed class BatchConsolidationManager : IBatchDelivery
             throw new InvalidOperationException("Batch contains orders mapped to different delivery routes.");
         }
 
-        return _routeQueryService.retrieveMainTransportLeg(routeIds[0])?.GetDistanceKm() ?? 0d;
+        return _routeQueryService.retrieveMainTransportLeg(routeIds[0])?.ReadDistanceKm() ?? 0d;
     }
 }

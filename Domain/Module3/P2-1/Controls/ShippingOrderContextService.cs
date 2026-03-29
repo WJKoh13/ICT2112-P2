@@ -16,16 +16,16 @@ namespace ProRental.Domain.Controls;
 public sealed class ShippingOrderContextService : IOrderService
 {
     private readonly AppDbContext _context;
-    private readonly IInventoryService _inventoryService;
+    private readonly IProductQuery _productQuery;
     private readonly ITransportationHubMapper _transportationHubMapper;
 
     public ShippingOrderContextService(
         AppDbContext context,
-        IInventoryService inventoryService,
+        IProductQuery productQuery,
         ITransportationHubMapper transportationHubMapper)
     {
         _context = context;
-        _inventoryService = inventoryService;
+        _productQuery = productQuery;
         _transportationHubMapper = transportationHubMapper;
     }
 
@@ -76,7 +76,7 @@ public sealed class ShippingOrderContextService : IOrderService
             .GroupBy(orderItem => orderItem.ProductId)
             .Select(group =>
             {
-                var unitWeightKg = (double)_inventoryService.GetProductWeight(group.Key);
+                var unitWeightKg = (double)_productQuery.GetProductWeight(group.Key);
                 return new OrderShippingItem(
                     group.Key,
                     group.Sum(orderItem => orderItem.Quantity),

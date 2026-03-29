@@ -2,7 +2,7 @@ using ProRental.Domain.Entities;
 
 namespace ProRental.Interfaces.Module2.P2_3;
 
-public interface IInventoryService
+public interface IProductQuery
 {
     Product? GetProductById(int productId);
     decimal GetProductWeight(int productId);

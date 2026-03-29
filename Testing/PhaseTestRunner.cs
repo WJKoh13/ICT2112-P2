@@ -1946,7 +1946,7 @@ internal static class Phase7Tests
             .First(address => !string.IsNullOrWhiteSpace(address));
         var manager = new ShippingOptionManager(
             new ShippingOptionMapper(context),
-            new ShippingCheckoutContextService(context, new StubInventoryService(), new TransportationHubMapper(context)),
+            new ShippingCheckoutContextService(context, new StubProductQuery(), new TransportationHubMapper(context)),
             Phase4Tests.CreatePreferenceService(),
             CreateRouteManager(
                 context,
@@ -2296,7 +2296,7 @@ internal static class Phase7Tests
 
         var service = new ShippingCheckoutContextService(
             context,
-            new StubInventoryService(),
+            new StubProductQuery(),
             new TransportationHubMapper(context));
 
         var shippingContext = service.GetShippingContextAsync(snapshot.CheckoutId).GetAwaiter().GetResult()
@@ -2330,7 +2330,7 @@ internal static class Phase7Tests
 
             var service = new ShippingCheckoutContextService(
                 context,
-                new StubInventoryService(),
+                new StubProductQuery(),
                 new TransportationHubMapper(context));
 
             var missingItemsException = TestAssertions.AssertThrows<InvalidOperationException>(
@@ -2406,7 +2406,7 @@ internal static class Phase7Tests
 
         return new ShippingOptionManager(
             mapper ?? new ShippingOptionMapper(context),
-            new ShippingCheckoutContextService(context, new StubInventoryService(), hubMapper),
+            new ShippingCheckoutContextService(context, new StubProductQuery(), hubMapper),
             Phase4Tests.CreatePreferenceService(),
             CreateRouteManager(context, hubMapper, googleMapsApi ?? new StubGoogleMapsApi(new Dictionary<(string Origin, string Destination), double>
             {
@@ -2485,7 +2485,7 @@ internal static class Phase7Tests
             .ExecuteDelete();
     }
 
-    private sealed class StubInventoryService : IInventoryService
+    private sealed class StubProductQuery : IProductQuery
     {
         public Product? GetProductById(int productId) => null;
         public decimal GetProductWeight(int productId) => 5.5m;

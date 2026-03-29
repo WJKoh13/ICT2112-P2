@@ -17,16 +17,16 @@ namespace ProRental.Domain.Controls;
 public sealed class ShippingCheckoutContextService : ICheckoutShippingContextService
 {
     private readonly AppDbContext _context;
-    private readonly IInventoryService _inventoryService;
+    private readonly IProductQuery _productQuery;
     private readonly ITransportationHubMapper _transportationHubMapper;
 
     public ShippingCheckoutContextService(
         AppDbContext context,
-        IInventoryService inventoryService,
+        IProductQuery productQuery,
         ITransportationHubMapper transportationHubMapper)
     {
         _context = context;
-        _inventoryService = inventoryService;
+        _productQuery = productQuery;
         _transportationHubMapper = transportationHubMapper;
     }
 
@@ -77,7 +77,7 @@ public sealed class ShippingCheckoutContextService : ICheckoutShippingContextSer
             .GroupBy(cartItem => cartItem.ProductId)
             .Select(group =>
             {
-                var unitWeightKg = (double)_inventoryService.GetProductWeight(group.Key);
+                var unitWeightKg = (double)_productQuery.GetProductWeight(group.Key);
                 return new CheckoutShippingItem(
                     group.Key,
                     group.Sum(cartItem => cartItem.Quantity),

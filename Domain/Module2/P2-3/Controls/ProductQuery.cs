@@ -5,11 +5,11 @@ using ProRental.Interfaces.Module2.P2_3;
 
 namespace ProRental.Domain.Module2.P2_3.Controls;
 
-public class InventoryService : IInventoryService
+public class ProductQuery : IProductQuery
 {
     private readonly AppDbContext _context;
 
-    public InventoryService(AppDbContext context)
+    public ProductQuery(AppDbContext context)
     {
         _context = context;
     }

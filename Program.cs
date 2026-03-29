@@ -162,7 +162,7 @@ builder.Services.AddScoped<ProRental.Data.Interfaces.ITransportationHubMapper, P
 builder.Services.AddScoped<ProRental.Domain.Control.TransportationHubFactory>();
 builder.Services.AddScoped<ProRental.Interfaces.Module3.P2_1.IHubCarbonService, ProRental.Domain.Control.TransportationHubManager>();
 builder.Services.AddScoped<ProRental.Interfaces.Module3.P2_1.IHubInfoService, ProRental.Domain.Control.TransportationHubManager>();
-builder.Services.AddScoped<ProRental.Interfaces.Module2.P2_3.IInventoryService, ProRental.Domain.Module2.P2_3.Controls.InventoryService>();
+builder.Services.AddScoped<ProRental.Interfaces.Module2.P2_3.IProductQuery, ProRental.Domain.Module2.P2_3.Controls.ProductQuery>();
 builder.Services.AddFeature1Services();
 builder.Services.AddScoped<ProRental.Interfaces.Module3.P2_1.IOrderService, ProRental.Domain.Controls.ShippingOrderContextService>();
 //TODO: ADD THIS INTO A REGISTRATION

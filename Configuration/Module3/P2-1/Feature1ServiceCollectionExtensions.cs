@@ -30,7 +30,7 @@ public static class Feature1ServiceCollectionExtensions
         });
         services.AddScoped<IRouteMapper, RouteMapper>();
         services.AddScoped<ITransportationHubMapper, TransportationHubMapper>();
-        services.AddScoped<IInventoryService, InventoryService>();
+        services.AddScoped<IProductQuery, ProductQuery>();
         services.AddScoped<IShippingOptionMapper, ShippingOptionMapper>();
         services.AddScoped<ICheckoutShippingContextService, ShippingCheckoutContextService>();
         services.AddScoped<IRouteDistanceCalculator, RouteDistanceCalculator>();

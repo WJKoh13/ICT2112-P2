@@ -15,16 +15,16 @@ public class TransportationHubManager : IHubCarbonService, IHubInfoService
 {
     private readonly TransportationHubFactory _hubFactory;
     private readonly ITransportationHubMapper _hubMapper;
-    private readonly IInventoryService _inventoryService;
+    private readonly IProductQuery _productQuery;
 
     public TransportationHubManager(
         TransportationHubFactory hubFactory,
         ITransportationHubMapper hubMapper,
-        IInventoryService inventoryService)
+        IProductQuery productQuery)
     {
         _hubFactory = hubFactory;
         _hubMapper = hubMapper;
-        _inventoryService = inventoryService;
+        _productQuery = productQuery;
     }
 
     // =============================================
@@ -54,11 +54,11 @@ public class TransportationHubManager : IHubCarbonService, IHubInfoService
         var warehouse = _hubFactory.CreateWarehouse(hubId);
         if (warehouse == null) return 0;
 
-        decimal productWeight = _inventoryService.GetProductWeight(productId);
+        decimal productWeight = _productQuery.GetProductWeight(productId);
         if (productWeight <= 0) return 0;
 
         // Use real inventory data: createdat as "stored since", totalquantity as qty
-        var storageInfo = _inventoryService.GetProductStorageInfo(productId);
+        var storageInfo = _productQuery.GetProductStorageInfo(productId);
         double hoursStored = storageInfo?.HoursStored ?? 24;
         int quantity = storageInfo?.Quantity ?? 1;
 
@@ -74,10 +74,10 @@ public class TransportationHubManager : IHubCarbonService, IHubInfoService
         var warehouse = _hubFactory.CreateWarehouse(hubId);
         if (warehouse == null) return new List<ItemCarbonInfo>();
 
-        decimal productWeight = _inventoryService.GetProductWeight(productId);
+        decimal productWeight = _productQuery.GetProductWeight(productId);
         if (productWeight <= 0) return new List<ItemCarbonInfo>();
 
-        var allItems = _inventoryService.GetAllProductStorageInfo();
+        var allItems = _productQuery.GetAllProductStorageInfo();
         var productItems = allItems.Where(i => i.ProductId == productId).ToList();
 
         var results = new List<ItemCarbonInfo>();
@@ -113,7 +113,7 @@ public class TransportationHubManager : IHubCarbonService, IHubInfoService
         if (warehouse == null) return new List<ItemCarbonInfo>();
 
         // Get all inventory items with real storage data from DB
-        var allItems = _inventoryService.GetAllProductStorageInfo();
+        var allItems = _productQuery.GetAllProductStorageInfo();
 
         // Filter to items stored 18 months or longer (18 × 30 × 24 = 13,140 hours)
         const double EighteenMonthsInHours = 13140;
@@ -123,7 +123,7 @@ public class TransportationHubManager : IHubCarbonService, IHubInfoService
         foreach (var item in longStoredItems)
         {
             // Get product weight from DB
-            decimal weight = _inventoryService.GetProductWeight(item.ProductId);
+            decimal weight = _productQuery.GetProductWeight(item.ProductId);
             if (weight <= 0) continue;
 
             double carbon = CalculateProductStorageCarbonInternal(warehouse, (double)weight, item.Quantity, item.HoursStored);
@@ -157,7 +157,7 @@ public class TransportationHubManager : IHubCarbonService, IHubInfoService
         if (warehouse == null) return new List<ProductTimeInfo>();
 
         // Get all inventory items with real storage data from DB
-        var allItems = _inventoryService.GetAllProductStorageInfo();
+        var allItems = _productQuery.GetAllProductStorageInfo();
 
         var results = allItems.Select(item => new ProductTimeInfo
         {
@@ -253,19 +253,19 @@ public class TransportationHubManager : IHubCarbonService, IHubInfoService
 
     /// <summary>
     /// Gets all products as lightweight dropdown items for UI selection.
-    /// Delegates to InventoryService so the controller doesn't need to depend on it directly.
+    /// Delegates to ProductQuery so the controller doesn't need to depend on it directly.
     /// </summary>
     public List<InventoryProductDropdownItem> GetAllProductDropdownItems()
     {
-        return _inventoryService.GetAllProductDropdownItems();
+        return _productQuery.GetAllProductDropdownItems();
     }
 
     /// <summary>
     /// Gets storage info for all product items in the warehouse.
-    /// Delegates to InventoryService so the controller doesn't need to depend on it directly.
+    /// Delegates to ProductQuery so the controller doesn't need to depend on it directly.
     /// </summary>
     public List<ProductStorageInfo> GetAllProductStorageInfo()
     {
-        return _inventoryService.GetAllProductStorageInfo();
+        return _productQuery.GetAllProductStorageInfo();
     }
 }

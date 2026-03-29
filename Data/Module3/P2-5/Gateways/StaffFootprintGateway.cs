@@ -240,8 +240,11 @@ public sealed class StaffFootprintGateway : IStaffFootprintGateway
 
     private static DateTime NormalizeTimestamp(DateTime value)
     {
-        return value.Kind == DateTimeKind.Utc
-            ? DateTime.SpecifyKind(value, DateTimeKind.Unspecified)
-            : value;
+        return value.Kind switch
+        {
+            DateTimeKind.Utc => value,
+            DateTimeKind.Local => value.ToUniversalTime(),
+            _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
+        };
     }
 }

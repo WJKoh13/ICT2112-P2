@@ -60,10 +60,7 @@ public sealed class BuildingFootprintGateway : IBuildingFootprintGateway
     public async Task<Buildingfootprint> CreateBuildingFootprintAsync(Buildingfootprint footprint)
     {
         var timehourly = ReadMember<DateTime>(footprint, "Timehourly", "_timehourly");
-        if (timehourly.Kind == DateTimeKind.Utc)
-        {
-            WriteMember(footprint, "Timehourly", "_timehourly", NormalizeTimestamp(timehourly));
-        }
+        WriteMember(footprint, "Timehourly", "_timehourly", NormalizeTimestamp(timehourly));
 
         _dbContext.Buildingfootprints.Add(footprint);
         await _dbContext.SaveChangesAsync();
@@ -204,8 +201,11 @@ public sealed class BuildingFootprintGateway : IBuildingFootprintGateway
 
     private static DateTime NormalizeTimestamp(DateTime value)
     {
-        return value.Kind == DateTimeKind.Utc
-            ? DateTime.SpecifyKind(value, DateTimeKind.Unspecified)
-            : value;
+        return value.Kind switch
+        {
+            DateTimeKind.Utc => value,
+            DateTimeKind.Local => value.ToUniversalTime(),
+            _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
+        };
     }
 }

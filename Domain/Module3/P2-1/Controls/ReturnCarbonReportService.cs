@@ -13,7 +13,7 @@ public record StageCarbonBreakdown(
     double CleaningSuppliesCarbon,
     double PackagingCarbon,
     double TotalCarbon,
-    bool IsHighCarbon
+    bool IsHighCarbon   
 )
 {
     public string StageLabel => StageType?.ToString().Replace("_", " ") ?? "Unknown";

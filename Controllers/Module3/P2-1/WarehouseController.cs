@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using ProRental.Interfaces;
+using ProRental.Interfaces.Module2.P2_3;
 using ProRental.Interfaces.Module3.P2_1;
 
 namespace ProRental.Controllers;

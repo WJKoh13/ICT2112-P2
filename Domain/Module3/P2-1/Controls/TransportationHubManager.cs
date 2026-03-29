@@ -1,7 +1,7 @@
 using ProRental.Data.Interfaces;
 using ProRental.Domain.Entities;
 using ProRental.Domain.Enums;
-using ProRental.Interfaces;
+using ProRental.Interfaces.Module2.P2_3;
 using ProRental.Interfaces.Module3.P2_1;
 
 namespace ProRental.Domain.Control;

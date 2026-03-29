@@ -21,28 +21,10 @@ using ProRental.Domain.Entities;
 using ProRental.Interfaces.Data.Module3.P2_5;
 using ProRental.Interfaces.Module2.P2_3;
 using ProRental.Interfaces.Module3.P2_5;
-
-// uncomment when ready to code
 using ProRental.Data;
 using ProRental.Domain.Controls;
-// using ProRental.Domain.Entities;
 using ProRental.Interfaces.Domain;
 using ProRental.Interfaces.Data;
-using ProRental.Interfaces.Data;
-using ProRental.Data;
-using ProRental.Interfaces.Domain;
-using ProRental.Domain.Controls;
-using ProRental.Controllers.Module1;
-using ProRental.Data.Services;
-
-
-// uncomment when ready to code
-// using ProRental.Data;
-// using ProRental.Domain.Controls;
-// //using ProRental.Domain.Entities;
-// using ProRental.Interfaces.Domain;
-// using ProRental.Interfaces.Data;
-// using ProRental.Controllers;
 using ProRental.Controllers.Module1;
 
 //p2-1 feat 1 test
@@ -180,7 +162,7 @@ builder.Services.AddScoped<ProRental.Data.Interfaces.ITransportationHubMapper, P
 builder.Services.AddScoped<ProRental.Domain.Control.TransportationHubFactory>();
 builder.Services.AddScoped<ProRental.Interfaces.Module3.P2_1.IHubCarbonService, ProRental.Domain.Control.TransportationHubManager>();
 builder.Services.AddScoped<ProRental.Interfaces.Module3.P2_1.IHubInfoService, ProRental.Domain.Control.TransportationHubManager>();
-builder.Services.AddScoped<ProRental.Interfaces.IInventoryService, ProRental.Domain.Control.DummyInventoryService>(); // TODO: Replace with Module 2's real implementation
+builder.Services.AddScoped<ProRental.Interfaces.Module2.P2_3.IInventoryService, ProRental.Domain.Module2.P2_3.Controls.InventoryService>();
 builder.Services.AddFeature1Services();
 //TODO: ADD THIS INTO A REGISTRATION
 builder.Services.AddScoped<ITransportMapper, TransportMapper>();
@@ -195,6 +177,7 @@ builder.Services.AddScoped<ProRental.Data.Module3.P2_1.Interfaces.IReturnStageGa
 builder.Services.AddScoped<ITransportService, TransportationManager>();
 builder.Services.AddScoped<TransportationFactory>();
 builder.Services.AddScoped<ReturnStageCalculator>();
+builder.Services.AddScoped<ProRental.Domain.Module3.P2_1.Interfaces.ICarbonReturnService, ReturnStageSurchargeService>();
 builder.Services.AddScoped<ReturnStageSurchargeService>();
 builder.Services.AddScoped<ReturnCarbonReportService>();
 
@@ -360,6 +343,5 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
-
 
 

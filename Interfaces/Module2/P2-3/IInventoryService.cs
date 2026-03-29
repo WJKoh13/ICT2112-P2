@@ -1,11 +1,7 @@
 using ProRental.Domain.Entities;
 
-namespace ProRental.Interfaces;
+namespace ProRental.Interfaces.Module2.P2_3;
 
-/// <summary>
-/// DUMMY interface — temporary stand-in for Module 2's inventory service.
-/// Replace with the real IInventoryService from Module 2 when available.
-/// </summary>
 public interface IInventoryService
 {
     Product? GetProductById(int productId);

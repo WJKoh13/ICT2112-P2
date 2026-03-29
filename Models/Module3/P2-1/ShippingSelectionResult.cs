@@ -7,7 +7,7 @@ namespace ProRental.Models.Module3.P2_1;
 /// by: ernest
 /// </summary>
 public sealed record ShippingSelectionResult(
-    int OrderId,
+    int CheckoutId,
     int OptionId,
     PreferenceType PreferenceType,
     decimal Cost,

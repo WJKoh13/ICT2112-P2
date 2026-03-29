@@ -3,7 +3,7 @@ const { execFileSync } = require('node:child_process');
 const { test, expect } = require('@playwright/test');
 
 // End-to-end browser coverage for the customer-facing Feature 1 checkout flow.
-const orderId = '12';
+const checkoutId = '17';
 const dbHarnessProjectPath = path.resolve(
   __dirname,
   '..',
@@ -11,7 +11,7 @@ const dbHarnessProjectPath = path.resolve(
   'Feature1ShippingOptionDbHarness.csproj'
 );
 
-function runDbProbe(commandName, selectedOrderId) {
+function runDbProbe(commandName, selectedCheckoutId) {
   return execFileSync(
     'dotnet',
     [
@@ -20,7 +20,7 @@ function runDbProbe(commandName, selectedOrderId) {
       dbHarnessProjectPath,
       '--',
       commandName,
-      selectedOrderId,
+      selectedCheckoutId,
     ],
     {
     encoding: 'utf8',
@@ -35,20 +35,20 @@ function runDbProbe(commandName, selectedOrderId) {
 }
 
 test.beforeEach(() => {
-  runDbProbe('reset-order', orderId);
+  runDbProbe('reset-checkout', checkoutId);
 });
 
 test.afterEach(() => {
-  runDbProbe('reset-order', orderId);
+  runDbProbe('reset-checkout', checkoutId);
 });
 
-test('customer can choose and confirm one shipping preference for seeded order 12', async ({ page }) => {
+test('customer can choose and confirm one shipping preference for seeded checkout 17', async ({ page }) => {
   // The test starts from a known seed state where checkout.option_id is empty.
-  expect(runDbProbe('get-selected-option', orderId)).toBe('NULL');
-  expect(runDbProbe('get-option-count', orderId)).toBe('0');
+  expect(runDbProbe('get-selected-option', checkoutId)).toBe('NULL');
+  expect(runDbProbe('get-option-count', checkoutId)).toBe('0');
 
   await page.goto('/');
-  await page.getByLabel('Feature 1 Shipping Options').fill(orderId);
+  await page.getByLabel('Feature 1 Checkout Shipping Options').fill(checkoutId);
   await page.getByRole('button', { name: 'Open' }).click();
 
   await expect(page.getByRole('heading', { name: 'Choose a shipping preference' })).toBeVisible();
@@ -56,7 +56,7 @@ test('customer can choose and confirm one shipping preference for seeded order 1
   await expect(page.getByRole('heading', { name: 'Cheapest' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Greenest' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Confirm preference' })).toHaveCount(3);
-  expect(runDbProbe('get-option-count', orderId)).toBe('0');
+  expect(runDbProbe('get-option-count', checkoutId)).toBe('0');
 
   await page.getByRole('button', { name: 'Confirm preference' }).first().click();
 
@@ -66,6 +66,6 @@ test('customer can choose and confirm one shipping preference for seeded order 1
   const selectedOptionId = details[1].trim();
 
   // Confirm that the UI selection also changed the persisted checkout row.
-  expect(runDbProbe('get-selected-option', orderId)).toBe(selectedOptionId);
-  expect(runDbProbe('get-option-count', orderId)).toBe('1');
+  expect(runDbProbe('get-selected-option', checkoutId)).toBe(selectedOptionId);
+  expect(runDbProbe('get-option-count', checkoutId)).toBe('1');
 });

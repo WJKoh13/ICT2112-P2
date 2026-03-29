@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using ProRental.Data.Interfaces;
 using ProRental.Data.UnitOfWork;
 using ProRental.Domain.Enums;
+using ProRental.Interfaces;
 using ProRental.Interfaces.Module2.P2_3;
 using ProRental.Interfaces.Module3.P2_1;
 using ProRental.Models.Module3.P2_1;
@@ -9,17 +10,17 @@ using ProRental.Models.Module3.P2_1;
 namespace ProRental.Domain.Controls;
 
 /// <summary>
-/// Order-backed adapter retained for non-checkout shipping workflows such as
-/// batch consolidation. Feature 1 itself now uses checkout-backed inputs.
+/// Checkout-backed Module 1 adapter used by Feature 1. It exposes only the checkout
+/// inputs needed to construct a shipping option set.
 /// by: ernest
 /// </summary>
-public sealed class ShippingOrderContextService : IOrderService
+public sealed class ShippingCheckoutContextService : ICheckoutShippingContextService
 {
     private readonly AppDbContext _context;
     private readonly IInventoryService _inventoryService;
     private readonly ITransportationHubMapper _transportationHubMapper;
 
-    public ShippingOrderContextService(
+    public ShippingCheckoutContextService(
         AppDbContext context,
         IInventoryService inventoryService,
         ITransportationHubMapper transportationHubMapper)
@@ -29,33 +30,33 @@ public sealed class ShippingOrderContextService : IOrderService
         _transportationHubMapper = transportationHubMapper;
     }
 
-    public async Task<OrderShippingContext?> GetShippingContextAsync(
-        int orderId,
+    public async Task<CheckoutShippingContext?> GetShippingContextAsync(
+        int checkoutId,
         CancellationToken cancellationToken = default)
     {
-        var order = await _context.Orders
+        var checkout = await _context.Checkouts
             .Include(entity => entity.Customer)
-            .Include(entity => entity.Orderitems)
-                .ThenInclude(item => item.Product)
-                    .ThenInclude(product => product.Productdetail)
+            .Include(entity => entity.Cart)
             .AsNoTracking()
-            .FirstOrDefaultAsync(entity => EF.Property<int>(entity, "Orderid") == orderId, cancellationToken);
+            .FirstOrDefaultAsync(entity => EF.Property<int>(entity, "Checkoutid") == checkoutId, cancellationToken);
 
-        if (order is null)
+        if (checkout is null)
         {
             return null;
         }
 
-        var destinationAddress = order.Customer.GetAddress();
+        var destinationAddress = checkout.Customer.GetAddress();
         if (string.IsNullOrWhiteSpace(destinationAddress))
         {
-            throw new InvalidOperationException($"Order '{orderId}' does not have a delivery address.");
+            throw new InvalidOperationException($"Checkout '{checkoutId}' does not have a delivery address.");
         }
 
-        var orderContext = order.GetOrderContext();
-        var orderItems = await _context.Orderitems
+        var checkoutContext = checkout.GetCheckoutContext();
+        var selectedCartItems = await _context.Cartitems
             .AsNoTracking()
-            .Where(entity => EF.Property<int>(entity, "Orderid") == orderId)
+            .Where(entity =>
+                EF.Property<int>(entity, "Cartid") == checkoutContext.CartId &&
+                EF.Property<bool?>(entity, "Isselected") == true)
             .Select(entity => new
             {
                 ProductId = EF.Property<int>(entity, "Productid"),
@@ -63,23 +64,23 @@ public sealed class ShippingOrderContextService : IOrderService
             })
             .ToListAsync(cancellationToken);
 
-        if (orderItems.Count == 0)
+        if (selectedCartItems.Count == 0)
         {
-            throw new InvalidOperationException($"Order '{orderId}' does not contain any order items.");
+            throw new InvalidOperationException($"Checkout '{checkoutId}' does not contain any selected cart items.");
         }
 
         var warehouseHub = _transportationHubMapper.FindByType(HubType.WAREHOUSE)
             .FirstOrDefault(hub => hub.GetHubId() > 0)
             ?? throw new InvalidOperationException("No warehouse hub is configured for shipping route generation.");
 
-        var items = orderItems
-            .GroupBy(orderItem => orderItem.ProductId)
+        var items = selectedCartItems
+            .GroupBy(cartItem => cartItem.ProductId)
             .Select(group =>
             {
                 var unitWeightKg = (double)_inventoryService.GetProductWeight(group.Key);
-                return new OrderShippingItem(
+                return new CheckoutShippingItem(
                     group.Key,
-                    group.Sum(orderItem => orderItem.Quantity),
+                    group.Sum(cartItem => cartItem.Quantity),
                     unitWeightKg);
             })
             .OrderBy(item => item.ProductId)
@@ -87,10 +88,9 @@ public sealed class ShippingOrderContextService : IOrderService
 
         var totalShipmentWeightKg = items.Sum(item => item.Quantity * item.UnitWeightKg);
 
-        return new OrderShippingContext(
-            orderContext.OrderId,
-            orderContext.CustomerId,
-            orderContext.CheckoutId,
+        return new CheckoutShippingContext(
+            checkoutId,
+            checkoutContext.CustomerId,
             destinationAddress,
             warehouseHub.GetHubId(),
             items,

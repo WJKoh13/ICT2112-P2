@@ -30,4 +30,6 @@ public partial class Checkout
     public virtual ShippingOption? Option { get; private set; }
 
     public virtual ICollection<Order> Orders { get; private set; } = new List<Order>();
+
+    public virtual ShippingOption? ShippingOption { get; private set; }
 }

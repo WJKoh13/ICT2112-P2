@@ -51,7 +51,5 @@ public partial class Order
 
     public virtual ICollection<Shipment> Shipments { get; private set; } = new List<Shipment>();
 
-    public virtual ICollection<ShippingOption> ShippingOptions { get; private set; } = new List<ShippingOption>();
-
     public virtual Transaction? Transaction { get; private set; }
 }

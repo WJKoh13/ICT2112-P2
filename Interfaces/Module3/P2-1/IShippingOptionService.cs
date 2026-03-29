@@ -8,8 +8,8 @@ namespace ProRental.Interfaces.Module3.P2_1;
 /// </summary>
 public interface IShippingOptionService
 {
-    Task<IReadOnlyList<ShippingPreferenceCard>> GetPreferenceChoicesForOrderAsync(
-        int orderId,
+    Task<IReadOnlyList<ShippingPreferenceCard>> GetPreferenceChoicesForCheckoutAsync(
+        int checkoutId,
         CancellationToken cancellationToken = default);
 
     Task<ShippingSelectionResult> ConfirmPreferenceSelectionAsync(

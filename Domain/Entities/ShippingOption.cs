@@ -20,15 +20,15 @@ public partial class ShippingOption
     private int? _deliveryDays;
     private int? DeliveryDays { get => _deliveryDays; set => _deliveryDays = value; }
 
-    private int? _orderId;
-    private int? OrderId { get => _orderId; set => _orderId = value; }
+    private int _checkoutId;
+    private int CheckoutId { get => _checkoutId; set => _checkoutId = value; }
 
     private int? _routeId;
     private int? RouteId { get => _routeId; set => _routeId = value; }
 
-    public virtual ICollection<Checkout> Checkouts { get; private set; } = new List<Checkout>();
+    public virtual Checkout Checkout { get; private set; } = null!;
 
-    public virtual Order? Order { get; private set; }
+    public virtual ICollection<Checkout> Checkouts { get; private set; } = new List<Checkout>();
 
     public virtual DeliveryRoute? Route { get; private set; }
 }

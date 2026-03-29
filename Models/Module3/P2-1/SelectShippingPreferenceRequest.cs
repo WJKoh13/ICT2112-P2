@@ -6,4 +6,4 @@ namespace ProRental.Models.Module3.P2_1;
 /// Customer selection payload for the deferred Feature 1 preference flow.
 /// by: ernest
 /// </summary>
-public sealed record SelectShippingPreferenceRequest(int OrderId, PreferenceType PreferenceType);
+public sealed record SelectShippingPreferenceRequest(int CheckoutId, PreferenceType PreferenceType);

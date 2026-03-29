@@ -16,7 +16,7 @@ public partial class ShippingOption
     private TransportMode? TransportMode { get => _transportMode; set => _transportMode = value; }
 
     public void ConfigureGeneratedOption(
-        int orderId,
+        int checkoutId,
         int? routeId,
         PreferenceType preferenceType,
         string displayName,
@@ -27,7 +27,7 @@ public partial class ShippingOption
     {
         // Feature 1 applies the generated checkout snapshot in one operation so callers
         // do not need field-by-field mutation against the EF entity.
-        _orderId = orderId;
+        _checkoutId = checkoutId;
         _routeId = routeId;
         _displayName = displayName;
         _cost = cost;
@@ -37,9 +37,9 @@ public partial class ShippingOption
         _transportMode = transportMode;
     }
 
-    public bool BelongsToOrder(int orderId)
+    public bool BelongsToCheckout(int checkoutId)
     {
-        return _orderId.HasValue && _orderId.Value == orderId;
+        return _checkoutId == checkoutId;
     }
 
     public ShippingOptionSummary GetSummary()
@@ -50,7 +50,7 @@ public partial class ShippingOption
         // The summary is the stable read model shared with the controller, views, and tests.
         return new ShippingOptionSummary(
             _optionId,
-            _orderId ?? 0,
+            _checkoutId,
             preferenceType,
             _displayName ?? string.Empty,
             _cost ?? 0m,
@@ -65,7 +65,7 @@ public partial class ShippingOption
     {
         var summary = GetSummary();
         return new ShippingSelectionResult(
-            summary.OrderId,
+            summary.CheckoutId,
             summary.OptionId,
             summary.PreferenceType,
             summary.Cost,

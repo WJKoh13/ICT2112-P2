@@ -1,7 +1,7 @@
 namespace ProRental.Models.Module3.P2_1;
 
 /// <summary>
-/// Stable checkout input snapshot passed from the order side into Feature 1 option generation.
+/// Stable order input snapshot passed into shipping and batching flows.
 /// by: ernest
 /// </summary>
 public sealed record OrderShippingItem(
@@ -10,7 +10,7 @@ public sealed record OrderShippingItem(
     double UnitWeightKg);
 
 /// <summary>
-/// Aggregate checkout input snapshot passed from the order side into Feature 1 option generation.
+/// Aggregate order input snapshot passed into shipping and batching flows.
 /// by: ernest
 /// </summary>
 public sealed record OrderShippingContext(

@@ -257,7 +257,9 @@ INSERT INTO Session (userId, role, createdAt, expiresAt) VALUES
 (12, 'STAFF',    NOW() - INTERVAL '2 hours',  NOW() + INTERVAL '6 hours'),   -- 14 ACTIVE
 (15, 'STAFF',    NOW() - INTERVAL '3 hours',  NOW() - INTERVAL '30 mins'),   -- 15 expired
 -- 16 overseas Japan shipping test session (userId 16)
-(16, 'CUSTOMER', NOW() - INTERVAL '45 mins',  NOW() + INTERVAL '23 hours');  -- 16 ACTIVE
+(16, 'CUSTOMER', NOW() - INTERVAL '45 mins',  NOW() + INTERVAL '23 hours'),  -- 16 ACTIVE
+-- 17 checkout-only Feature 1 fixture session (userId 2)
+(2,  'CUSTOMER', NOW() - INTERVAL '20 mins',  NOW() + INTERVAL '23 hours');  -- 17 ACTIVE
 
 -- ================================================================
 -- 2. CART (16 rows)
@@ -288,7 +290,9 @@ INSERT INTO Cart (customerId, sessionId, rentalStart, rentalEnd, status) VALUES
 -- Abandoned / active
 (5,  5,  NOW() - INTERVAL '8 days',  NOW() - INTERVAL '5 days',  'EXPIRED'),      -- 15 abandoned (led to cancelled order)
 -- Overseas Japan shipping test cart (customerId 12, sessionId 16)
-(12, 16, NOW() + INTERVAL '2 days',  NOW() + INTERVAL '6 days',  'CHECKED_OUT');  -- 16
+(12, 16, NOW() + INTERVAL '2 days',  NOW() + INTERVAL '6 days',  'CHECKED_OUT'),  -- 16
+-- Cart 17: checkout-only Feature 1 fixture
+(2,  17, NOW() + INTERVAL '4 days',  NOW() + INTERVAL '8 days',  'CHECKED_OUT');  -- 17
 
 -- ================================================================
 -- 3. CART ITEM
@@ -341,10 +345,13 @@ INSERT INTO CartItem (cartId, productId, quantity, isSelected) VALUES
 (15, 4, 1, FALSE),  -- deselected before abandoning
 (15, 6, 1, TRUE),
 -- Cart 16: overseas Japan shipping test fixture (single rentable item)
-(16, 2, 1, TRUE);
+(16, 2, 1, TRUE),
+-- Cart 17: checkout-only Feature 1 fixture
+(17, 1, 1, TRUE),
+(17, 5, 1, TRUE);
 
 -- ================================================================
--- 4. CHECKOUT (16 rows)
+-- 4. CHECKOUT (17 rows)
 -- checkout_status_enum: IN_PROGRESS | CONFIRMED | CANCELLED
 -- All columns now provided including cartId
 -- ================================================================
@@ -365,7 +372,9 @@ INSERT INTO Checkout (customerId, cartId, paymentMethodType, status, notifyOptIn
 (3,  14, 'CREDIT_CARD', 'IN_PROGRESS', TRUE,  NOW() - INTERVAL '2 hours'),  -- 14
 (5,  15, 'CREDIT_CARD', 'CANCELLED',   FALSE, NOW() - INTERVAL '8 days'),   -- 15
 -- Checkout 16: overseas Japan shipping test fixture
-(12, 16, 'CREDIT_CARD', 'CONFIRMED',   TRUE,  NOW() - INTERVAL '45 mins');  -- 16
+(12, 16, 'CREDIT_CARD', 'CONFIRMED',   TRUE,  NOW() - INTERVAL '45 mins'),  -- 16
+-- Checkout 17: checkout-only Feature 1 fixture (no Order row)
+(2,  17, 'CREDIT_CARD', 'IN_PROGRESS', TRUE,  NOW() - INTERVAL '20 mins');  -- 17
 
 
 -- ================================================================

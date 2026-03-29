@@ -7,7 +7,7 @@ namespace ProRental.Models.Module3.P2_1;
 /// by: ernest
 /// </summary>
 public sealed record ShippingPreferenceCard(
-    int OrderId,
+    int CheckoutId,
     PreferenceType PreferenceType,
     string DisplayName,
     string Description,

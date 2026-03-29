@@ -4,7 +4,7 @@
 @* by: ernest *@
 @{
     ViewData["Title"] = "Shipping Options";
-    var orderId = Model.FirstOrDefault()?.OrderId ?? 0;
+    var checkoutId = Model.FirstOrDefault()?.CheckoutId ?? 0;
 }
 
 <section class="py-4">
@@ -48,7 +48,7 @@
                             </dl>
 
                             <form asp-action="SelectShippingPreference" method="post" class="mt-auto">
-                                <input type="hidden" name="orderId" value="@option.OrderId" />
+                                <input type="hidden" name="checkoutId" value="@option.CheckoutId" />
                                 <input type="hidden" name="preferenceType" value="@option.PreferenceType" />
                                 <button type="submit" class="btn btn-primary w-100">Confirm preference</button>
                             </form>

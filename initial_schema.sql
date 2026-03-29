@@ -246,9 +246,10 @@ CREATE TABLE shipping_option (
     carbonFootprintKg DOUBLE PRECISION,
     delivery_days    INT,
     preference_type  preference_type,
-    order_id         INT,
+    checkout_id      INT NOT NULL,
     transport_mode   transport_mode,
     route_id         INT,
+    CONSTRAINT uq_shipping_option_checkout UNIQUE (checkout_id),
     CONSTRAINT fk_shipping_option_route FOREIGN KEY (route_id)
         REFERENCES delivery_route(route_id)
 );
@@ -1258,8 +1259,8 @@ ALTER TABLE batch_order
 
 -- Team 1 → Team 6 & Team 3: shipping_option and return_stage references
 ALTER TABLE shipping_option
-    ADD CONSTRAINT fk_shipping_option_order
-        FOREIGN KEY (order_id) REFERENCES "Order"(orderId);
+    ADD CONSTRAINT fk_shipping_option_checkout
+        FOREIGN KEY (checkout_id) REFERENCES Checkout(checkoutId) ON DELETE CASCADE;
 ALTER TABLE return_stage
     ADD CONSTRAINT fk_return_stage_return_request
         FOREIGN KEY (return_id) REFERENCES ReturnRequest(ReturnRequestId);

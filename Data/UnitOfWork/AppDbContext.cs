@@ -2336,6 +2336,9 @@ public partial class AppDbContext : DbContext
 
             entity.ToTable("shipping_option");
 
+            // entity.HasIndex("CheckoutId", "uq_shipping_option_checkout").IsUnique();
+            entity.HasIndex("CheckoutId").HasDatabaseName("uq_shipping_option_checkout").IsUnique();
+
             entity.Property("OptionId")
                 .HasField("_optionId")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
@@ -2344,6 +2347,9 @@ public partial class AppDbContext : DbContext
             entity.Property("Carbonfootprintkg")
                 .HasField("_carbonfootprintkg")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("carbonfootprintkg");
+            entity.Property("CheckoutId")
+                .HasField("_checkoutId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("checkout_id");
             entity.Property("Cost")
                 .HasField("_cost")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
@@ -2357,16 +2363,13 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(255)
                 .HasColumnName("display_name");
-            entity.Property("OrderId")
-                .HasField("_orderId")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("order_id");
             entity.Property("RouteId")
                 .HasField("_routeId")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("route_id");
 
-            entity.HasOne(d => d.Order).WithMany(p => p.ShippingOptions)
-                .HasForeignKey("OrderId")
-                .HasConstraintName("fk_shipping_option_order");
+            entity.HasOne(d => d.Checkout).WithOne(p => p.ShippingOption)
+                .HasForeignKey<ShippingOption>("CheckoutId")
+                .HasConstraintName("fk_shipping_option_checkout");
 
             entity.HasOne(d => d.Route).WithMany(p => p.ShippingOptions)
                 .HasForeignKey("RouteId")

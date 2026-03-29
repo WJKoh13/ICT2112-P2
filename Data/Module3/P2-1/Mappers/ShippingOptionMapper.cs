@@ -47,6 +47,18 @@ public sealed class ShippingOptionMapper : IShippingOptionMapper
             .FirstOrDefaultAsync(option => EF.Property<int>(option, "OptionId") == optionId, cancellationToken);
     }
 
+    public Task<int?> FindSelectedRouteIdByOrderIdAsync(int orderId, CancellationToken cancellationToken = default)
+    {
+        return (from order in _context.Orders
+                join checkout in _context.Checkouts
+                    on EF.Property<int>(order, "Checkoutid") equals EF.Property<int>(checkout, "Checkoutid")
+                join shippingOption in _context.ShippingOptions
+                    on EF.Property<int?>(checkout, "OptionId") equals EF.Property<int>(shippingOption, "OptionId")
+                where EF.Property<int>(order, "Orderid") == orderId
+                select EF.Property<int?>(shippingOption, "RouteId"))
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public async Task AddAsync(ShippingOption option, CancellationToken cancellationToken = default)
     {
         await _context.ShippingOptions.AddAsync(option, cancellationToken);

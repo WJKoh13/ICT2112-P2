@@ -11,6 +11,7 @@ public interface IShippingOptionMapper
     Task<Checkout?> FindCheckoutAsync(int checkoutId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<ShippingOption>> FindByCheckoutIdAsync(int checkoutId, CancellationToken cancellationToken = default);
     Task<ShippingOption?> FindByIdAsync(int optionId, CancellationToken cancellationToken = default);
+    Task<int?> FindSelectedRouteIdByOrderIdAsync(int orderId, CancellationToken cancellationToken = default);
     Task AddAsync(ShippingOption option, CancellationToken cancellationToken = default);
     Task AddRangeAsync(IEnumerable<ShippingOption> options, CancellationToken cancellationToken = default);
     Task UpdateAsync(ShippingOption option, CancellationToken cancellationToken = default);

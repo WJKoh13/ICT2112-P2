@@ -1,30 +1,33 @@
-using Microsoft.EntityFrameworkCore;
 using ProRental.Data.Interfaces;
-using ProRental.Data.UnitOfWork;
+using ProRental.Data.Module3.P2_1.Interfaces;
 using ProRental.Domain.Entities;
 using ProRental.Domain.Enums;
 using ProRental.Interfaces.Module3.P2_1;
+using ProRental.Models.Module3.P2_1;
 
-namespace ProRental.Domain.Controls;
+namespace ProRental.Domain.Module3.P2_1.Controls;
 
 /// <summary>
 /// Main routing orchestrator for Module 3 / P2-1. It creates a structured
-/// multi-modal route for Feature 1 and exposes first-mile route lookup for Feature 6.
+/// multi-modal route for Feature 1 and exposes main-transport route lookup for Feature 6.
 /// </summary>
 public sealed class RouteManager : IRoutingService, IRouteQueryService
 {
-    private readonly AppDbContext _context;
+    private readonly IRouteMapper _routeMapper;
     private readonly ITransportationHubMapper _transportationHubMapper;
     private readonly IRouteLegBuilder _routeLegBuilder;
+    private readonly IRouteDistanceCalculator _routeDistanceCalculator;
 
     public RouteManager(
-        AppDbContext context,
+        IRouteMapper routeMapper,
         ITransportationHubMapper transportationHubMapper,
-        IRouteLegBuilder routeLegBuilder)
+        IRouteLegBuilder routeLegBuilder,
+        IRouteDistanceCalculator routeDistanceCalculator)
     {
-        _context = context;
+        _routeMapper = routeMapper;
         _transportationHubMapper = transportationHubMapper;
         _routeLegBuilder = routeLegBuilder;
+        _routeDistanceCalculator = routeDistanceCalculator;
     }
 
     public async Task<DeliveryRoute> CreateMultiModalRouteAsync(string origin, string destination, List<TransportMode> modes)
@@ -44,40 +47,23 @@ public sealed class RouteManager : IRoutingService, IRouteQueryService
             throw new ArgumentException("At least one transport mode is required.", nameof(modes));
         }
 
-        var orderedModes = modes
-            .Distinct()
-            .ToList();
-
-        for (var index = 0; index < orderedModes.Count; index++)
-        {
-            var mode = orderedModes[index];
-
-            try
-            {
-                return await CreateRouteForModeAsync(origin, destination, mode);
-            }
-            catch (RouteResolutionException exception) when (index < orderedModes.Count - 1 && ShouldTryNextMode(mode, orderedModes[index + 1], exception))
-            {
-                continue;
-            }
-        }
-
-        throw new InvalidOperationException("Route resolution exhausted all transport-mode fallbacks without producing a route.");
+        var routeModeProfile = RouteModeInputAdapter.ResolveProfile(modes);
+        return await CreateRouteAsync(origin, destination, routeModeProfile);
     }
 
-    private async Task<DeliveryRoute> CreateRouteForModeAsync(string origin, string destination, TransportMode mode)
+    private async Task<DeliveryRoute> CreateRouteAsync(string origin, string destination, RouteModeProfile routeModeProfile)
     {
-        var routeContext = ResolveRouteContext(origin, destination, mode);
+        var routeContext = ResolveRouteContext(origin, destination, routeModeProfile);
 
         var route = new DeliveryRoute();
-        route.SetOriginAddress(routeContext.WarehousePoint.Address);
-        route.SetDestinationAddress(routeContext.DestinationPoint.Address);
+        route.SetOriginAddress(routeContext.WarehouseAddress);
+        route.SetDestinationAddress(routeContext.DestinationAddress);
         route.SetIsValid(true);
 
         var routeLegs = await BuildRouteLegsAsync(routeContext);
         foreach (var routeLeg in routeLegs)
         {
-            route.RouteLegs.Add(routeLeg);
+            route.addLeg(routeLeg);
         }
 
         route.SetTotalDistanceKm((double)Math.Round(
@@ -85,84 +71,106 @@ public sealed class RouteManager : IRoutingService, IRouteQueryService
             2,
             MidpointRounding.AwayFromZero));
 
-        _context.DeliveryRoutes.Add(route);
-        await _context.SaveChangesAsync();
+        await _routeMapper.AddAsync(route);
+        await _routeMapper.SaveChangesAsync();
 
         return route;
     }
 
-    public RouteLeg retrieveFirstMileLeg(int routeId)
+    public RouteLeg retrieveMainTransportLeg(int routeId)
     {
         if (routeId <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(routeId));
         }
 
-        return _context.RouteLegs
-            .AsNoTracking()
-            .FirstOrDefault(routeLeg =>
-                EF.Property<int>(routeLeg, "RouteId") == routeId &&
-                routeLeg.GetIsFirstMile() == true)
-            ?? throw new InvalidOperationException($"First-mile route leg for route '{routeId}' was not found.");
+        return _routeMapper.RetrieveMainTransportLeg(routeId)
+            ?? throw new InvalidOperationException($"Main transport route leg for route '{routeId}' was not found.");
     }
 
     private async Task<List<RouteLeg>> BuildRouteLegsAsync(RouteContext routeContext)
     {
-        var originHubPoint = routeContext.OriginHubPoint;
-        var destinationHubPoint = routeContext.DestinationHubPoint;
+        var originHub = routeContext.OriginHub;
+        var destinationHub = routeContext.DestinationHub;
 
-        return routeContext.MainTransportMode switch
+        return routeContext.UseThreeLegRoute switch
         {
-            TransportMode.PLANE or TransportMode.SHIP =>
+            true =>
             [
-                await _routeLegBuilder.BuildFirstMileLegAsync(routeContext.WarehousePoint, originHubPoint ?? throw new RouteResolutionException("Origin hub address is required for multi-leg route generation.")),
-                await _routeLegBuilder.BuildMainTransportLegAsync(2, originHubPoint ?? throw new RouteResolutionException("Origin hub address is required for multi-leg route generation."), destinationHubPoint ?? throw new RouteResolutionException("Destination hub address is required for multi-leg route generation."), routeContext.MainTransportMode),
-                await _routeLegBuilder.BuildLastMileLegAsync(3, destinationHubPoint ?? throw new RouteResolutionException("Destination hub address is required for multi-leg route generation."), routeContext.DestinationPoint)
+                await _routeLegBuilder.BuildFirstMileLegAsync(
+                    routeContext.WarehouseHub,
+                    originHub ?? throw new RouteResolutionException("Origin hub is required for multi-leg route generation."),
+                    routeContext.FirstMileMode),
+                await _routeLegBuilder.BuildMainTransportLegAsync(
+                    originHub ?? throw new RouteResolutionException("Origin hub is required for multi-leg route generation."),
+                    destinationHub ?? throw new RouteResolutionException("Destination hub is required for multi-leg route generation."),
+                    routeContext.MainTransportMode),
+                await _routeLegBuilder.BuildLastMileLegAsync(
+                    destinationHub ?? throw new RouteResolutionException("Destination hub is required for multi-leg route generation."),
+                    routeContext.DestinationAddress,
+                    routeContext.LastMileMode)
             ],
-            TransportMode.TRAIN or TransportMode.TRUCK =>
+            false =>
             [
-                await _routeLegBuilder.BuildMainTransportLegAsync(1, routeContext.WarehousePoint, routeContext.DestinationPoint, routeContext.MainTransportMode)
+                await BuildDirectMainLegAsync(routeContext)
             ],
-            _ => throw new RouteResolutionException($"Transport mode '{routeContext.MainTransportMode}' is not supported for route generation.")
         };
     }
 
-    private RouteContext ResolveRouteContext(string origin, string destination, TransportMode mainTransportMode)
+    private async Task<RouteLeg> BuildDirectMainLegAsync(RouteContext routeContext)
+    {
+        var routeLeg = await BuildDirectLegAsync(
+            routeContext.WarehouseAddress,
+            routeContext.DestinationAddress,
+            routeContext.MainTransportMode);
+        routeLeg.SetSequence(1);
+        return routeLeg;
+    }
+
+    private RouteContext ResolveRouteContext(string origin, string destination, RouteModeProfile routeModeProfile)
     {
         var warehouseHub = ResolveWarehouseHub();
         var customerAddress = EnsureAddress(destination, "Customer destination address");
-        var warehousePoint = ToRouteDistancePoint(warehouseHub);
-        var customerPoint = new RouteDistancePoint(customerAddress);
         var warehouseCountryCode = RouteCountryCodeResolver.ResolveWarehouseCountryCode(warehouseHub);
         var destinationCountryCode = RouteCountryCodeResolver.ResolveAddressCountryCode(customerAddress, "Customer destination address");
 
-        return mainTransportMode switch
+        return routeModeProfile switch
         {
-            TransportMode.PLANE => ResolveHubRouteContext(warehousePoint, customerPoint, warehouseCountryCode, destinationCountryCode, TransportMode.PLANE, HubType.AIRPORT, "airport"),
-            TransportMode.SHIP => ResolveHubRouteContext(warehousePoint, customerPoint, warehouseCountryCode, destinationCountryCode, TransportMode.SHIP, HubType.SHIPPING_PORT, "shipping port"),
-            TransportMode.TRAIN or TransportMode.TRUCK => new RouteContext(
-                warehousePoint,
-                customerPoint,
-                mainTransportMode,
-                OriginHubPoint: null,
-                DestinationHubPoint: null),
-            _ => throw new RouteResolutionException($"Transport mode '{mainTransportMode}' is not supported for route generation.")
+            { UseThreeLegRoute: true, MainTransportMode: TransportMode.PLANE } => ResolveHubRouteContext(
+                warehouseHub,
+                customerAddress,
+                warehouseCountryCode,
+                destinationCountryCode,
+                routeModeProfile,
+                HubType.AIRPORT,
+                "airport"),
+            { UseThreeLegRoute: true, MainTransportMode: TransportMode.SHIP } => ResolveHubRouteContext(
+                warehouseHub,
+                customerAddress,
+                warehouseCountryCode,
+                destinationCountryCode,
+                routeModeProfile,
+                HubType.SHIPPING_PORT,
+                "shipping port"),
+            { UseThreeLegRoute: false, MainTransportMode: TransportMode.TRAIN or TransportMode.TRUCK } => new RouteContext(
+                warehouseHub,
+                customerAddress,
+                routeModeProfile.FirstMileMode,
+                routeModeProfile.MainTransportMode,
+                routeModeProfile.LastMileMode,
+                UseThreeLegRoute: false,
+                OriginHub: null,
+                DestinationHub: null),
+            _ => throw new RouteResolutionException($"Transport mode profile '{routeModeProfile.MainTransportMode}' is not supported for route generation.")
         };
     }
 
-    private static bool ShouldTryNextMode(TransportMode currentMode, TransportMode nextMode, RouteResolutionException exception)
-    {
-        return currentMode == TransportMode.TRAIN &&
-               nextMode == TransportMode.SHIP &&
-               exception.Message.Contains("did not return a route distance", StringComparison.Ordinal);
-    }
-
     private RouteContext ResolveHubRouteContext(
-        RouteDistancePoint warehousePoint,
-        RouteDistancePoint customerPoint,
+        TransportationHub warehouseHub,
+        string customerAddress,
         string warehouseCountryCode,
         string destinationCountryCode,
-        TransportMode mainTransportMode,
+        RouteModeProfile routeModeProfile,
         HubType hubType,
         string hubLabel)
     {
@@ -176,29 +184,32 @@ public sealed class RouteManager : IRoutingService, IRouteQueryService
             hubsByAddress,
             warehouseCountryCode,
             hubLabel,
-            mainTransportMode,
+            routeModeProfile.MainTransportMode,
             "warehouse");
 
         var destinationHub = ResolveCountryMatchedHub(
             hubsByAddress,
             destinationCountryCode,
             hubLabel,
-            mainTransportMode,
+            routeModeProfile.MainTransportMode,
             "customer destination",
             excludedAddress: originHub.GetAddress());
 
         if (string.Equals(originHub.GetAddress(), destinationHub.GetAddress(), StringComparison.OrdinalIgnoreCase))
         {
             throw new RouteResolutionException(
-                $"Distinct {hubLabel} addresses are required for {mainTransportMode} route generation between '{warehouseCountryCode}' and '{destinationCountryCode}'.");
+                $"Distinct {hubLabel} addresses are required for {routeModeProfile.MainTransportMode} route generation between '{warehouseCountryCode}' and '{destinationCountryCode}'.");
         }
 
         return new RouteContext(
-            warehousePoint,
-            customerPoint,
-            mainTransportMode,
-            ToRouteDistancePoint(originHub),
-            ToRouteDistancePoint(destinationHub));
+            warehouseHub,
+            customerAddress,
+            routeModeProfile.FirstMileMode,
+            routeModeProfile.MainTransportMode,
+            routeModeProfile.LastMileMode,
+            UseThreeLegRoute: true,
+            originHub,
+            destinationHub);
     }
 
     private TransportationHub ResolveWarehouseHub()
@@ -260,18 +271,35 @@ public sealed class RouteManager : IRoutingService, IRouteQueryService
         return address;
     }
 
-    private static RouteDistancePoint ToRouteDistancePoint(TransportationHub hub)
+    private async Task<RouteLeg> BuildDirectLegAsync(string originAddress, string destinationAddress, TransportMode transportMode)
     {
-        return new RouteDistancePoint(
-            EnsureAddress(hub.GetAddress(), "Hub address"),
-            hub.GetLatitude(),
-            hub.GetLongitude());
+        var originPoint = new RouteDistancePoint(EnsureAddress(originAddress, "Warehouse address"));
+        var destinationPoint = new RouteDistancePoint(EnsureAddress(destinationAddress, "Customer destination address"));
+        var distanceKm = await _routeDistanceCalculator.CalculateLegDistanceKmAsync(transportMode, originPoint, destinationPoint);
+
+        var routeLeg = new RouteLeg();
+        routeLeg.ConfigureLeg(
+            sequence: 2,
+            originPoint.Address,
+            destinationPoint.Address,
+            distanceKm,
+            transportMode,
+            isFirstMile: false,
+            isMainTransport: true,
+            isLastMile: false);
+        return routeLeg;
     }
 
     private sealed record RouteContext(
-        RouteDistancePoint WarehousePoint,
-        RouteDistancePoint DestinationPoint,
+        TransportationHub WarehouseHub,
+        string DestinationAddress,
+        TransportMode FirstMileMode,
         TransportMode MainTransportMode,
-        RouteDistancePoint? OriginHubPoint,
-        RouteDistancePoint? DestinationHubPoint);
+        TransportMode LastMileMode,
+        bool UseThreeLegRoute,
+        TransportationHub? OriginHub,
+        TransportationHub? DestinationHub)
+    {
+        public string WarehouseAddress => EnsureAddress(WarehouseHub.GetAddress(), "Warehouse address");
+    }
 }

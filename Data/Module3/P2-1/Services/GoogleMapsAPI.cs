@@ -1,16 +1,16 @@
 using System.Net.Http.Json;
 using Microsoft.Extensions.Configuration;
 using ProRental.Configuration.Module3.P2_1;
-using ProRental.Domain.Controls;
+using ProRental.Domain.Module3.P2_1.Controls;
 using ProRental.Interfaces.Module3.P2_1;
 
-namespace ProRental.Domain.Module3.P2_1.Controls;
+namespace ProRental.Data.Module3.P2_1.Services;
 
 /// <summary>
 /// Thin Google Maps Routes API boundary used by the route-distance feature when
 /// local configuration provides a valid API key.
 /// </summary>
-public sealed class GoogleMapsAPI : IGoogleMapsApi
+public sealed class GoogleMapsAPI : IGoogleMapsAPI
 {
     private const string RoutesEndpoint = "directions/v2:computeRoutes";
 

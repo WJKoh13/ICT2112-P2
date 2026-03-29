@@ -1,6 +1,6 @@
 namespace ProRental.Interfaces.Module3.P2_1;
 
-public interface IGoogleMapsApi
+public interface IGoogleMapsAPI
 {
     Task<double> FetchRouteDistanceKmAsync(
         string origin,

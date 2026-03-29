@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using ProRental.Data.Interfaces;
 using ProRental.Data.UnitOfWork;
 using ProRental.Domain.Enums;
-using ProRental.Interfaces;
+using ProRental.Interfaces.Module2.P2_3;
 using ProRental.Interfaces.Module3.P2_1;
 using ProRental.Models.Module3.P2_1;
 

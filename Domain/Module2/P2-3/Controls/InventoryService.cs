@@ -1,21 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using ProRental.Data.UnitOfWork;
 using ProRental.Domain.Entities;
-using ProRental.Interfaces;
+using ProRental.Interfaces.Module2.P2_3;
 
-namespace ProRental.Domain.Control;
+namespace ProRental.Domain.Module2.P2_3.Controls;
 
-/// <summary>
-/// DUMMY implementation of IInventoryService.
-/// Temporary stand-in until Module 2 provides their real implementation.
-/// Reads product data directly from AppDbContext.
-/// TODO: Remove this class and replace DI registration with Module 2's real service.
-/// </summary>
-public class DummyInventoryService : IInventoryService
+public class InventoryService : IInventoryService
 {
     private readonly AppDbContext _context;
 
-    public DummyInventoryService(AppDbContext context)
+    public InventoryService(AppDbContext context)
     {
         _context = context;
     }
@@ -43,8 +37,6 @@ public class DummyInventoryService : IInventoryService
         var product = GetProductById(productId);
         if (product?.Productdetail == null) return 0;
 
-        // Access weight via the Productdetail navigation property
-        // Productdetail._weight is private, so we use EF to project it
         var weight = _context.Set<Productdetail>()
             .Where(pd => EF.Property<int>(pd, "Productid") == productId)
             .Select(pd => EF.Property<decimal?>(pd, "Weight"))
@@ -57,7 +49,6 @@ public class DummyInventoryService : IInventoryService
     {
         var now = DateTime.UtcNow;
 
-        // Get each individual inventory item
         var inventoryItems = _context.Set<Inventoryitem>()
             .Select(i => new
             {
@@ -68,7 +59,6 @@ public class DummyInventoryService : IInventoryService
             })
             .ToList();
 
-        // Get product names
         var productDetails = _context.Set<Productdetail>()
             .Select(pd => new
             {
@@ -100,7 +90,6 @@ public class DummyInventoryService : IInventoryService
 
     public ProductStorageInfo? GetProductStorageInfo(int productId)
     {
-        // Get the earliest inventory item for this product
         var inventoryData = _context.Set<Inventoryitem>()
             .Where(i => EF.Property<int>(i, "Productid") == productId)
             .Select(i => new
@@ -114,13 +103,11 @@ public class DummyInventoryService : IInventoryService
 
         if (inventoryData == null) return null;
 
-        // Get product name
         var productName = _context.Set<Productdetail>()
             .Where(pd => EF.Property<int>(pd, "Productid") == productId)
             .Select(pd => EF.Property<string>(pd, "Name"))
             .FirstOrDefault() ?? "Unknown";
 
-        // Count how many inventory items exist for this product
         var quantity = _context.Set<Inventoryitem>()
             .Where(i => EF.Property<int>(i, "Productid") == productId)
             .Count();

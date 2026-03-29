@@ -2,6 +2,7 @@ using ProRental.Data.UnitOfWork;
 using ProRental.Domain.Entities;
 using ProRental.Domain.Enums;
 using ProRental.Data.Interfaces;
+using ProRental.Domain.Module3.P2_1.Controls;
 using ProRental.Interfaces.Module3.P2_1;
 using ProRental.Models.Module3.P2_1;
 

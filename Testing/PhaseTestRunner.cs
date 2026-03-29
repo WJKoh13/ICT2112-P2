@@ -15,11 +15,14 @@ using ProRental.Data.UnitOfWork;
 using ProRental.Data.Module3.P2_1;
 using ProRental.Data.Module3.P2_1.Gateways;
 using ProRental.Data.Module3.P2_1.Interfaces;
+using ProRental.Data.Module3.P2_1.Mappers;
+using ProRental.Data.Module3.P2_1.Services;
 using ProRental.Domain.Controls;
 using ProRental.Domain.Module3.P2_1.Controls;
 using ProRental.Domain.Entities;
 using ProRental.Domain.Enums;
 using ProRental.Interfaces;
+using ProRental.Interfaces.Module2.P2_3;
 using ProRental.Interfaces.Module3.P2_1;
 using ProRental.Models.Module3.P2_1;
 using System.Reflection;
@@ -790,7 +793,7 @@ internal static class Phase4Tests
             })
         }));
 
-        var distanceKm = calculator.CalculateDistanceKmAsync(
+        var distanceKm = calculator.CalculateLegDistanceKmAsync(
             TransportMode.TRUCK,
             CreatePoint("8 Marina View, Singapore 018960"),
             CreatePoint("1 Fullerton Road, Singapore 049213")).GetAwaiter().GetResult();
@@ -809,7 +812,7 @@ internal static class Phase4Tests
         }));
 
         var exception = TestAssertions.AssertThrows<RouteResolutionException>(
-            () => calculator.CalculateDistanceKmAsync(
+            () => calculator.CalculateLegDistanceKmAsync(
                 TransportMode.TRUCK,
                 CreatePoint("8 Marina View, Singapore 018960"),
                 CreatePoint("1 Fullerton Road, Singapore 049213")).GetAwaiter().GetResult(),
@@ -825,7 +828,7 @@ internal static class Phase4Tests
         var calculator = new RouteDistanceCalculator(CreateGoogleMapsApi(_ => new HttpResponseMessage(HttpStatusCode.BadGateway)));
 
         var exception = TestAssertions.AssertThrows<RouteResolutionException>(
-            () => calculator.CalculateDistanceKmAsync(
+            () => calculator.CalculateLegDistanceKmAsync(
                 TransportMode.TRUCK,
                 CreatePoint("8 Marina View, Singapore 018960"),
                 CreatePoint("1 Fullerton Road, Singapore 049213")).GetAwaiter().GetResult(),
@@ -841,7 +844,7 @@ internal static class Phase4Tests
         var googleMapsApi = new Phase4RecordingGoogleMapsApi();
         var calculator = new RouteDistanceCalculator(googleMapsApi);
 
-        var distanceKm = calculator.CalculateDistanceKmAsync(
+        var distanceKm = calculator.CalculateLegDistanceKmAsync(
             TransportMode.PLANE,
             CreatePoint("Origin Airport", 0d, 0d),
             CreatePoint("Destination Airport", 0d, 1d)).GetAwaiter().GetResult();
@@ -855,7 +858,7 @@ internal static class Phase4Tests
         var googleMapsApi = new Phase4RecordingGoogleMapsApi();
         var calculator = new RouteDistanceCalculator(googleMapsApi);
 
-        var distanceKm = calculator.CalculateDistanceKmAsync(
+        var distanceKm = calculator.CalculateLegDistanceKmAsync(
             TransportMode.SHIP,
             CreatePoint("Origin Port", 0d, 0d),
             CreatePoint("Destination Port", 1d, 0d)).GetAwaiter().GetResult();
@@ -871,7 +874,7 @@ internal static class Phase4Tests
             apiKey: string.Empty));
 
         var exception = TestAssertions.AssertThrows<RouteResolutionException>(
-            () => calculator.CalculateDistanceKmAsync(
+            () => calculator.CalculateLegDistanceKmAsync(
                 TransportMode.TRUCK,
                 CreatePoint("8 Marina View, Singapore 018960"),
                 CreatePoint("1 Fullerton Road, Singapore 049213")).GetAwaiter().GetResult(),
@@ -888,7 +891,7 @@ internal static class Phase4Tests
             _ => throw new InvalidOperationException("Google route lookup should not run with blank route endpoints.")));
 
         var exception = TestAssertions.AssertThrows<RouteResolutionException>(
-            () => calculator.CalculateDistanceKmAsync(
+            () => calculator.CalculateLegDistanceKmAsync(
                 TransportMode.TRUCK,
                 CreatePoint(string.Empty),
                 CreatePoint("1 Fullerton Road, Singapore 049213")).GetAwaiter().GetResult(),
@@ -905,7 +908,7 @@ internal static class Phase4Tests
         var calculator = new RouteDistanceCalculator(googleMapsApi);
 
         var exception = TestAssertions.AssertThrows<RouteResolutionException>(
-            () => calculator.CalculateDistanceKmAsync(
+            () => calculator.CalculateLegDistanceKmAsync(
                 TransportMode.PLANE,
                 CreatePoint("Origin Airport"),
                 CreatePoint("Destination Airport", 0d, 1d)).GetAwaiter().GetResult(),
@@ -923,7 +926,7 @@ internal static class Phase4Tests
         var calculator = new RouteDistanceCalculator(googleMapsApi);
 
         var exception = TestAssertions.AssertThrows<RouteResolutionException>(
-            () => calculator.CalculateDistanceKmAsync(
+            () => calculator.CalculateLegDistanceKmAsync(
                 TransportMode.SHIP,
                 CreatePoint("Origin Port", 95d, 0d),
                 CreatePoint("Destination Port", 1d, 0d)).GetAwaiter().GetResult(),
@@ -1270,6 +1273,11 @@ internal static class Phase4Tests
             return Task.FromResult(StoredOptions.FirstOrDefault(option => option.GetSummary().OptionId == optionId));
         }
 
+        public Task<int?> FindSelectedRouteIdByOrderIdAsync(int orderId, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<int?>(null);
+        }
+
         public Task AddAsync(ShippingOption option, CancellationToken cancellationToken = default)
         {
             if (option.GetSummary().OptionId == 0)
@@ -1489,7 +1497,7 @@ internal static class Phase4Tests
         }
     }
 
-    private sealed class Phase4RecordingGoogleMapsApi : IGoogleMapsApi
+    private sealed class Phase4RecordingGoogleMapsApi : IGoogleMapsAPI
     {
         public List<(string Origin, string Destination)> Requests { get; } = [];
 
@@ -1706,7 +1714,7 @@ internal static class Phase6Tests
         TestAssertions.AssertTrue(scopedProvider.GetService<IShippingOptionMapper>() is ShippingOptionMapper, "Expected shipping option mapper registration.");
         TestAssertions.AssertTrue(scopedProvider.GetService<ICheckoutShippingContextService>() is ShippingCheckoutContextService, "Expected checkout context service registration.");
         TestAssertions.AssertTrue(scopedProvider.GetService<IRoutingService>() is RouteManager, "Expected routing service registration.");
-        TestAssertions.AssertTrue(scopedProvider.GetService<IGoogleMapsApi>() is GoogleMapsAPI, "Expected Google Maps API registration.");
+        TestAssertions.AssertTrue(scopedProvider.GetService<IGoogleMapsAPI>() is GoogleMapsAPI, "Expected Google Maps API registration.");
         TestAssertions.AssertTrue(scopedProvider.GetService<ITransportCarbonService>() is ProRental.Domain.Module3.P2_1.Controls.TransportCarbonManager, "Expected transport carbon service registration.");
         TestAssertions.AssertTrue(scopedProvider.GetService<IShippingPreferenceService>() is PreferenceManager, "Expected preference manager registration.");
         TestAssertions.AssertTrue(scopedProvider.GetService<IShippingOptionService>() is ShippingOptionManager, "Expected shipping option manager registration.");
@@ -2373,7 +2381,7 @@ internal static class Phase7Tests
     private static ShippingOptionManager CreateManager(
         AppDbContext context,
         IShippingOptionMapper? mapper = null,
-        IGoogleMapsApi? googleMapsApi = null,
+        IGoogleMapsAPI? googleMapsApi = null,
         IEnumerable<TransportationHub>? additionalHubs = null,
         ITransportationHubMapper? transportationHubMapper = null)
     {
@@ -2412,9 +2420,14 @@ internal static class Phase7Tests
     private static RouteManager CreateRouteManager(
         AppDbContext context,
         ITransportationHubMapper hubMapper,
-        IGoogleMapsApi googleMapsApi)
+        IGoogleMapsAPI googleMapsApi)
     {
-        return new RouteManager(context, hubMapper, new RouteLegBuilder(new RouteDistanceCalculator(googleMapsApi)));
+        var routeDistanceCalculator = new RouteDistanceCalculator(googleMapsApi);
+        return new RouteManager(
+            new RouteMapper(context),
+            hubMapper,
+            new RouteLegBuilder(routeDistanceCalculator),
+            routeDistanceCalculator);
     }
 
     private static void CleanupCheckoutFixture(AppDbContext context, Phase3Tests.CheckoutFixture snapshot, IReadOnlyCollection<int> routeIdsBefore)
@@ -2568,7 +2581,7 @@ internal static class Phase7Tests
         throw new InvalidOperationException($"Unsupported test country mapping for address '{address}'.");
     }
 
-    private sealed class StubGoogleMapsApi : IGoogleMapsApi
+    private sealed class StubGoogleMapsApi : IGoogleMapsAPI
     {
         private readonly IReadOnlyDictionary<(string Origin, string Destination), double> _distances;
         private readonly IReadOnlyDictionary<(string Origin, string Destination), Exception> _exceptions;
@@ -2666,6 +2679,9 @@ internal static class Phase7Tests
 
         public Task<ShippingOption?> FindByIdAsync(int optionId, CancellationToken cancellationToken = default) =>
             _inner.FindByIdAsync(optionId, cancellationToken);
+
+        public Task<int?> FindSelectedRouteIdByOrderIdAsync(int orderId, CancellationToken cancellationToken = default) =>
+            _inner.FindSelectedRouteIdByOrderIdAsync(orderId, cancellationToken);
 
         public Task AddAsync(ShippingOption option, CancellationToken cancellationToken = default) =>
             _inner.AddAsync(option, cancellationToken);

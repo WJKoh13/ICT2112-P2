@@ -10,13 +10,12 @@ The current implementation matches the deferred-selection plan in the main areas
   - `ConfirmPreferenceSelectionAsync(...)`
 - No routing, transport-carbon, or shipping-option persistence happens during the initial GET flow.
 - After the customer selects a preference, Feature 1 performs:
-  1. one call to `IRoutingService.CreateMultiModalRoute(...)`
+  1. one call to `IRoutingService.CreateMultiModalRouteAsync(...)`
   2. one call to `ITransportCarbonService.CalculateRouteQuote(...)`
   3. one persisted `ShippingOption` update/insert plus checkout selection
-- `PreferenceTypeModes.AllowedModes` is the source of truth for:
-  - `FAST -> [PLANE, TRUCK]`
-  - `CHEAP -> [SHIP, TRUCK]`
-  - `GREEN -> [TRAIN, TRUCK]`
+- `PreferenceTypeModes.ResolveRouteProfile(...)` is the source of truth for production routing profiles:
+  - same-country routes may remain valid as direct single-leg route requests
+  - explicit three-leg route profiles are used for hub-based cross-border routing
 - The temporary `GetRouteCarbonInput(...)` bridge no longer lives on `IShippingOptionService`.
 
 ## Current Caveats
@@ -37,6 +36,10 @@ Excluded from this document:
 - test doubles
 - legacy eager-ranking classes that are no longer on the primary checkout path
 
+Presentation layer:
+
+- none required for this feature diagram
+
 ## Feature 1
 
 ### Service Contract
@@ -56,7 +59,7 @@ Excluded from this document:
 Role:
 
 - returns the three preference cards for the initial screen
-- resolves allowed modes from `PreferenceTypeModes`
+- resolves route profiles from `PreferenceTypeModes`
 - calls routing once after preference selection
 - calls transport-carbon once after route creation
 - persists the final `ShippingOption`
@@ -67,6 +70,7 @@ Role:
 **`IShippingOptionMapper`**
 
 - `FindOrderWithCheckoutAsync(int orderId, CancellationToken cancellationToken = default)`
+- `FindSelectedRouteIdByOrderIdAsync(int orderId, CancellationToken cancellationToken = default)`
 - `FindByOrderIdAsync(int orderId, CancellationToken cancellationToken = default)`
 - `FindByIdAsync(int optionId, CancellationToken cancellationToken = default)`
 - `AddAsync(ShippingOption option, CancellationToken cancellationToken = default)`
@@ -78,6 +82,7 @@ Role:
 **`ShippingOptionMapper`**
 
 - `FindOrderWithCheckoutAsync(int orderId, CancellationToken cancellationToken = default)`
+- `FindSelectedRouteIdByOrderIdAsync(int orderId, CancellationToken cancellationToken = default)`
 - `FindByOrderIdAsync(int orderId, CancellationToken cancellationToken = default)`
 - `FindByIdAsync(int optionId, CancellationToken cancellationToken = default)`
 - `AddAsync(ShippingOption option, CancellationToken cancellationToken = default)`
@@ -97,6 +102,7 @@ Role:
 
 **`DeliveryRoute`**
 
+- `addLeg(RouteLeg leg)`
 - `GetRouteId()`
 - `GetOriginAddress()`
 - `GetDestinationAddress()`
@@ -141,7 +147,15 @@ Role:
 
 **`PreferenceTypeModes`**
 
-- `AllowedModes`
+- `ResolveRouteProfile(...)`
+- `ResolveAllowedModes(...)`
+- `GetAllowedModesLabel(...)`
+
+**`RouteModeProfile`**
+
+- value record describing either:
+  - an explicit three-leg route profile, or
+  - a simplified/direct route profile when a single main leg is appropriate
 
 ## Feature 2
 
@@ -195,13 +209,40 @@ Role:
 
 **`IRoutingService`**
 
-- `CreateMultiModalRoute(string origin, string destination, List<TransportMode> modes)`
+- `CreateMultiModalRouteAsync(string origin, string destination, List<TransportMode> modes)`
 
 Role:
 
-- Feature 1 passes a single preference's allowed modes
+- Feature 1 passes a route mode profile expressed as one or more transport modes
 - routing returns one `DeliveryRoute`
 - Feature 1 then forwards that route into Feature 2 for quote calculation
+
+### Routing Support Contracts
+
+**`IRouteLegBuilder`**
+
+- `BuildFirstMileLegAsync(...)`
+- `BuildMainTransportLegAsync(...)`
+- `BuildLastMileLegAsync(...)`
+
+**`IRouteDistanceCalculator`**
+
+- `CalculateLegDistanceKmAsync(...)`
+
+**`IRouteQueryService`**
+
+- `RetrieveMainTransportLeg(routeId: int)`
+
+### Infrastructure / External Service Boundary
+
+**`IRouteMapper` / `RouteMapper`**
+
+- persist and query `DeliveryRoute` data
+
+**`IGoogleMapsAPI` / `GoogleMapsAPI`**
+
+- external service boundary used for leg-distance resolution where road-route lookup is appropriate
+- not part of the presentation layer
 
 ## Recommended Diagram Chain
 
@@ -209,7 +250,11 @@ For the updated deferred-selection diagram, the main flow should read:
 
 `IShippingOptionService / ShippingOptionManager`
 -> `IRoutingService`
+-> `IRouteLegBuilder`
+-> `IRouteDistanceCalculator`
+-> `IGoogleMapsAPI`
 -> `ITransportCarbonService / TransportCarbonManager`
+-> `IRouteMapper / RouteMapper`
 -> `IShippingOptionMapper / ShippingOptionMapper`
 -> `ShippingOption`
 -> `DeliveryRoute`
@@ -223,6 +268,7 @@ The key supporting value objects and records are:
 - `ShippingOptionSummary`
 - `RouteQuoteResult`
 - `PreferenceTypeModes`
+- `RouteModeProfile`
 
 ## Mock Services
 

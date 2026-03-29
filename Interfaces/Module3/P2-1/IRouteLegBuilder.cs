@@ -5,7 +5,7 @@ namespace ProRental.Interfaces.Module3.P2_1;
 
 public interface IRouteLegBuilder
 {
-    Task<RouteLeg> BuildFirstMileLegAsync(RouteDistancePoint startPoint, RouteDistancePoint endPoint);
-    Task<RouteLeg> BuildMainTransportLegAsync(int sequence, RouteDistancePoint startPoint, RouteDistancePoint endPoint, TransportMode transportMode);
-    Task<RouteLeg> BuildLastMileLegAsync(int sequence, RouteDistancePoint startPoint, RouteDistancePoint endPoint);
+    Task<RouteLeg> BuildFirstMileLegAsync(TransportationHub warehouse, TransportationHub originHub, TransportMode transportMode);
+    Task<RouteLeg> BuildMainTransportLegAsync(TransportationHub originHub, TransportationHub destinationHub, TransportMode transportMode);
+    Task<RouteLeg> BuildLastMileLegAsync(TransportationHub destinationHub, string customerAddress, TransportMode transportMode);
 }

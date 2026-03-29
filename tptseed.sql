@@ -39,16 +39,16 @@ VALUES
 -- main leg should be SHIP
 -- ============================================================
 (1, 1, 'TRUCK', '1 Marina Boulevard, Singapore', 'Port of Singapore, Pasir Ris, Singapore', 18.0, TRUE,  FALSE, 1),
-(1, 2, 'SHIP',  'Port of Singapore, Pasir Ris, Singapore', 'Hong Kong Seaport Receiving Point', 2520.0, FALSE, FALSE, 3),
-(1, 3, 'TRUCK', 'Hong Kong Seaport Receiving Point', '123 Industrial Road, Hong Kong', 42.0, FALSE, TRUE,  2),
+(1, 2, 'SHIP',  'Port of Singapore, Pasir Ris, Singapore', '123 Industrial Road, Hong Kong', 2520.0, FALSE, FALSE, 3),
+(1, 3, 'TRUCK', '123 Industrial Road, Hong Kong', '123 Industrial Road, Hong Kong', 42.0, FALSE, TRUE,  2),
 
 -- ============================================================
 -- Route 2 : AIR route (Truck -> Plane -> Truck)
 -- main leg should be PLANE
 -- ============================================================
 (2, 1, 'TRUCK', '1 Marina Boulevard, Singapore', 'Changi Airport Terminal 3, Singapore', 22.0, TRUE,  FALSE, 1),
-(2, 2, 'PLANE', 'Changi Airport Terminal 3, Singapore', 'Hong Kong Air Cargo Terminal', 2500.0, FALSE, FALSE, 4),
-(2, 3, 'TRUCK', 'Hong Kong Air Cargo Terminal', '123 Industrial Road, Hong Kong', 38.0, FALSE, TRUE,  2),
+(2, 2, 'PLANE', 'Changi Airport Terminal 3, Singapore', '123 Industrial Road, Hong Kong', 2500.0, FALSE, FALSE, 4),
+(2, 3, 'TRUCK', '123 Industrial Road, Hong Kong', '123 Industrial Road, Hong Kong', 38.0, FALSE, TRUE,  2),
 
 -- ============================================================
 -- Route 3 : Port feeder route only

@@ -222,9 +222,6 @@ public partial class AppDbContext
         {
             entity.Property("StageType").HasField("_stageType").UsePropertyAccessMode(PropertyAccessMode.Field)
                   .HasColumnName("stage_type").HasColumnType("carbon_stage_type");
-
-            entity.Property("StageTypeAlt").HasField("_stageTypeAlt").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("stagetype").HasColumnType("stagetype");
         });
 
         modelBuilder.Entity<RouteLeg>(entity =>

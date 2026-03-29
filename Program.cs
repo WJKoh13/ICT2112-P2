@@ -21,28 +21,10 @@ using ProRental.Domain.Entities;
 using ProRental.Interfaces.Data.Module3.P2_5;
 using ProRental.Interfaces.Module2.P2_3;
 using ProRental.Interfaces.Module3.P2_5;
-
-// uncomment when ready to code
 using ProRental.Data;
 using ProRental.Domain.Controls;
-// using ProRental.Domain.Entities;
 using ProRental.Interfaces.Domain;
 using ProRental.Interfaces.Data;
-using ProRental.Interfaces.Data;
-using ProRental.Data;
-using ProRental.Interfaces.Domain;
-using ProRental.Domain.Controls;
-using ProRental.Controllers.Module1;
-using ProRental.Data.Services;
-
-
-// uncomment when ready to code
-// using ProRental.Data;
-// using ProRental.Domain.Controls;
-// //using ProRental.Domain.Entities;
-// using ProRental.Interfaces.Domain;
-// using ProRental.Interfaces.Data;
-// using ProRental.Controllers;
 using ProRental.Controllers.Module1;
 
 //p2-1 feat 1 test
@@ -360,6 +342,5 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
-
 
 
